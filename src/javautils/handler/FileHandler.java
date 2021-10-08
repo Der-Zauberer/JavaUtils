@@ -63,11 +63,8 @@ public class FileHandler {
 	public static void writeLines(File file, String lines[], boolean append) {
 		try {
 			BufferedWriter writer;
-			if (append) {
-				writer = Files.newBufferedWriter(Paths.get(file.toString()), Charset.forName("UTF-8"), StandardOpenOption.APPEND);
-			} else {
-				writer = Files.newBufferedWriter(Paths.get(file.toString()), Charset.forName("UTF-8"));
-			}
+			if (append) {writer = Files.newBufferedWriter(Paths.get(file.toString()), Charset.forName("UTF-8"), StandardOpenOption.APPEND);}
+			else {writer = Files.newBufferedWriter(Paths.get(file.toString()), Charset.forName("UTF-8"));}
 			for (int i = 0; i < lines.length - 1; i++) {
 				writer.write(lines[i]);
 				writer.newLine();
