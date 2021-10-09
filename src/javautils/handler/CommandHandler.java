@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import javautils.util.Command;
+import javautils.util.Console;
 
 public class CommandHandler {
 
@@ -26,7 +27,7 @@ public class CommandHandler {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
-					sendMessageOutput(commands.get(string).getCommandHelp());
+					Console.sendMessage(commands.get(string).getCommandHelp());
 					return true;
 				}
 				return commands.get(string).onCommand(string, args, FileHandler.getJarDirectory());
@@ -60,24 +61,12 @@ public class CommandHandler {
 		return false;
 	}
 
-	public static ArrayList<String> getHistory() {
-		return history;
-	}
-
-	public static void sendMessageOutput(Object object) {
-		System.out.println(object);
-	}
-
-	public static void sendInfoOutput(Object object) {
-		System.out.println("[INFO] " + object);
-	}
-
-	public static void sendWarningOutput(Object object) {
-		System.out.println("[WARNING] " + object);
-	}
-
-	public static void sendErrorOutput(Object object) {
-		System.out.println("[ERROR] " + object);
+	public static String[] getHistory() {
+		String string[] = new String[history.size()];
+		for (int i = 0; i < history.size(); i++) {
+			string[i] = history.get(i);
+		}
+		return string;
 	}
 
 	private static String[] getSplitedCommand(String string) {
