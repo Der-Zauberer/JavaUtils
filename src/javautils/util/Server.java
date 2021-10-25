@@ -10,7 +10,7 @@ public class Server implements Runnable {
 	private ServerSocket server;
 	private ArrayList<Client> clients;
 	private Thread thread;
-	private MessageReceiveAction messagereceiveaction;
+	private MessageReceiveAction action;
 	
 	public Server(int port) throws IOException {
 		this(new ServerSocket(port));
@@ -19,7 +19,7 @@ public class Server implements Runnable {
 	public Server(ServerSocket server) throws IOException {
 		this.server = server;
 		clients = new ArrayList<>();
-		messagereceiveaction = (client, message) -> {};
+		action = (client, message) -> {};
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -49,11 +49,11 @@ public class Server implements Runnable {
 	}
 	
 	public void onMessageRecieve(Client client, String message) {
-		messagereceiveaction.onMessageReceive(client, message);
+		action.onMessageReceive(client, message);
 	}
 	
-	public void setOnMessageRecieve(MessageReceiveAction messagereceiveaction) {
-		this.messagereceiveaction = messagereceiveaction;
+	public void setOnMessageRecieve(MessageReceiveAction action) {
+		this.action = action;
 	}
 	
 	public ServerSocket getServerSocket() {

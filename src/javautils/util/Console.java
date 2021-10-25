@@ -1,56 +1,99 @@
 package javautils.util;
 
+import java.io.File;
 import java.util.Scanner;
+import javauitls.events.ConsoleInputEvent;
+import javauitls.events.ConsoleOutputEvent;
 import javautils.handler.CommandHandler;
+import javautils.handler.EventHandler;
+import javautils.handler.FileHandler;
 
-public class Console {
+public class Console implements Runnable {
 
-	private static Thread thread;
-	private static String prefix;
+	private Thread thread;
+	private String prefix;
+	private File directory;
 
-	public static void startConsole() {
+	public Console() {
+		startConsole();
+		directory = FileHandler.getJarDirectory();
+	}
+	
+	public Console(String prefix) {
+		startConsole(prefix);
+		directory = FileHandler.getJarDirectory();
+	}
+	
+	public void startConsole() {
 		startConsole("");
 	}
 	
-	@SuppressWarnings("resource")
-	public static void startConsole(String prefix) {
-		Console.prefix = prefix;
-		thread = new Thread(() -> {
-			Scanner scanner = new Scanner(System.in);
-			while (true) {
-				System.out.print(prefix + "~ ");
-				CommandHandler.executeCommand(scanner.nextLine());
-			}
-		});
+	public void startConsole(String prefix) {
+		this.prefix = prefix;
+		thread = new Thread(this);
 		thread.start();
+		Logger.addConsole(this);
 	}
 
 	public void stopConsole() {
+		Logger.removeConsole(this);
 		thread.interrupt();
 	}
-
-	public static void setPrefix(String prefix) {
-		Console.prefix = prefix;
+	
+	@SuppressWarnings("resource")
+	@Override
+	public void run() {
+		Scanner scanner = new Scanner(System.in);
+		String input;
+		while (!thread.isInterrupted()) {
+			System.out.print(prefix + "~ ");
+			input = scanner.nextLine();
+			ConsoleInputEvent event = new ConsoleInputEvent(this, input);
+			EventHandler.executeEvent(EventType.CONSOLEINPUTEVENT, event);
+			if(!event.isCancled()) {
+				CommandHandler.executeCommand(event.getConsole(), event.getInput());
+			}
+		}
 	}
 
-	public static String getPrefix() {
+	public  void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
+
+	public String getPrefix() {
 		return prefix;
 	}
 	
-	public static void sendMessage(Object object) {
-		System.out.println(object);
+	public File getDirectory() {
+		return directory;
+	}
+	
+	public void setDirectory(File directory) {
+		this.directory = directory;
+	}
+	
+	public void sendMessage(Object object) {
+		sendOutput(object.toString());
 	}
 
-	public static void sendInfoMessage(Object object) {
-		System.out.println("[INFO] " + object);
+	public void sendInfoMessage(Object object) {
+		sendOutput("[INFO] " + object.toString());
 	}
 
-	public static void sendWarningMessage(Object object) {
-		System.out.println("[WARNING] " + object);
+	public void sendWarningMessage(Object object) {
+		sendOutput("[WARNING] " + object.toString());
 	}
 
-	public static void sendErrorMessage(Object object) {
-		System.out.println("[ERROR] " + object);
+	public void sendErrorMessage(Object object) {
+		sendOutput("[ERROR] " + object.toString());
+	}
+	
+	private void sendOutput(String output) {
+		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output);
+		EventHandler.executeEvent(EventType.CONSOLEOUTPUTEVENT, event);
+		if(!event.isCancled()) {
+			System.out.println(event.getOutput());
+		}
 	}
 
 }

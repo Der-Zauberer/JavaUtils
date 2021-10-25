@@ -3,8 +3,12 @@ package javautils.handler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import javauitls.events.CommandNotFoundEvent;
+import javauitls.events.CommandPreProcessingEvent;
 import javautils.util.Command;
 import javautils.util.Console;
+import javautils.util.EventType;
 
 public class CommandHandler {
 
@@ -15,24 +19,35 @@ public class CommandHandler {
 		commands.put(label, command);
 	}
 
-	public static boolean executeCommand(String string) {
+	public static boolean executeCommand(Console console, String string) {
 		history.add(string);
 		String command[] = getSplitedCommand(string);
 		String label = command[0];
 		String args[] = Arrays.copyOfRange(command, 1, command.length);
-		return executeCommand(label, args);
+		return executeCommand(console, string, label, args);
 	}
 
-	private static boolean executeCommand(String label, String args[]) {
+	private static boolean executeCommand(Console console, String command, String label, String args[]) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
-					Console.sendMessage(commands.get(string).getCommandHelp());
+					console.sendMessage(commands.get(string).getCommandHelp());
 					return true;
 				}
-				return commands.get(string).onCommand(string, args, FileHandler.getJarDirectory());
+				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, command, label, args, console.getDirectory());
+				EventHandler.executeEvent(EventType.COMMANDPREPROCESSINGEVENT, event);
+				if (!event.isCancled()) {
+					return commands.get(string).onCommand(event.getConsole(), event.getCommand(), event.getArgs(), event.getDirectory());
+				} else {
+					CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args, FileHandler.getJarDirectory());
+					EventHandler.executeEvent(EventType.COMMANDNOTFOUNDEVENT, commandNotFoundEvent);
+					return false;
+				}
+				
 			}
 		}
+		CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args, FileHandler.getJarDirectory());
+		EventHandler.executeEvent(EventType.COMMANDNOTFOUNDEVENT, commandNotFoundEvent);
 		return false;
 	}
 
@@ -76,26 +91,26 @@ public class CommandHandler {
 		}
 		ArrayList<String> strings = new ArrayList<>();
 		string += " ";
-		int lastspace = -1;
-		char lastchar = ' ';
+		int lastSpace = -1;
+		char lastChar = ' ';
 		char character = ' ';
 		boolean enclosed = false;
 		for (int i = 0; i < string.length(); i++) {
 			character = string.charAt(i);
 			if (character == ' ' && !enclosed) {
-				if (lastchar != ' ' && lastchar != '"') {
-					strings.add(string.substring(lastspace + 1, i));
+				if (lastChar != ' ' && lastChar != '"') {
+					strings.add(string.substring(lastSpace + 1, i));
 				}
-				lastspace = i;
+				lastSpace = i;
 			} else if (character == '"' && !enclosed) {
-				lastspace = i;
+				lastSpace = i;
 				enclosed = true;
 			} else if (character == '"' && enclosed) {
-				strings.add(string.substring(lastspace + 1, i));
-				lastspace = i;
+				strings.add(string.substring(lastSpace + 1, i));
+				lastSpace = i;
 				enclosed = false;
 			}
-			lastchar = character;
+			lastChar = character;
 		}
 		String command[] = new String[strings.size()];
 		for (int i = 0; i < command.length; i++) {

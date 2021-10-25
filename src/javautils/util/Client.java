@@ -13,7 +13,7 @@ public class Client implements Runnable {
 	private Thread thread;
 	private PrintStream output;
 	private BufferedReader input;
-	private MessageReceiveAction messagereceiveaction;
+	private MessageReceiveAction action;
 
 	public Client(String host, int port) throws UnknownHostException, IOException {
 		this(new Socket(host, port));
@@ -23,7 +23,7 @@ public class Client implements Runnable {
 		this.socket = socket;
 		output = new PrintStream(socket.getOutputStream(), true);
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		messagereceiveaction = (client, message) -> {};
+		action = (client, message) -> {};
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -48,11 +48,11 @@ public class Client implements Runnable {
 	}
 	
 	public void onMessageReceive(String message) {
-		messagereceiveaction.onMessageReceive(this, message);
+		action.onMessageReceive(this, message);
 	}
 
-	public void setOnMessageRecieve(MessageReceiveAction messagereceiveaction) {
-		this.messagereceiveaction = messagereceiveaction;
+	public void setOnMessageRecieve(MessageReceiveAction action) {
+		this.action = action;
 	}
 
 	public Socket getSocket() {
