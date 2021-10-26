@@ -26,7 +26,7 @@ public class Server implements Runnable {
 	
 	@Override
 	public void run() {
-		while (!thread.isInterrupted()) {
+		while (!thread.isInterrupted() && !server.isClosed()) {
 			try {
 				Socket socket = this.server.accept();
 				Client client = new Client(socket) {

@@ -23,10 +23,6 @@ public class ConsoleOutputEvent extends Event {
 		return cancled;
 	}
 	
-	public void setConsole(Console console) {
-		this.console = console;
-	}
-	
 	public Console getConsole() {
 		return console;
 	}

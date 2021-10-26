@@ -32,19 +32,19 @@ public class CommandHandler {
 					console.sendMessage(commands.get(string).getCommandHelp());
 					return true;
 				}
-				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, command, label, args, console.getDirectory());
+				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, commands.get(string), string, label, args);
 				EventHandler.executeEvent(CommandPreProcessingEvent.class, event);
 				if (!event.isCancled()) {
-					return commands.get(string).onCommand(event.getConsole(), event.getCommand(), event.getArgs(), event.getDirectory());
+					return commands.get(label).onCommand(event.getConsole(), event.getLabel(), event.getArgs());
 				} else {
-					CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args, FileHandler.getJarDirectory());
+					CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args);
 					EventHandler.executeEvent(CommandNotFoundEvent.class, commandNotFoundEvent);
 					return false;
 				}
 				
 			}
 		}
-		CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args, FileHandler.getJarDirectory());
+		CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args);
 		EventHandler.executeEvent(CommandNotFoundEvent.class, commandNotFoundEvent);
 		return false;
 	}

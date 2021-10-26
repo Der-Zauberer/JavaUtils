@@ -1,7 +1,6 @@
 package javauitls.events;
 
-import java.io.File;
-
+import javautils.util.Command;
 import javautils.util.Console;
 import javautils.util.Event;
 
@@ -9,18 +8,18 @@ public class CommandPreProcessingEvent extends Event {
 
 	private boolean cancled;
 	private Console console;
-	private String command;
+	private Command command;
+	private String string;
 	private String label;
 	private String args[];
-	private File directory;
 	
-	public CommandPreProcessingEvent(Console console, String command, String label, String args[], File directory) {
+	public CommandPreProcessingEvent(Console console, Command command, String string, String label, String args[]) {
 		this.cancled = false;
 		this.console = console;
 		this.command = command;
+		this.string = string;
 		this.label = label;
 		this.args = args;
-		this.directory = directory;
 	}
 	
 	public void setCancled(boolean cancled) {
@@ -31,20 +30,16 @@ public class CommandPreProcessingEvent extends Event {
 		return cancled;
 	}
 	
-	public void setConsole(Console console) {
-		this.console = console;
-	}
-	
 	public Console getConsole() {
 		return console;
 	}
 	
-	public void setCommand(String command) {
-		this.command = command;
+	public Command getCommand() {
+		return command;
 	}
 	
-	public String getCommand() {
-		return command;
+	public String getString() {
+		return string;
 	}
 	
 	public void setLabel(String label) {
@@ -61,14 +56,6 @@ public class CommandPreProcessingEvent extends Event {
 	
 	public String[] getArgs() {
 		return args;
-	}
-	
-	public void setDirectory(File directory) {
-		this.directory = directory;
-	}
-	
-	public File getDirectory() {
-		return directory;
 	}
 	
 }
