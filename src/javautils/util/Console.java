@@ -32,11 +32,9 @@ public class Console implements Runnable {
 		this.prefix = prefix;
 		thread = new Thread(this);
 		thread.start();
-		Logger.addConsole(this);
 	}
 
 	public void stopConsole() {
-		Logger.removeConsole(this);
 		thread.interrupt();
 	}
 	
@@ -49,7 +47,7 @@ public class Console implements Runnable {
 			System.out.print(prefix + "~ ");
 			input = scanner.nextLine();
 			ConsoleInputEvent event = new ConsoleInputEvent(this, input);
-			EventHandler.executeEvent(EventType.CONSOLEINPUTEVENT, event);
+			EventHandler.executeEvent(ConsoleInputEvent.class, event);
 			if(!event.isCancled()) {
 				CommandHandler.executeCommand(event.getConsole(), event.getInput());
 			}
@@ -90,7 +88,7 @@ public class Console implements Runnable {
 	
 	private void sendOutput(String output) {
 		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output);
-		EventHandler.executeEvent(EventType.CONSOLEOUTPUTEVENT, event);
+		EventHandler.executeEvent(ConsoleOutputEvent.class, event);
 		if(!event.isCancled()) {
 			System.out.println(event.getOutput());
 		}

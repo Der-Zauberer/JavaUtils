@@ -3,12 +3,10 @@ package javautils.handler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-
 import javauitls.events.CommandNotFoundEvent;
 import javauitls.events.CommandPreProcessingEvent;
 import javautils.util.Command;
 import javautils.util.Console;
-import javautils.util.EventType;
 
 public class CommandHandler {
 
@@ -35,19 +33,19 @@ public class CommandHandler {
 					return true;
 				}
 				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, command, label, args, console.getDirectory());
-				EventHandler.executeEvent(EventType.COMMANDPREPROCESSINGEVENT, event);
+				EventHandler.executeEvent(CommandPreProcessingEvent.class, event);
 				if (!event.isCancled()) {
 					return commands.get(string).onCommand(event.getConsole(), event.getCommand(), event.getArgs(), event.getDirectory());
 				} else {
 					CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args, FileHandler.getJarDirectory());
-					EventHandler.executeEvent(EventType.COMMANDNOTFOUNDEVENT, commandNotFoundEvent);
+					EventHandler.executeEvent(CommandNotFoundEvent.class, commandNotFoundEvent);
 					return false;
 				}
 				
 			}
 		}
 		CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args, FileHandler.getJarDirectory());
-		EventHandler.executeEvent(EventType.COMMANDNOTFOUNDEVENT, commandNotFoundEvent);
+		EventHandler.executeEvent(CommandNotFoundEvent.class, commandNotFoundEvent);
 		return false;
 	}
 

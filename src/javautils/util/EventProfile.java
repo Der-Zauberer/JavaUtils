@@ -1,16 +1,17 @@
 package javautils.util;
 
+@SuppressWarnings("rawtypes")
 public class EventProfile {
 
-	private EventType type;
+	private Class type;
 	private EventExecuter executer;
 	
-	public EventProfile(EventType type, EventExecuter executer) {
+	public EventProfile(Class type, EventExecuter executer) {
 		this.type = type;
 		this.executer = executer;
 	}
 	
-	public EventType getType() {
+	public Class getType() {
 		return type;
 	}
 	
