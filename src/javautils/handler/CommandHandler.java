@@ -3,6 +3,8 @@ package javautils.handler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import javauitls.events.CommandExecutionFailedEvent;
 import javauitls.events.CommandNotFoundEvent;
 import javauitls.events.CommandPreProcessingEvent;
 import javautils.util.Command;
@@ -35,7 +37,12 @@ public class CommandHandler {
 				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, commands.get(string), string, label, args);
 				EventHandler.executeEvent(CommandPreProcessingEvent.class, event);
 				if (!event.isCancled()) {
-					return commands.get(label).onCommand(event.getConsole(), event.getLabel(), event.getArgs());
+					boolean success = commands.get(label).onCommand(event.getConsole(), event.getLabel(), event.getArgs());
+					if (!success) {
+						CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getConsole(), event.getCommand(), event.getString(), event.getLabel(), event.getArgs());
+						EventHandler.executeEvent(CommandExecutionFailedEvent.class, commandExecutionFailedEvent);
+					}
+					return success;
 				} else {
 					CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args);
 					EventHandler.executeEvent(CommandNotFoundEvent.class, commandNotFoundEvent);
