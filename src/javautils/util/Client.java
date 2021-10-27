@@ -13,6 +13,7 @@ import javauitls.events.ClientDisconnectEvent;
 import javauitls.events.ClientDisconnectEvent.DisconnectCause;
 import javauitls.events.ClientMessageRecieveEvent;
 import javauitls.events.ClientMessageSendEvent;
+import javautils.action.ClientMessageReceiveAction;
 import javautils.handler.EventHandler;
 
 public class Client implements Runnable {
@@ -21,7 +22,7 @@ public class Client implements Runnable {
 	private Thread thread;
 	private PrintStream output;
 	private BufferedReader input;
-	private MessageReceiveAction action;
+	private ClientMessageReceiveAction action;
 	private boolean selfdisconnect;
 
 	public Client(String host, int port) throws UnknownHostException, IOException {
@@ -78,10 +79,10 @@ public class Client implements Runnable {
 	}
 	
 	public void onMessageReceive(String message) {
-		action.onMessageReceive(this, message);
+		action.onAction(this, message);
 	}
 
-	public void setOnMessageRecieve(MessageReceiveAction action) {
+	public void setOnMessageRecieve(ClientMessageReceiveAction action) {
 		this.action = action;
 	}
 

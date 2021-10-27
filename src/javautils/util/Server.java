@@ -5,12 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import javautils.action.ClientMessageReceiveAction;
+
 public class Server implements Runnable {
 	
 	private ServerSocket server;
 	private ArrayList<Client> clients;
 	private Thread thread;
-	private MessageReceiveAction action;
+	private ClientMessageReceiveAction action;
 	
 	public Server(int port) throws IOException {
 		this(new ServerSocket(port));
@@ -49,10 +51,10 @@ public class Server implements Runnable {
 	}
 	
 	public void onMessageRecieve(Client client, String message) {
-		action.onMessageReceive(client, message);
+		action.onAction(client, message);
 	}
 	
-	public void setOnMessageRecieve(MessageReceiveAction action) {
+	public void setOnMessageRecieve(ClientMessageReceiveAction action) {
 		this.action = action;
 	}
 	
