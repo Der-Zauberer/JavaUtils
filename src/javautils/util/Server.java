@@ -61,6 +61,13 @@ public class Server implements Runnable {
 	}
 	
 	public ArrayList<Client> getClients() {
+		ArrayList<Client> openClients = new ArrayList<>();
+		for (Client client : clients) {
+			if (!client.isClosed()) {
+				openClients.add(client);
+			}
+		}
+		clients = openClients;
 		return clients;
 	}
 
