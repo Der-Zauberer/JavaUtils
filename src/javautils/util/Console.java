@@ -15,7 +15,7 @@ public class Console implements Runnable {
 	private String prefix;
 	private File directory;
 	private ConsoleOutputAction outputAction;
-	
+	private Object sender;
 	
 	public Console() {
 		this(true);
@@ -26,6 +26,7 @@ public class Console implements Runnable {
 		directory = FileHandler.getJarDirectory();
 		prefix = "";
 		outputAction = output -> System.out.println(output);
+		sender = System.in;
 	}
 	
 	public Console(String prefix) {
@@ -67,17 +68,25 @@ public class Console implements Runnable {
 	public String getPrefix() {
 		return prefix;
 	}
+
+	public void setDirectory(File directory) {
+		this.directory = directory;
+	}
 	
 	public File getDirectory() {
 		return directory;
 	}
 	
-	public void setDirectory(File directory) {
-		this.directory = directory;
-	}
-	
 	public void setOutputAction(ConsoleOutputAction outputAction) {
 		this.outputAction = outputAction;
+	}
+	
+	public void setSender(Object sender) {
+		this.sender = sender;
+	}
+	
+	public Object getSender() {
+		return sender;
 	}
 	
 	public void sendInput(String string) {

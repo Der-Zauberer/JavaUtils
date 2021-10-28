@@ -31,7 +31,7 @@ public class Server implements Runnable {
 		while (!thread.isInterrupted() && !server.isClosed()) {
 			try {
 				Socket socket = this.server.accept();
-				Client client = new Client(socket) {
+				Client client = new Client(socket, this) {
 					@Override
 					public void onMessageReceive(String message) {
 						onMessageRecieve(this, message);
@@ -63,14 +63,11 @@ public class Server implements Runnable {
 	}
 	
 	public ArrayList<Client> getClients() {
-		ArrayList<Client> openClients = new ArrayList<>();
-		for (Client client : clients) {
-			if (!client.isClosed()) {
-				openClients.add(client);
-			}
-		}
-		clients = openClients;
 		return clients;
+	}
+	
+	public void removeClientFromHandler(Client client) {
+		clients.remove(client);
 	}
 
 }

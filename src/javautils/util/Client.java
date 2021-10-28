@@ -19,6 +19,7 @@ import javautils.handler.EventHandler;
 public class Client implements Runnable {
 
 	private Socket socket;
+	private Server server;
 	private Thread thread;
 	private PrintStream output;
 	private BufferedReader input;
@@ -40,6 +41,11 @@ public class Client implements Runnable {
 		thread = new Thread(this);
 		thread.start();
 	}
+	
+	public Client(Socket socket, Server server) throws IOException {
+		this(socket);
+		this.server = server;
+	}
 
 	@Override
 	public void run() {
@@ -53,9 +59,11 @@ public class Client implements Runnable {
 					onMessageReceive(message);
 				}
 			} catch (SocketException socketException) {
+				if (isPartOfServer()) server.removeClientFromHandler(this);
 				close();
 				break;
 			} catch (NullPointerException nullPointerException) {
+				if (isPartOfServer()) server.removeClientFromHandler(this);
 				close();
 				break;
 			} catch (IOException exception) {
@@ -108,6 +116,17 @@ public class Client implements Runnable {
 	public void reopen(Socket socket) {
 		this.socket = socket;
 		thread.start();
+	}
+	
+	public boolean isPartOfServer() {
+		if(server != null) {
+			return true;
+		}
+		return false;
+	}
+	
+	public Server getServer() {
+		return server;
 	}
 
 }
