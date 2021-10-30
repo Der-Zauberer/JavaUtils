@@ -7,7 +7,6 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-
 import javauitls.events.ClientConnectEvent;
 import javauitls.events.ClientDisconnectEvent;
 import javauitls.events.ClientDisconnectEvent.DisconnectCause;
@@ -38,8 +37,10 @@ public class Client implements Runnable {
 		selfdisconnect = false;
 		ClientConnectEvent event = new ClientConnectEvent(this);
 		EventHandler.executeEvent(ClientConnectEvent.class, event);
-		thread = new Thread(this);
-		thread.start();
+		if (!isPartOfServer()) {
+			thread = new Thread(this);
+			thread.start();
+		}
 	}
 	
 	public Client(Socket socket, Server server) throws IOException {
@@ -50,7 +51,7 @@ public class Client implements Runnable {
 	@Override
 	public void run() {
 		String message;
-		while (!thread.isInterrupted() && !isClosed()) {
+		while ((thread == null || !thread.isInterrupted()) && !isClosed()) {
 			try {
 				message = input.readLine();
 				ClientMessageRecieveEvent event = new ClientMessageRecieveEvent(this, message);

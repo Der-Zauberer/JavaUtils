@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javautils.action.ClientMessageReceiveAction;
 
@@ -11,6 +13,7 @@ public class Server implements Runnable {
 	
 	private ServerSocket server;
 	private ArrayList<Client> clients;
+	private ExecutorService service;
 	private Thread thread;
 	private ClientMessageReceiveAction action;
 	
@@ -22,6 +25,7 @@ public class Server implements Runnable {
 		this.server = server;
 		clients = new ArrayList<>();
 		action = (client, message) -> {};
+		service = Executors.newCachedThreadPool();
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -30,13 +34,14 @@ public class Server implements Runnable {
 	public void run() {
 		while (!thread.isInterrupted() && !server.isClosed()) {
 			try {
-				Socket socket = this.server.accept();
+				Socket socket = server.accept();
 				Client client = new Client(socket, this) {
 					@Override
 					public void onMessageReceive(String message) {
 						onMessageRecieve(this, message);
 					}
 				};
+				service.submit(client);
 				clients.add(client);
 			} catch (IOException exception) {
 				exception.printStackTrace();
