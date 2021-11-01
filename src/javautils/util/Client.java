@@ -30,6 +30,11 @@ public class Client implements Runnable {
 	}
 
 	public Client(Socket socket) throws IOException {
+		this(socket, null);
+	}
+	
+	public Client(Socket socket, Server server) throws IOException {
+		this.server = server;
 		this.socket = socket;
 		output = new PrintStream(socket.getOutputStream(), true);
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -41,11 +46,6 @@ public class Client implements Runnable {
 			thread = new Thread(this);
 			thread.start();
 		}
-	}
-	
-	public Client(Socket socket, Server server) throws IOException {
-		this(socket);
-		this.server = server;
 	}
 
 	@Override

@@ -55,7 +55,7 @@ public class Console implements Runnable {
 		Scanner scanner = new Scanner(System.in);
 		String input;
 		while (!thread.isInterrupted()) {
-			System.out.print(prefix + "~ ");
+			System.out.print(prefix);
 			input = scanner.nextLine();
 			sendInput(input);
 		}

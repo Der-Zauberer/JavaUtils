@@ -90,7 +90,7 @@ public class CommandHandler {
 	}
 
 	private static String[] getSplitedCommand(String string) {
-		if (string == null || string.isBlank()) {
+		if (string == null || string.isEmpty()) {
 			String list[] = { "" };
 			return list;
 		}
