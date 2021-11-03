@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>JavaUtils</groupId>
   <artifactId>javautils</artifactId>
-  <version>v0.2-alpha</version>
+  <version>v0.3-alpha</version>
   <name>JavaUtils</name>
   <build>
     <sourceDirectory>src</sourceDirectory>
