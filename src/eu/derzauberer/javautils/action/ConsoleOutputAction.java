@@ -1,4 +1,4 @@
-package javautils.action;
+package eu.derzauberer.javautils.action;
 
 public interface ConsoleOutputAction {
 

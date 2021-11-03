@@ -1,4 +1,4 @@
-package javautils.util;
+package eu.derzauberer.javautils.util;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javautils.action.ClientMessageReceiveAction;
+import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 
 public class Server implements Runnable {
 	

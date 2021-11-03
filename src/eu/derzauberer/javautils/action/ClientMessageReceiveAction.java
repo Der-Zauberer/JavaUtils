@@ -1,6 +1,6 @@
-package javautils.action;
+package eu.derzauberer.javautils.action;
 
-import javautils.util.Client;
+import eu.derzauberer.javautils.util.Client;
 
 public interface ClientMessageReceiveAction {
 	

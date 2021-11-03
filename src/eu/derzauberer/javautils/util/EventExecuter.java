@@ -1,4 +1,4 @@
-package javautils.util;
+package eu.derzauberer.javautils.util;
 
 public interface EventExecuter {
 	

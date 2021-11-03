@@ -1,7 +1,7 @@
-package javauitls.events;
+package eu.derzauberer.javautils.events;
 
-import javautils.util.Console;
-import javautils.util.Event;
+import eu.derzauberer.javautils.util.Console;
+import eu.derzauberer.javautils.util.Event;
 
 public class CommandNotFoundEvent extends Event {
 	

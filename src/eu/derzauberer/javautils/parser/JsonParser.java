@@ -1,4 +1,4 @@
-package javautils.parser;
+package eu.derzauberer.javautils.parser;
 import java.util.ArrayList;
 import java.util.HashMap;
 

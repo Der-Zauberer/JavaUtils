@@ -1,14 +1,14 @@
-package javautils.handler;
+package eu.derzauberer.javautils.handler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import javauitls.events.CommandExecutionFailedEvent;
-import javauitls.events.CommandNotFoundEvent;
-import javauitls.events.CommandPreProcessingEvent;
-import javautils.util.Command;
-import javautils.util.Console;
+import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
+import eu.derzauberer.javautils.events.CommandNotFoundEvent;
+import eu.derzauberer.javautils.events.CommandPreProcessingEvent;
+import eu.derzauberer.javautils.util.Command;
+import eu.derzauberer.javautils.util.Console;
 
 public class CommandHandler {
 

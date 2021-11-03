@@ -1,4 +1,4 @@
-package javautils.util;
+package eu.derzauberer.javautils.util;
 
 @SuppressWarnings("rawtypes")
 public class EventProfile {

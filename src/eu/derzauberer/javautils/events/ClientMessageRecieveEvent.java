@@ -1,15 +1,15 @@
-package javauitls.events;
+package eu.derzauberer.javautils.events;
 
-import javautils.util.Client;
-import javautils.util.Event;
+import eu.derzauberer.javautils.util.Client;
+import eu.derzauberer.javautils.util.Event;
 
-public class ClientMessageSendEvent extends Event {
+public class ClientMessageRecieveEvent extends Event {
 	
 	private boolean cancled;
 	private Client client;
 	private String message;
 	
-	public ClientMessageSendEvent(Client client, String message) {
+	public ClientMessageRecieveEvent(Client client, String message) {
 		this.cancled = false;
 		this.client = client;
 		this.message = message;

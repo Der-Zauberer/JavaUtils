@@ -1,4 +1,4 @@
-package javautils.util;
+package eu.derzauberer.javautils.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,13 +7,14 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import javauitls.events.ClientConnectEvent;
-import javauitls.events.ClientDisconnectEvent;
-import javauitls.events.ClientDisconnectEvent.DisconnectCause;
-import javauitls.events.ClientMessageRecieveEvent;
-import javauitls.events.ClientMessageSendEvent;
-import javautils.action.ClientMessageReceiveAction;
-import javautils.handler.EventHandler;
+
+import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
+import eu.derzauberer.javautils.events.ClientConnectEvent;
+import eu.derzauberer.javautils.events.ClientDisconnectEvent;
+import eu.derzauberer.javautils.events.ClientMessageRecieveEvent;
+import eu.derzauberer.javautils.events.ClientMessageSendEvent;
+import eu.derzauberer.javautils.events.ClientDisconnectEvent.DisconnectCause;
+import eu.derzauberer.javautils.handler.EventHandler;
 
 public class Client implements Runnable {
 

@@ -1,7 +1,7 @@
-package javauitls.events;
+package eu.derzauberer.javautils.events;
 
-import javautils.util.Client;
-import javautils.util.Event;
+import eu.derzauberer.javautils.util.Client;
+import eu.derzauberer.javautils.util.Event;
 
 public class ClientConnectEvent extends Event {
 	

@@ -1,4 +1,4 @@
-package javautils.handler;
+package eu.derzauberer.javautils.handler;
 
 import java.awt.Desktop;
 import java.io.BufferedReader;

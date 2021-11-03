@@ -1,9 +1,10 @@
-package javautils.handler;
+package eu.derzauberer.javautils.handler;
 
 import java.util.ArrayList;
-import javautils.util.Event;
-import javautils.util.EventExecuter;
-import javautils.util.EventProfile;
+
+import eu.derzauberer.javautils.util.Event;
+import eu.derzauberer.javautils.util.EventExecuter;
+import eu.derzauberer.javautils.util.EventProfile;
 
 @SuppressWarnings("rawtypes")
 public class EventHandler {

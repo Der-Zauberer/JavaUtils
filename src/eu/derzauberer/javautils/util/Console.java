@@ -1,13 +1,14 @@
-package javautils.util;
+package eu.derzauberer.javautils.util;
 
 import java.io.File;
 import java.util.Scanner;
-import javauitls.events.ConsoleInputEvent;
-import javauitls.events.ConsoleOutputEvent;
-import javautils.action.ConsoleOutputAction;
-import javautils.handler.CommandHandler;
-import javautils.handler.EventHandler;
-import javautils.handler.FileHandler;
+
+import eu.derzauberer.javautils.action.ConsoleOutputAction;
+import eu.derzauberer.javautils.events.ConsoleInputEvent;
+import eu.derzauberer.javautils.events.ConsoleOutputEvent;
+import eu.derzauberer.javautils.handler.CommandHandler;
+import eu.derzauberer.javautils.handler.EventHandler;
+import eu.derzauberer.javautils.handler.FileHandler;
 
 public class Console implements Runnable {
 
