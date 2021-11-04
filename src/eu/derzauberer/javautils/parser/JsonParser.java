@@ -18,6 +18,7 @@ public class JsonParser {
 		structure = new ArrayList<>();
 		elements = new HashMap<>();
 		removeSpaces();
+		System.out.println(this.string);
 		parse();
 	}
 
@@ -139,10 +140,16 @@ public class JsonParser {
 								break;
 							} else {
 								structure.add(position, key);
+								removeWrongKeys(key, keys);
 								return;
 							}
+						} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
+							structure.add(position + 1, key);
+							removeWrongKeys(key, keys);
+							return;
 						} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
 							structure.add(position + 1, key);
+							removeWrongKeys(key, keys);
 							return;
 						}
 					}
@@ -261,6 +268,20 @@ public class JsonParser {
 			}
 		}
 		return false;
+	}
+	
+	private void removeWrongKeys(String key, String[] keys) {
+		if (key.contains(".")) {
+			String parentKey = key.substring(0, key.lastIndexOf("."));
+			if (structure.contains(parentKey)) {
+				remove(parentKey);
+			}
+		}
+		for (int i = 0; i < structure.size(); i++) {
+			if (structure.get(i).startsWith(key) && structure.get(i).split("\\.").length - 1 == keys.length) {
+				remove(structure.get(i));
+			}
+		}
 	}
 	
 	private static List<Object> getStringListFromObject(Object object) {
