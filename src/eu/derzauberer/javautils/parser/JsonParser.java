@@ -1,6 +1,11 @@
 package eu.derzauberer.javautils.parser;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class JsonParser {
 
@@ -19,9 +24,22 @@ public class JsonParser {
 	public void set(String key, String string) {
 		setObject(key, string);
 	}
+	
+	public void set(String key, List<String> list) {
+		setObject(key, list);
+	}
+	
+	public void remove(String key) {
+		structure.remove(key);
+		elements.remove(key);
+	}
 
 	public String getString(String key) {
-		return null;
+		return elements.get(key).toString();
+	}
+	
+	public List<String> getStringList(String key) {
+		return getStringListFromObject(elements.get(key)).stream().map(object -> Objects.toString(object, null)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -37,11 +55,13 @@ public class JsonParser {
 		String key = "";
 		String name = null;
 		String value = null;
+		ArrayList<Object> array = new ArrayList<>();
 		int lastBreakPoint = 0;
-		boolean enclosed = false;
+		boolean isString = false;
+		boolean isArray = false;
 		boolean isValue = false;
 		for (int i = 0; i < string.length(); i++) {
-			if (!enclosed || string.charAt(i) == '"') {
+			if (!isString || string.charAt(i) == '"') {
 				if (string.charAt(i) == '{') {
 					isValue = false;
 					if (name != null) {
@@ -66,9 +86,12 @@ public class JsonParser {
 						key = "";
 					}
 				} else if (string.charAt(i) == '"') {
-					if (enclosed) {
+					if (isString) {
 						if (!isValue) {
 							name = string.substring(lastBreakPoint + 1, i);
+						} else if (isArray) {
+							value = string.substring(lastBreakPoint + 1, i);
+							array.add(value);
 						} else {
 							value = string.substring(lastBreakPoint + 1, i);
 							isValue = false;
@@ -78,11 +101,23 @@ public class JsonParser {
 							name = null;
 						}
 					}
-					enclosed = !enclosed;
+					isString = !isString;
 					lastBreakPoint = i;
 				} else if (string.charAt(i) == ':') {
 					isValue = true;
 					lastBreakPoint = i;
+				} else if (string.charAt(i) == '[') {
+					isArray = true;
+					array.clear();
+				} else if (string.charAt(i) == ']') {
+					isArray = false;
+					structure.add(key + name);
+					elements.put(key + name, array.clone());
+					array.clear();
+				} else if (string.charAt(i) == ',') {
+					if (!isArray) {
+						isValue = false;
+					}
 				}
 			}
 		}
@@ -165,7 +200,17 @@ public class JsonParser {
 					}
 				}
 			}
-			addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + qm + elements.get(key) + qm);
+			if (elements.get(key) instanceof ArrayList<?>) {
+				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
+				List<Object> list = getStringListFromObject(elements.get(key));
+				for (int i = 0; i < list.size() - 1; i++) {
+					addLine(string, position + 2, tab, qm + list.get(i).toString() + qm + "," + newLine);
+				}
+				addLine(string, position + 2, tab, qm + list.get(list.size() - 1).toString() + qm + newLine);
+				addLine(string, position + 1, tab, "]");
+			} else {
+				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + qm + elements.get(key).toString() + qm);
+			}
 			isValue = true;
 			lastKey = key;
 		}
@@ -216,6 +261,10 @@ public class JsonParser {
 			}
 		}
 		return false;
+	}
+	
+	private static List<Object> getStringListFromObject(Object object) {
+	    return new ArrayList<>((Collection<?>)object);
 	}
 
 }
