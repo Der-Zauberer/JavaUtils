@@ -26,6 +26,10 @@ public class JsonParser {
 		setObject(key, string);
 	}
 	
+	public void set(String key, boolean value) {
+		setObject(key, value);
+	}
+	
 	public void set(String key, List<String> list) {
 		setObject(key, list);
 	}
@@ -34,9 +38,23 @@ public class JsonParser {
 		structure.remove(key);
 		elements.remove(key);
 	}
+	
+	public boolean exist(String key) {
+		if (structure.contains(key)) {
+			return true;
+		}
+		return false;
+	}
 
 	public String getString(String key) {
 		return elements.get(key).toString();
+	}
+	
+	public boolean getBoolean(String key) {
+		if (elements.get(key) != null || elements.get(key) instanceof Boolean) {
+			return (Boolean) elements.get(key);
+		}
+		return false;
 	}
 	
 	public List<String> getStringList(String key) {
@@ -69,22 +87,32 @@ public class JsonParser {
 						key += name + ".";
 						name = null;
 					}
-				} else if (string.charAt(i) == '}') {
+				} else if (string.charAt(i) == '}' || string.charAt(i) == ',') {
 					if (isValue) {
 						value = string.substring(lastBreakPoint + 1, i);
 						isValue = false;
-						structure.add(key + name);
-						elements.put(key + name, value);
+						if (value.equals("null")) {
+							structure.add(key + name);
+							elements.put(key + name, null);
+						} else if (value.equals("true")) {
+							structure.add(key + name);
+							elements.put(key + name, true);
+						} else if (value.equals("false")) {
+							structure.add(key + name);
+							elements.put(key + name, false);
+						}
 						value = null;
-						name = null;
 						isValue = false;
 					}
-					if (key != "" && key.substring(0, key.length() - 1).contains(".")) {
-						key = key.substring(0, key.length() - 1);
-						key = key.substring(0, key.lastIndexOf('.'));
-						key += ".";
-					} else {
-						key = "";
+					if (string.charAt(i) == '}') {
+						name = null;
+						if (key != "" && key.substring(0, key.length() - 1).contains(".")) {
+							key = key.substring(0, key.length() - 1);
+							key = key.substring(0, key.lastIndexOf('.'));
+							key += ".";
+						} else {
+							key = "";
+						}
 					}
 				} else if (string.charAt(i) == '"') {
 					if (isString) {
@@ -207,7 +235,9 @@ public class JsonParser {
 					}
 				}
 			}
-			if (elements.get(key) instanceof ArrayList<?>) {
+			if (elements.get(key) == null) {
+				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "null");
+			} else if (elements.get(key) instanceof ArrayList<?>) {
 				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
 				List<Object> list = getStringListFromObject(elements.get(key));
 				for (int i = 0; i < list.size() - 1; i++) {
@@ -215,6 +245,8 @@ public class JsonParser {
 				}
 				addLine(string, position + 2, tab, qm + list.get(list.size() - 1).toString() + qm + newLine);
 				addLine(string, position + 1, tab, "]");
+			} else if (elements.get(key) instanceof Boolean) {
+				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + elements.get(key).toString().toLowerCase());
 			} else {
 				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + qm + elements.get(key).toString() + qm);
 			}
