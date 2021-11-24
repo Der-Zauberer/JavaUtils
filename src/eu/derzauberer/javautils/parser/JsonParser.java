@@ -69,6 +69,13 @@ public class JsonParser {
 		}
 		return false;
 	}
+	
+	public boolean isNull(String key) {
+		if (elements.get(key) == null) {
+			return true;
+		}
+		return false;
+	}
 
 	public String get(String key) {
 		return getString(key);
@@ -86,81 +93,27 @@ public class JsonParser {
 	}
 	
 	public byte getByte(String key) {
-		try {
-			return Byte.parseByte(getStringFromObject(elements.get(key), false));
-		} catch (NumberFormatException exception) {
-			try {return (byte) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (byte) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (byte) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (byte) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (byte) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-		}
-		return 0;
+		return (byte) getNumberFromString(getStringFromObject(elements.get(key), false), Byte.class);
 	}
 	
 	public short getShort(String key) {
-		try {
-			return Short.parseShort(getStringFromObject(elements.get(key), false));
-		} catch (NumberFormatException exception) {
-			try {return (short) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (short) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (short) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (short) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (short) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-		}
-		return 0;
+		return (short) getNumberFromString(getStringFromObject(elements.get(key), false), Short.class);
 	}
 	
 	public int getInt(String key) {
-		try {
-			return Integer.parseInt(getStringFromObject(elements.get(key), false));
-		} catch (NumberFormatException exception) {
-			try {return (int) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (int) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (int) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (int) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (int) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-		}
-		return 0;
+		return (int) getNumberFromString(getStringFromObject(elements.get(key), false), Integer.class);
 	}
 	
 	public long getLong(String key) {
-		try {
-			return Long.parseLong(getStringFromObject(elements.get(key), false));
-		} catch (NumberFormatException exception) {
-			try {return (long) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (long) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (long) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (long) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (long) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-		}
-		return 0;
+		return (long) getNumberFromString(getStringFromObject(elements.get(key), false), Long.class);
 	}
 	
 	public float getFloat(String key) {
-		try {
-			return Float.parseFloat(getStringFromObject(elements.get(key), false));
-		} catch (NumberFormatException exception) {
-			try {return (float) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (float) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (float) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (float) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (float) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-		}
-		return 0;
+		return (float) getNumberFromString(getStringFromObject(elements.get(key), false), Float.class);
 	}
 	
 	public double getDouble(String key) {
-		try {
-			return Double.parseDouble(getStringFromObject(elements.get(key), false));
-		} catch (NumberFormatException exception) {
-			try {return (double) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (double) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (double) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (double) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-			try {return (double) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
-		}
-		return 0;
+		return (double) getNumberFromString(getStringFromObject(elements.get(key), false), Double.class);
 	}
 	
 	public List<String> getStringList(String key) {
@@ -359,6 +312,7 @@ public class JsonParser {
 		return string.toString();
 	}
 
+
 	private void removeSpaces() {
 		string = string.replace(" ", "");
 		string = string.replace("\n", "");
@@ -427,6 +381,59 @@ public class JsonParser {
 			try {Double.parseDouble(string); return string.toCharArray();} catch (NumberFormatException exception) {}
 		}
 		return string;
+	}
+	
+	private Object getNumberFromString(String string, Class<?> numberClass) {
+		if (numberClass == Byte.class) {
+			try {return Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException exception) {
+				try {return (byte) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (byte) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (byte) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (byte) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (byte) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+			}
+		} else if (numberClass == Short.class) {
+			try {return Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException exception) {
+				try {return (short) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (short) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (short) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (short) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (short) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+			}
+		} else if (numberClass == Integer.class) {
+			try {return Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException exception) {
+				try {return (int) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (int) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (int) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (int) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (int) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+			}
+		} else if (numberClass == Long.class) {
+			try {return Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException exception) {
+				try {return (long) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (long) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (long) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (long) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (long) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+			}
+		} else if (numberClass == Float.class) {
+			try {return Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException exception) {
+				try {return (float) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (float) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (float) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (float) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (float) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+			}
+		} else if (numberClass == Double.class) {
+			try {return Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException exception) {
+				try {return (double) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (double) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (double) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (double) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+				try {return (double) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
+			}
+		}
+		return 0;
 	}
 	
 	private String getStringFromObject(Object object, boolean stringWithQotationMark) {
