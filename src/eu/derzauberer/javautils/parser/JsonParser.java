@@ -30,6 +30,30 @@ public class JsonParser {
 		setObject(key, value);
 	}
 	
+	public void set(String key, byte value) {
+		setObject(key, Byte.toString(value).toCharArray());
+	}
+	
+	public void set(String key, short value) {
+		setObject(key, Short.toString(value).toCharArray());
+	}
+	
+	public void set(String key, int value) {
+		setObject(key, Integer.toString(value).toCharArray());
+	}
+	
+	public void set(String key, long value) {
+		setObject(key, Long.toString(value).toCharArray());
+	}
+	
+	public void set(String key, float value) {
+		setObject(key, Float.toString(value).toCharArray());
+	}
+	
+	public void set(String key, double value) {
+		setObject(key, Double.toString(value).toCharArray());
+	}
+	
 	public void set(String key, List<String> list) {
 		setObject(key, list);
 	}
@@ -46,8 +70,12 @@ public class JsonParser {
 		return false;
 	}
 
+	public String get(String key) {
+		return getString(key);
+	}
+	
 	public String getString(String key) {
-		return elements.get(key).toString();
+		return getStringFromObject(elements.get(key), false);
 	}
 	
 	public boolean getBoolean(String key) {
@@ -55,6 +83,84 @@ public class JsonParser {
 			return (Boolean) elements.get(key);
 		}
 		return false;
+	}
+	
+	public byte getByte(String key) {
+		try {
+			return Byte.parseByte(getStringFromObject(elements.get(key), false));
+		} catch (NumberFormatException exception) {
+			try {return (byte) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (byte) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (byte) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (byte) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (byte) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+		}
+		return 0;
+	}
+	
+	public short getShort(String key) {
+		try {
+			return Short.parseShort(getStringFromObject(elements.get(key), false));
+		} catch (NumberFormatException exception) {
+			try {return (short) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (short) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (short) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (short) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (short) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+		}
+		return 0;
+	}
+	
+	public int getInt(String key) {
+		try {
+			return Integer.parseInt(getStringFromObject(elements.get(key), false));
+		} catch (NumberFormatException exception) {
+			try {return (int) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (int) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (int) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (int) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (int) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+		}
+		return 0;
+	}
+	
+	public long getLong(String key) {
+		try {
+			return Long.parseLong(getStringFromObject(elements.get(key), false));
+		} catch (NumberFormatException exception) {
+			try {return (long) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (long) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (long) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (long) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (long) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+		}
+		return 0;
+	}
+	
+	public float getFloat(String key) {
+		try {
+			return Float.parseFloat(getStringFromObject(elements.get(key), false));
+		} catch (NumberFormatException exception) {
+			try {return (float) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (float) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (float) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (float) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (float) Double.parseDouble(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+		}
+		return 0;
+	}
+	
+	public double getDouble(String key) {
+		try {
+			return Double.parseDouble(getStringFromObject(elements.get(key), false));
+		} catch (NumberFormatException exception) {
+			try {return (double) Byte.parseByte(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (double) Short.parseShort(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (double) Integer.parseInt(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (double) Long.parseLong(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+			try {return (double) Float.parseFloat(getStringFromObject(elements.get(key), false));} catch (NumberFormatException except) {}
+		}
+		return 0;
 	}
 	
 	public List<String> getStringList(String key) {
@@ -90,17 +196,9 @@ public class JsonParser {
 				} else if (string.charAt(i) == '}' || string.charAt(i) == ',') {
 					if (isValue) {
 						value = string.substring(lastBreakPoint + 1, i);
+						structure.add(key + name);
+						elements.put(key + name, getObjectFromString(value));
 						isValue = false;
-						if (value.equals("null")) {
-							structure.add(key + name);
-							elements.put(key + name, null);
-						} else if (value.equals("true")) {
-							structure.add(key + name);
-							elements.put(key + name, true);
-						} else if (value.equals("false")) {
-							structure.add(key + name);
-							elements.put(key + name, false);
-						}
 						value = null;
 						isValue = false;
 					}
@@ -116,13 +214,14 @@ public class JsonParser {
 					}
 				} else if (string.charAt(i) == '"') {
 					if (isString) {
+						String substring = string.substring(lastBreakPoint + 1, i);
 						if (!isValue) {
-							name = string.substring(lastBreakPoint + 1, i);
+							name = substring;
 						} else if (isArray) {
-							value = string.substring(lastBreakPoint + 1, i);
+							value = substring;
 							array.add(value);
 						} else {
-							value = string.substring(lastBreakPoint + 1, i);
+							value = substring;
 							isValue = false;
 							structure.add(key + name);
 							elements.put(key + name, value);
@@ -235,9 +334,7 @@ public class JsonParser {
 					}
 				}
 			}
-			if (elements.get(key) == null) {
-				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "null");
-			} else if (elements.get(key) instanceof ArrayList<?>) {
+			if (elements.get(key) instanceof ArrayList<?>) {
 				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
 				List<Object> list = getStringListFromObject(elements.get(key));
 				for (int i = 0; i < list.size() - 1; i++) {
@@ -245,10 +342,8 @@ public class JsonParser {
 				}
 				addLine(string, position + 2, tab, qm + list.get(list.size() - 1).toString() + qm + newLine);
 				addLine(string, position + 1, tab, "]");
-			} else if (elements.get(key) instanceof Boolean) {
-				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + elements.get(key).toString().toLowerCase());
 			} else {
-				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + qm + elements.get(key).toString() + qm);
+				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + getStringFromObject(elements.get(key), true));
 			}
 			isValue = true;
 			lastKey = key;
@@ -316,8 +411,40 @@ public class JsonParser {
 		}
 	}
 	
-	private static List<Object> getStringListFromObject(Object object) {
+	private Object getObjectFromString(String string) {
+		if (string.equals("null")) {
+			return null;
+		} else if (string.equals("true")) {
+			return true;
+		} else if (string.equals("true")) {
+			return false;
+		} else {
+			try {Byte.parseByte(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+			try {Short.parseShort(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+			try {Integer.parseInt(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+			try {Long.parseLong(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+			try {Float.parseFloat(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+			try {Double.parseDouble(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+		}
+		return string;
+	}
+	
+	private String getStringFromObject(Object object, boolean stringWithQotationMark) {
+		if (object == null) {
+			return null;
+		} else if (object instanceof Boolean) {
+			return object.toString().toLowerCase();
+		} else if (object instanceof char[]) {
+			return String.valueOf((char[]) object);
+		} else if (stringWithQotationMark){
+			return "\"" + object.toString() + "\"";
+		} else {
+			return object.toString();
+		}
+	}
+	
+	private List<Object> getStringListFromObject(Object object) {
 	    return new ArrayList<>((Collection<?>)object);
 	}
-
+	
 }
