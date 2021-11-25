@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class JsonParser {
@@ -54,8 +53,20 @@ public class JsonParser {
 		setObject(key, Double.toString(value).toCharArray());
 	}
 	
-	public void set(String key, List<String> list) {
-		setObject(key, list);
+	public void set(String key, List<?> list) {
+		boolean isString = true;
+		List<Object> objects = new ArrayList<>();
+		for (Object element : list) {
+			if (!(element instanceof String)) {
+				isString = false;
+			}
+		}
+		if (isString) {
+			list.forEach(object -> objects.add(object.toString()));
+		} else {
+			list.forEach(object -> objects.add(getObjectFromString(getStringFromObject(object, false))));
+		}
+		setObject(key, objects);
 	}
 	
 	public void remove(String key) {
@@ -76,9 +87,69 @@ public class JsonParser {
 		}
 		return false;
 	}
-
-	public String get(String key) {
-		return getString(key);
+	
+	public Class<?> getType(String key) {
+		Object object = elements.get(key);
+		if (!elements.containsKey(key)) {
+			for (String keys : elements.keySet()) {
+				if (keys.startsWith(key)) {
+					return Object.class;
+				}
+			}
+			return null;
+		}
+		if (object == null) {
+			return null;
+		} else if (object instanceof Boolean) {
+			return Boolean.class;
+		} else if (object instanceof char[]) {
+			return Number.class;
+		} else if (object instanceof List<?>) {
+			return List.class;
+		}
+		return String.class;
+	}
+	
+	public Class<?> getListType(String key) {
+		if (elements.get(key) instanceof List<?>) {
+			List<Object> objects = getListFromObject(elements.get(key));
+			if (objects.get(0)  == null) {
+				boolean isNull = true;
+				for (Object object : objects) {
+					if (object != null) {
+						isNull = false;
+						break;
+					}
+				}
+				if (isNull) {
+					return null;
+				}
+			}
+			if (objects.get(0) instanceof String) {	
+				return String.class;
+			} else {
+				boolean isString = false;
+				for (Object object : objects) {
+					if (object instanceof String) {
+						isString = true;
+						break;
+					}
+				}
+				if (isString) {
+					return String.class;
+				}
+			}
+			if (objects.get(0) instanceof Boolean) {
+				return Boolean.class;
+			} else if (objects.get(0) instanceof char[]) {
+				return Number.class;
+			} else if (objects.get(0) instanceof List<?>) {
+				return List.class;
+			}
+			return String.class;
+		} else {
+			return null;
+		}
 	}
 	
 	public String getString(String key) {
@@ -117,7 +188,63 @@ public class JsonParser {
 	}
 	
 	public List<String> getStringList(String key) {
-		return getStringListFromObject(elements.get(key)).stream().map(object -> Objects.toString(object, null)).collect(Collectors.toList());
+		return getListFromObject(elements.get(key)).stream().map(object -> getStringFromObject(object, false)).collect(Collectors.toList());
+	}
+	
+	public List<Boolean> getBooleanList(String key) {
+		List <Boolean> list = new ArrayList<>();
+		for (Object object : getListFromObject(elements.get(key))) {
+			if (object instanceof Boolean || object instanceof String) {
+				if (object instanceof Boolean) {
+					list.add((Boolean)object);
+				} else if (object instanceof String) {
+					if (((String) object).equals("true")) {
+						list.add(true);
+					} else {
+						list.add(false);
+					}
+				}
+			} else {
+				list.add(false);
+			}
+		}
+		return list;
+	}
+	
+	public List<Byte> getByteList(String key) {
+		List <Byte> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((byte) getNumberFromString(getStringFromObject(object, false), Byte.class)));
+		return list;
+	}
+	
+	public List<Short> getShortList(String key) {
+		List <Short> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((short) getNumberFromString(getStringFromObject(object, false), Short.class)));
+		return list;
+	}
+	
+	public List<Integer> getIntList(String key) {
+		List <Integer> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((int) getNumberFromString(getStringFromObject(object, false), Integer.class)));
+		return list;
+	}
+	
+	public List<Long> getLongList(String key) {
+		List <Long> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((long) getNumberFromString(getStringFromObject(object, false), Long.class)));
+		return list;
+	}
+	
+	public List<Float> getFloatList(String key) {
+		List <Float> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((float) getNumberFromString(getStringFromObject(object, false), Float.class)));
+		return list;
+	}
+	
+	public List<Double> getDoubleList(String key) {
+		List <Double> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((double) getNumberFromString(getStringFromObject(object, false), Double.class)));
+		return list;
 	}
 
 	@Override
@@ -147,13 +274,16 @@ public class JsonParser {
 						name = null;
 					}
 				} else if (string.charAt(i) == '}' || string.charAt(i) == ',') {
-					if (isValue) {
+					if (isValue && string.charAt(i - 1) != '"') {
 						value = string.substring(lastBreakPoint + 1, i);
-						structure.add(key + name);
-						elements.put(key + name, getObjectFromString(value));
-						isValue = false;
-						value = null;
-						isValue = false;
+						if (isArray) {
+							array.add(getObjectFromString(value));
+							lastBreakPoint = i;
+						} else {
+							structure.add(key + name);
+							elements.put(key + name, getObjectFromString(value));
+							isValue = false;
+						}
 					}
 					if (string.charAt(i) == '}') {
 						name = null;
@@ -189,16 +319,18 @@ public class JsonParser {
 					lastBreakPoint = i;
 				} else if (string.charAt(i) == '[') {
 					isArray = true;
+					isValue = true;
+					lastBreakPoint = i;
 					array.clear();
 				} else if (string.charAt(i) == ']') {
+					if (string.charAt(i - 1) != '"') {
+						array.add(getObjectFromString(string.substring(lastBreakPoint + 1, i)));
+					}
+					isValue = false;
 					isArray = false;
 					structure.add(key + name);
 					elements.put(key + name, array.clone());
 					array.clear();
-				} else if (string.charAt(i) == ',') {
-					if (!isArray) {
-						isValue = false;
-					}
 				}
 			}
 		}
@@ -287,13 +419,11 @@ public class JsonParser {
 					}
 				}
 			}
-			if (elements.get(key) instanceof ArrayList<?>) {
-				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
-				List<Object> list = getStringListFromObject(elements.get(key));
-				for (int i = 0; i < list.size() - 1; i++) {
-					addLine(string, position + 2, tab, qm + list.get(i).toString() + qm + "," + newLine);
+			if (elements.get(key) instanceof ArrayList<?>) {addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
+				List<Object> list = getListFromObject(elements.get(key));
+				for (int i = 0; i < list.size() - 1; i++) {addLine(string, position + 2, tab, getStringFromObject(list.get(i), true) + "," + newLine);
 				}
-				addLine(string, position + 2, tab, qm + list.get(list.size() - 1).toString() + qm + newLine);
+				addLine(string, position + 2, tab, getStringFromObject(list.get(list.size() - 1), true) + newLine);
 				addLine(string, position + 1, tab, "]");
 			} else {
 				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + getStringFromObject(elements.get(key), true));
@@ -311,7 +441,6 @@ public class JsonParser {
 		string.append(newLine + "}");
 		return string.toString();
 	}
-
 
 	private void removeSpaces() {
 		string = string.replace(" ", "");
@@ -370,7 +499,7 @@ public class JsonParser {
 			return null;
 		} else if (string.equals("true")) {
 			return true;
-		} else if (string.equals("true")) {
+		} else if (string.equals("false")) {
 			return false;
 		} else {
 			try {Byte.parseByte(string); return string.toCharArray();} catch (NumberFormatException exception) {}
@@ -450,7 +579,7 @@ public class JsonParser {
 		}
 	}
 	
-	private List<Object> getStringListFromObject(Object object) {
+	private List<Object> getListFromObject(Object object) {
 	    return new ArrayList<>((Collection<?>)object);
 	}
 	
