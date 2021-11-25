@@ -22,7 +22,7 @@ public class JsonParser {
 	}
 
 	public void set(String key, String string) {
-		setObject(key, string);
+		setObject(key, removeEscapeCodes(string));
 	}
 	
 	public void set(String key, boolean value) {
@@ -153,7 +153,7 @@ public class JsonParser {
 	}
 	
 	public String getString(String key) {
-		return getStringFromObject(elements.get(key), false);
+		return addEscapeCodes(getStringFromObject(elements.get(key), false));
 	}
 	
 	public boolean getBoolean(String key) {
@@ -581,6 +581,26 @@ public class JsonParser {
 	
 	private List<Object> getListFromObject(Object object) {
 	    return new ArrayList<>((Collection<?>)object);
+	}
+	
+	private String removeEscapeCodes(String string) {
+		string = string.replace("\"", "\\\"");
+		string = string.replace("\b", "\\b");
+		string = string.replace("\n", "\\n");
+		string = string.replace("\r", "\\r");
+		string = string.replace("\t", "\\t");
+		string = string.replace("/", "\\/");
+		return string;
+	}
+	
+	private String addEscapeCodes(String string) {
+		string = string.replace("\\\"", "\"");
+		string = string.replace("\\b", "\b");
+		string = string.replace("\\n", "\n");
+		string = string.replace("\\r", "\r");
+		string = string.replace("\\t", "\t");
+		string = string.replace("\\/", "/");
+		return string;
 	}
 	
 }
