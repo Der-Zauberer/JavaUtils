@@ -62,7 +62,7 @@ public class JsonParser {
 			}
 		}
 		if (isString) {
-			list.forEach(object -> objects.add(object.toString()));
+			list.forEach(object -> objects.add(removeEscapeCodes(object.toString())));
 		} else {
 			list.forEach(object -> objects.add(getObjectFromString(getStringFromObject(object, false))));
 		}
@@ -188,7 +188,7 @@ public class JsonParser {
 	}
 	
 	public List<String> getStringList(String key) {
-		return getListFromObject(elements.get(key)).stream().map(object -> getStringFromObject(object, false)).collect(Collectors.toList());
+		return getListFromObject(elements.get(key)).stream().map(object -> addEscapeCodes(getStringFromObject(object, false))).collect(Collectors.toList());
 	}
 	
 	public List<Boolean> getBooleanList(String key) {
