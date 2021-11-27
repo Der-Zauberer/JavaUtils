@@ -1,17 +1,16 @@
 package eu.derzauberer.javautils.util;
 
-@SuppressWarnings("rawtypes")
 public class EventProfile {
 
-	private Class type;
+	private Class<? extends Event> type;
 	private EventExecuter executer;
 	
-	public EventProfile(Class type, EventExecuter executer) {
+	public EventProfile(Class<? extends Event> type, EventExecuter executer) {
 		this.type = type;
 		this.executer = executer;
 	}
 	
-	public Class getType() {
+	public Class<? extends Event> getType() {
 		return type;
 	}
 	
