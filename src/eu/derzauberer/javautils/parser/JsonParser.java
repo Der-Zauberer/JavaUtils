@@ -246,6 +246,12 @@ public class JsonParser {
 		getListFromObject(elements.get(key)).forEach(object -> list.add((double) getNumberFromString(getStringFromObject(object, false), Double.class)));
 		return list;
 	}
+	
+	public List<JsonParser> getObjectList(String key) {
+		List <JsonParser> list = new ArrayList<>();
+		getListFromObject(elements.get(key)).forEach(object -> list.add((JsonParser)object));
+		return list;
+	}
 
 	@Override
 	public String toString() {
@@ -268,24 +274,40 @@ public class JsonParser {
 		for (int i = 0; i < string.length(); i++) {
 			if (!isString || string.charAt(i) == '"') {
 				if (string.charAt(i) == '{') {
-					isValue = false;
-					if (name != null) {
-						key += name + ".";
-						name = null;
+					if (isArray) {
+						lastBreakPoint = i;
+						int counter = 1;
+						while (counter > 0) {
+							i++;
+							if (string.charAt(i) == '{') {
+								counter++;
+							} else if (string.charAt(i) == '}') {
+								counter--;
+							}
+						}
+						array.add(new JsonParser(string.substring(lastBreakPoint, i + 1)));
+					} else {
+						isValue = false;
+						if (name != null) {
+							key += name + ".";
+							name = null;
+						}
 					}
 				} else if (string.charAt(i) == '}' || string.charAt(i) == ',') {
 					if (isValue && string.charAt(i - 1) != '"') {
 						value = string.substring(lastBreakPoint + 1, i);
 						if (isArray) {
-							array.add(getObjectFromString(value));
-							lastBreakPoint = i;
+							if (string.charAt(i - 1) != '}') {
+								array.add(getObjectFromString(value));
+								lastBreakPoint = i;
+							}
 						} else {
 							structure.add(key + name);
 							elements.put(key + name, getObjectFromString(value));
 							isValue = false;
 						}
 					}
-					if (string.charAt(i) == '}') {
+					if (string.charAt(i) == '}' && !isArray) {
 						name = null;
 						if (key != "" && key.substring(0, key.length() - 1).contains(".")) {
 							key = key.substring(0, key.length() - 1);
@@ -323,7 +345,7 @@ public class JsonParser {
 					lastBreakPoint = i;
 					array.clear();
 				} else if (string.charAt(i) == ']') {
-					if (string.charAt(i - 1) != '"') {
+					if (string.charAt(i - 1) != '"' && string.charAt(i - 1) != '}') {
 						array.add(getObjectFromString(string.substring(lastBreakPoint + 1, i)));
 					}
 					isValue = false;
@@ -419,12 +441,35 @@ public class JsonParser {
 					}
 				}
 			}
-			if (elements.get(key) instanceof ArrayList<?>) {addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
+			if (elements.get(key) instanceof ArrayList<?>) {
+				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
 				List<Object> list = getListFromObject(elements.get(key));
-				for (int i = 0; i < list.size() - 1; i++) {addLine(string, position + 2, tab, getStringFromObject(list.get(i), true) + "," + newLine);
+				for (int i = 0; i < list.size(); i++) {
+					if (getJsonObjectFromObject(list.get(i)) != null) {
+						String object;
+						if (oneliner) {
+							object = getJsonObjectFromObject(list.get(i)).toOneLineString();
+							string.append(object);
+						} else {
+							object = getJsonObjectFromObject(list.get(i)).toString();
+							for (String line : object.split("\n")) {
+								addLine(string, position + 2, tab, line);
+								if (string.charAt(string.length() - 1) != '}') {
+									string.append(newLine);
+								}
+							}
+						}
+					} else {
+						addLine(string, position + 2, tab, getStringFromObject(list.get(i), true));
+					}
+					if (i == list.size() - 1) {
+						string.append(newLine);
+					} else {
+						string.append("," + newLine);
+					}
 				}
-				addLine(string, position + 2, tab, getStringFromObject(list.get(list.size() - 1), true) + newLine);
 				addLine(string, position + 1, tab, "]");
+				
 			} else {
 				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + getStringFromObject(elements.get(key), true));
 			}
@@ -438,7 +483,7 @@ public class JsonParser {
 		for (int i = layer; i > 0; i--) {
 			addLine(string, i, tab, "}" + newLine);
 		}
-		string.append(newLine + "}");
+		string.append("}");
 		return string.toString();
 	}
 
@@ -581,6 +626,14 @@ public class JsonParser {
 	
 	private List<Object> getListFromObject(Object object) {
 	    return new ArrayList<>((Collection<?>)object);
+	}
+	
+	private JsonParser getJsonObjectFromObject(Object object) {
+		if (object instanceof JsonParser) {
+			return (JsonParser) object;
+		} else {
+			return null;
+		}
 	}
 	
 	private String removeEscapeCodes(String string) {
