@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class JsonParser {
@@ -12,6 +13,10 @@ public class JsonParser {
 	private ArrayList<String> structure;
 	private HashMap<String, Object> elements;
 
+	public JsonParser() {
+		this("");
+	}
+	
 	public JsonParser(String string) {
 		this.string = string;
 		structure = new ArrayList<>();
@@ -21,6 +26,10 @@ public class JsonParser {
 		parse();
 	}
 
+	private void set(String key, Object object) {
+		setObject(key, object);
+	}
+	
 	public void set(String key, String string) {
 		setObject(key, removeEscapeCodes(string));
 	}
@@ -81,79 +90,34 @@ public class JsonParser {
 		return false;
 	}
 	
-	public boolean isNull(String key) {
-		if (elements.get(key) == null) {
-			return true;
-		}
-		return false;
+	public boolean isEmpty() {
+		return elements.isEmpty();
 	}
 	
-	public Class<?> getType(String key) {
-		Object object = elements.get(key);
-		if (!elements.containsKey(key)) {
-			for (String keys : elements.keySet()) {
-				if (keys.startsWith(key)) {
-					return Object.class;
-				}
-			}
-			return null;
-		}
-		if (object == null) {
-			return null;
-		} else if (object instanceof Boolean) {
-			return Boolean.class;
-		} else if (object instanceof char[]) {
-			return Number.class;
-		} else if (object instanceof List<?>) {
-			return List.class;
-		}
-		return String.class;
+	public Object get(String key) {
+		return elements.get(key);
 	}
 	
-	public Class<?> getListType(String key) {
-		if (elements.get(key) instanceof List<?>) {
-			List<Object> objects = getListFromObject(elements.get(key));
-			if (objects.get(0)  == null) {
-				boolean isNull = true;
-				for (Object object : objects) {
-					if (object != null) {
-						isNull = false;
-						break;
-					}
-				}
-				if (isNull) {
-					return null;
-				}
-			}
-			if (objects.get(0) instanceof String) {	
-				return String.class;
-			} else {
-				boolean isString = false;
-				for (Object object : objects) {
-					if (object instanceof String) {
-						isString = true;
-						break;
-					}
-				}
-				if (isString) {
-					return String.class;
-				}
-			}
-			if (objects.get(0) instanceof Boolean) {
-				return Boolean.class;
-			} else if (objects.get(0) instanceof char[]) {
-				return Number.class;
-			} else if (objects.get(0) instanceof List<?>) {
-				return List.class;
-			}
-			return String.class;
+	public String getString(String key) {
+		if (elements.get(key) != null) {
+			return addEscapeCodes(getStringFromObject(elements.get(key), false));
 		} else {
 			return null;
 		}
 	}
 	
-	public String getString(String key) {
-		return addEscapeCodes(getStringFromObject(elements.get(key), false));
+	public JsonParser getJsonObject(String key) {
+		if (elements.get(key) instanceof JsonParser) {
+			return (JsonParser) elements.get(key);
+		} else {
+			JsonParser jsonParser = new JsonParser("");
+			for (String element : elements.keySet()) {
+				if (element.startsWith(key)) {
+					jsonParser.set(element.substring(element.lastIndexOf('.')), elements.get(element));
+				}
+			}
+			return jsonParser;
+		}
 	}
 	
 	public boolean getBoolean(String key) {
@@ -164,27 +128,79 @@ public class JsonParser {
 	}
 	
 	public byte getByte(String key) {
-		return (byte) getNumberFromString(getStringFromObject(elements.get(key), false), Byte.class);
+		Class<?> classtype = elements.get(key).getClass();
+		if (classtype == Byte.class) {return (byte) elements.get(key);}
+		else if (classtype == Short.class) {return (byte) ((short) elements.get(key));}
+		else if (classtype == Integer.class) {return (byte) ((int) elements.get(key));}
+		else if (classtype == Long.class) {return (byte) ((long) elements.get(key));}
+		else if (classtype == Float.class) {return (byte) ((float) elements.get(key));}
+		else if (classtype == Double.class) {return (byte) ((double) elements.get(key));}
+		else if (classtype == String.class) {try {return (byte) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		return 0;
 	}
 	
 	public short getShort(String key) {
-		return (short) getNumberFromString(getStringFromObject(elements.get(key), false), Short.class);
+		Class<?> classtype = elements.get(key).getClass();
+		if (classtype == Byte.class) {return (short) ((byte) elements.get(key));}
+		else if (classtype == Short.class) {return (short) elements.get(key);}
+		else if (classtype == Integer.class) {return (short) ((int) elements.get(key));}
+		else if (classtype == Long.class) {return (short) ((long) elements.get(key));}
+		else if (classtype == Float.class) {return (short) ((float) elements.get(key));}
+		else if (classtype == Double.class) {return (short) ((double) elements.get(key));}
+		else if (classtype == String.class) {try {return (short) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		return 0;
 	}
 	
 	public int getInt(String key) {
-		return (int) getNumberFromString(getStringFromObject(elements.get(key), false), Integer.class);
+		Class<?> classtype = elements.get(key).getClass();
+		if (classtype == Byte.class) {return (int) ((byte) elements.get(key));}
+		else if (classtype == Short.class) {return (int) ((short) elements.get(key));}
+		else if (classtype == Integer.class) {return (int) elements.get(key);}
+		else if (classtype == Long.class) {return (int) ((long) elements.get(key));}
+		else if (classtype == Float.class) { return (int) ((float) elements.get(key));}
+		else if (classtype == Double.class) {return (int) ((double) elements.get(key));}
+		else if (classtype == String.class) {try {return (int) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		return 0;
 	}
 	
 	public long getLong(String key) {
-		return (long) getNumberFromString(getStringFromObject(elements.get(key), false), Long.class);
+		Class<?> classtype = elements.get(key).getClass();
+		if (classtype == Byte.class) {return (long) ((byte) elements.get(key));}
+		else if (classtype == Short.class) {return (long) ((short) elements.get(key));}
+		else if (classtype == Integer.class) {return (long) ((int) elements.get(key));}
+		else if (classtype == Long.class) {return (long) elements.get(key);}
+		else if (classtype == Float.class) {return (long) ((float) elements.get(key));}
+		else if (classtype == Double.class) {return (long) ((double) elements.get(key));}
+		else if (classtype == String.class) {try {return (long) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		return 0;
 	}
 	
 	public float getFloat(String key) {
-		return (float) getNumberFromString(getStringFromObject(elements.get(key), false), Float.class);
+		Class<?> classtype = elements.get(key).getClass();
+		if (classtype == Byte.class) {return (float) ((byte) elements.get(key));}
+		else if (classtype == Short.class) {return (float) ((short) elements.get(key));}
+		else if (classtype == Integer.class) {return (float) ((int) elements.get(key));}
+		else if (classtype == Long.class) {return (float) ((long) elements.get(key));}
+		else if (classtype == Float.class) {return (float) elements.get(key);}
+		else if (classtype == Double.class) {return (float) ((double) elements.get(key));}
+		else if (classtype == String.class) {try {return (float) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		return 0;
 	}
 	
 	public double getDouble(String key) {
-		return (double) getNumberFromString(getStringFromObject(elements.get(key), false), Double.class);
+		Class<?> classtype = elements.get(key).getClass();
+		if (classtype == Byte.class) {return (double) ((byte) elements.get(key));}
+		else if (classtype == Short.class) {return (double) ((short) elements.get(key));}
+		else if (classtype == Integer.class) {return (double) ((int) elements.get(key));}
+		else if (classtype == Long.class) {return (double) ((long) elements.get(key));}
+		else if (classtype == Float.class) {return (double) ((float) elements.get(key));}
+		else if (classtype == Double.class) {return (double) elements.get(key);}
+		else if (classtype == String.class) {try {return Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		return 0;
+	}
+	
+	public List<Object> getObjectList(String key) {
+		return getListFromObject(elements.get(key));
 	}
 	
 	public List<String> getStringList(String key) {
@@ -198,7 +214,7 @@ public class JsonParser {
 				if (object instanceof Boolean) {
 					list.add((Boolean)object);
 				} else if (object instanceof String) {
-					if (((String) object).equals("true")) {
+					if (((String) object).equalsIgnoreCase("true")) {
 						list.add(true);
 					} else {
 						list.add(false);
@@ -213,41 +229,101 @@ public class JsonParser {
 	
 	public List<Byte> getByteList(String key) {
 		List <Byte> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((byte) getNumberFromString(getStringFromObject(object, false), Byte.class)));
+		for (Object object : getListFromObject(elements.get(key))) {
+			Class<?> classtype = object.getClass();
+			if (classtype == Byte.class) {list.add((byte) object);}
+			else if (classtype == Short.class) {list.add((byte) ((short) object));}
+			else if (classtype == Integer.class) {list.add((byte) ((int) object));}
+			else if (classtype == Long.class) {list.add((byte) ((long) object));}
+			else if (classtype == Float.class) {list.add((byte) ((float) object));}
+			else if (classtype == Double.class) {list.add((byte) ((double) object));}
+			else if (classtype == String.class) {try {list.add((byte) Double.parseDouble(object.toString().replace("\"", "")));} catch (Exception exception) {list.add((byte) 0);}}
+			else {list.add((byte) 0);}
+		}
 		return list;
 	}
 	
 	public List<Short> getShortList(String key) {
 		List <Short> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((short) getNumberFromString(getStringFromObject(object, false), Short.class)));
+		for (Object object : getListFromObject(elements.get(key))) {
+			Class<?> classtype = object.getClass();
+			if (classtype == Byte.class) {list.add((short) ((byte) object));}
+			else if (classtype == Short.class) {list.add((short) object);}
+			else if (classtype == Integer.class) {list.add((short) ((int) object));}
+			else if (classtype == Long.class) {list.add((short) ((long) object));}
+			else if (classtype == Float.class) {list.add((short) ((float) object));}
+			else if (classtype == Double.class) {list.add((short) ((double) object));}
+			else if (classtype == String.class) {try {list.add((short) Double.parseDouble(object.toString().replace("\"", "")));} catch (Exception exception) {list.add((short) 0);}}
+			else {list.add((short) 0);}
+		}
 		return list;
 	}
 	
 	public List<Integer> getIntList(String key) {
 		List <Integer> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((int) getNumberFromString(getStringFromObject(object, false), Integer.class)));
+		for (Object object : getListFromObject(elements.get(key))) {
+			Class<?> classtype = object.getClass();
+			if (classtype == Byte.class) {list.add((int) ((byte) object));}
+			else if (classtype == Short.class) {list.add((int) ((short) object));}
+			else if (classtype == Integer.class) {list.add((int) object);}
+			else if (classtype == Long.class) {list.add((int) ((long) object));}
+			else if (classtype == Float.class) {list.add((int) ((float) object));}
+			else if (classtype == Double.class) {list.add((int) ((double) object));}
+			else if (classtype == String.class) {try {list.add((int) Double.parseDouble(object.toString().replace("\"", "")));} catch (Exception exception) {list.add((int) 0);}}
+			else {list.add((int) 0);}
+		}
 		return list;
 	}
 	
 	public List<Long> getLongList(String key) {
 		List <Long> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((long) getNumberFromString(getStringFromObject(object, false), Long.class)));
+		for (Object object : getListFromObject(elements.get(key))) {
+			Class<?> classtype = object.getClass();
+			if (classtype == Byte.class) {list.add((long) ((byte) object));}
+			else if (classtype == Short.class) {list.add((long) ((short) object));}
+			else if (classtype == Integer.class) {list.add((long) ((int) object));}
+			else if (classtype == Long.class) {list.add((long) object);}
+			else if (classtype == Float.class) {list.add((long) ((float) object));}
+			else if (classtype == Double.class) {list.add((long) ((double) object));}
+			else if (classtype == String.class) {try {list.add((long) Double.parseDouble(object.toString().replace("\"", "")));} catch (Exception exception) {list.add((long) 0);}}
+			else {list.add((long) 0);}
+		}
 		return list;
 	}
 	
 	public List<Float> getFloatList(String key) {
 		List <Float> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((float) getNumberFromString(getStringFromObject(object, false), Float.class)));
+		for (Object object : getListFromObject(elements.get(key))) {
+			Class<?> classtype = object.getClass();
+			if (classtype == Byte.class) {list.add((float) ((byte) object));}
+			else if (classtype == Short.class) {list.add((float) ((short) object));}
+			else if (classtype == Integer.class) {list.add((float) ((int) object));}
+			else if (classtype == Long.class) {list.add((float) ((long) object));}
+			else if (classtype == Float.class) {list.add((float) object);}
+			else if (classtype == Double.class) {list.add((float) ((double) object));}
+			else if (classtype == String.class) {try {list.add((float) Double.parseDouble(object.toString().replace("\"", "")));} catch (Exception exception) {list.add((float) 0);}}
+			else {list.add((float) 0);}
+		}
 		return list;
 	}
 	
 	public List<Double> getDoubleList(String key) {
 		List <Double> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((double) getNumberFromString(getStringFromObject(object, false), Double.class)));
+		for (Object object : getListFromObject(elements.get(key))) {
+			Class<?> classtype = object.getClass();
+			if (classtype == Byte.class) {list.add((double) ((byte) object));}
+			else if (classtype == Short.class) {list.add((double) ((short) object));}
+			else if (classtype == Integer.class) {list.add((double) ((int) object));}
+			else if (classtype == Long.class) {list.add((double) ((long) object));}
+			else if (classtype == Float.class) {list.add((double) ((float) object));}
+			else if (classtype == Double.class) {list.add((double) object);}
+			else if (classtype == String.class) {try {list.add((double) Double.parseDouble(object.toString().replace("\"", "")));} catch (Exception exception) {list.add((double) 0);}}
+			else {list.add((double) 0);}
+		}
 		return list;
 	}
 	
-	public List<JsonParser> getObjectList(String key) {
+	public List<JsonParser> getJsonObjectList(String key) {
 		List <JsonParser> list = new ArrayList<>();
 		getListFromObject(elements.get(key)).forEach(object -> list.add((JsonParser)object));
 		return list;
@@ -345,7 +421,7 @@ public class JsonParser {
 					lastBreakPoint = i;
 					array.clear();
 				} else if (string.charAt(i) == ']') {
-					if (string.charAt(i - 1) != '"' && string.charAt(i - 1) != '}') {
+					if (string.charAt(i - 1) != '"' && string.charAt(i - 1) != '}' && string.charAt(i - 1) != '[') {
 						array.add(getObjectFromString(string.substring(lastBreakPoint + 1, i)));
 					}
 					isValue = false;
@@ -393,7 +469,6 @@ public class JsonParser {
 			} else {
 				structure.add(key);
 			}
-
 		}
 	}
 
@@ -540,74 +615,44 @@ public class JsonParser {
 	}
 	
 	private Object getObjectFromString(String string) {
-		if (string.equals("null")) {
+		if (string.equalsIgnoreCase("null")) {
 			return null;
-		} else if (string.equals("true")) {
+		} else if (string.equalsIgnoreCase("true")) {
 			return true;
-		} else if (string.equals("false")) {
+		} else if (string.equalsIgnoreCase("false")) {
 			return false;
-		} else {
-			try {Byte.parseByte(string); return string.toCharArray();} catch (NumberFormatException exception) {}
-			try {Short.parseShort(string); return string.toCharArray();} catch (NumberFormatException exception) {}
-			try {Integer.parseInt(string); return string.toCharArray();} catch (NumberFormatException exception) {}
-			try {Long.parseLong(string); return string.toCharArray();} catch (NumberFormatException exception) {}
-			try {Float.parseFloat(string); return string.toCharArray();} catch (NumberFormatException exception) {}
-			try {Double.parseDouble(string); return string.toCharArray();} catch (NumberFormatException exception) {}
+		} else if (isNumericString(string)) {
+			if (!string.contains(".")) {
+				long number = Long.parseLong(string);
+				if (Byte.MIN_VALUE <= number && number <= Byte.MAX_VALUE) {
+					return (byte) number;
+				} else if (Short.MIN_VALUE <= number && number <= Short.MAX_VALUE){
+					return (short) number;
+				} else if (Integer.MIN_VALUE <= number && number <= Integer.MAX_VALUE) {
+					return (int) number;
+				} else {
+					return number;
+				}
+			} else {
+				double number = Double.parseDouble(string);
+				if (Float.MIN_VALUE <= number && number <= Float.MAX_VALUE) {
+					return (float) number;
+				} else {
+					return number;
+				}
+			}
+			
 		}
 		return string;
 	}
 	
-	private Object getNumberFromString(String string, Class<?> numberClass) {
-		if (numberClass == Byte.class) {
-			try {return Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException exception) {
-				try {return (byte) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (byte) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (byte) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (byte) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (byte) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-			}
-		} else if (numberClass == Short.class) {
-			try {return Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException exception) {
-				try {return (short) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (short) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (short) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (short) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (short) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-			}
-		} else if (numberClass == Integer.class) {
-			try {return Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException exception) {
-				try {return (int) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (int) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (int) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (int) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (int) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-			}
-		} else if (numberClass == Long.class) {
-			try {return Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException exception) {
-				try {return (long) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (long) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (long) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (long) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (long) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-			}
-		} else if (numberClass == Float.class) {
-			try {return Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException exception) {
-				try {return (float) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (float) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (float) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (float) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (float) Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-			}
-		} else if (numberClass == Double.class) {
-			try {return Double.parseDouble(getStringFromObject(string, false));} catch (NumberFormatException exception) {
-				try {return (double) Byte.parseByte(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (double) Short.parseShort(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (double) Integer.parseInt(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (double) Long.parseLong(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-				try {return (double) Float.parseFloat(getStringFromObject(string, false));} catch (NumberFormatException except) {}
-			}
-		}
-		return 0;
+	private boolean isNumericString(String string) {
+		Pattern numericRegex = Pattern.compile(
+		        "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
+		        "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
+		        "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +
+		        "[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*");
+		return numericRegex.matcher(string).matches();
 	}
 	
 	private String getStringFromObject(Object object, boolean stringWithQotationMark) {
@@ -615,8 +660,8 @@ public class JsonParser {
 			return null;
 		} else if (object instanceof Boolean) {
 			return object.toString().toLowerCase();
-		} else if (object instanceof char[]) {
-			return String.valueOf((char[]) object);
+		} else if (object instanceof Number) {
+			return object.toString();
 		} else if (stringWithQotationMark){
 			return "\"" + object.toString() + "\"";
 		} else {
