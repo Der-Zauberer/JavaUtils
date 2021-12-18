@@ -22,7 +22,6 @@ public class JsonParser {
 		structure = new ArrayList<>();
 		elements = new HashMap<>();
 		removeSpaces();
-		System.out.println(this.string);
 		parse();
 	}
 
