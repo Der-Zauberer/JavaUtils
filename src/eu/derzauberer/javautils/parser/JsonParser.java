@@ -62,6 +62,15 @@ public class JsonParser {
 		setObject(key, Double.toString(value).toCharArray());
 	}
 	
+	public void set(String key, JsonParser object) {
+		if (!key.endsWith(".")) {
+			key += ".";
+		}
+		for (String string : object.getKeys()) {
+			setObject(key + string, object.get(string));
+		}
+	}
+	
 	public void set(String key, List<?> list) {
 		boolean isString = true;
 		List<Object> objects = new ArrayList<>();
@@ -94,6 +103,35 @@ public class JsonParser {
 		return elements.isEmpty();
 	}
 	
+	public int size() {
+		return elements.size();
+	}
+	
+	public List<String> getKeys() {
+		ArrayList<String> keys = new ArrayList<>();
+		for (String string : structure) {
+			keys.add(string);
+		}
+		return keys;
+	}
+	
+	public List<String> getKeys(String key) {
+		return getKeys(key, true);
+	}
+	
+	public List<String> getKeys(String key, boolean fullkeys) {
+		List<String> keys = getKeys();
+		for (int i = 0; i < keys.size(); i++) {
+			if (!keys.get(i).startsWith(key)) {
+				keys.remove(i);
+				i--;
+			} else if (!fullkeys) {
+				keys.set(i, keys.get(i).substring(key.length() + 1));
+			}
+		}
+		return keys;
+	}
+	
 	public Object get(String key) {
 		return elements.get(key);
 	}
@@ -103,20 +141,6 @@ public class JsonParser {
 			return addEscapeCodes(getStringFromObject(elements.get(key), false));
 		} else {
 			return null;
-		}
-	}
-	
-	public JsonParser getJsonObject(String key) {
-		if (elements.get(key) instanceof JsonParser) {
-			return (JsonParser) elements.get(key);
-		} else {
-			JsonParser jsonParser = new JsonParser("");
-			for (String element : elements.keySet()) {
-				if (element.startsWith(key)) {
-					jsonParser.set(element.substring(element.lastIndexOf('.')), elements.get(element));
-				}
-			}
-			return jsonParser;
 		}
 	}
 	
@@ -197,6 +221,18 @@ public class JsonParser {
 		else if (classtype == Double.class) {return (double) elements.get(key);}
 		else if (classtype == String.class) {try {return Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
+	}
+	
+	public JsonParser getJsonObject(String key) {
+		if (elements.get(key) instanceof JsonParser) {
+			return (JsonParser) elements.get(key);
+		} else {
+			JsonParser jsonParser = new JsonParser();
+			for (String string : getKeys(key, false)) {
+				jsonParser.set(string, elements.get(string));
+			}
+			return jsonParser;
+		}
 	}
 	
 	public List<Object> getObjectList(String key) {
