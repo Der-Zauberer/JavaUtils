@@ -4,13 +4,17 @@ import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Scanner;
 
 public class FileHandler {
 
@@ -101,7 +105,32 @@ public class FileHandler {
 		}
 		return file;
 	}
-
+	
+	public static String getStringFromWebsite(URL url) throws IOException {
+		return getStringFromWebsite(url, false);
+	}
+	
+	public static String getStringFromWebsite(URL url, boolean removeHtmlTags) throws IOException {
+		Scanner scanner = new Scanner(url.openStream());
+		StringBuilder builder = new StringBuilder();
+		while(scanner.hasNext()) {
+			builder.append(scanner.nextLine());
+			builder.append("\n");
+		}
+		String string = builder.toString().substring(0, builder.length() - 1);
+		if (removeHtmlTags) {
+			string = string.replaceAll("<[^>]*>", "");
+		}
+		scanner.close();
+		return string;
+	}
+	
+	public static void downloadFileFromWebsite(URL url, File file) throws IOException {
+		ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
+		FileOutputStream output = new FileOutputStream(file.getPath());
+		output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
+	}
+	
 	public static File getJarDirectory() {
 		File file = null;
 		try {
