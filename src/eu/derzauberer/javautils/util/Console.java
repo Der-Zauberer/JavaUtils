@@ -2,6 +2,7 @@ package eu.derzauberer.javautils.util;
 
 import java.io.File;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
@@ -11,6 +12,8 @@ import eu.derzauberer.javautils.handler.EventHandler;
 import eu.derzauberer.javautils.handler.FileHandler;
 
 public class Console implements Runnable {
+
+	public enum MessageType {DEFAULT, INFO, SUCCESS, WARNING, ERROR}
 
 	private Thread thread;
 	private String prefix;
@@ -98,30 +101,37 @@ public class Console implements Runnable {
 		}
 	}
 	
-	private void sendOutput(String output) {
-		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output);
+	private void sendOutput(String output, MessageType type) {
+		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output, type);
 		EventHandler.executeEvent(ConsoleOutputEvent.class, event);
+		if (event.getMessageType() != MessageType.DEFAULT) {
+			event.setOutput("[" + type.toString() + "] " + event.getOutput());
+		}
 		if(!event.isCancled()) {
 			outputAction.onAction(event.getOutput());
 		}
 	}
 	
 	public void sendMessage(Object object) {
-		sendOutput(object.toString());
+		sendOutput(object.toString(), MessageType.DEFAULT);
 	}
 
-	public void sendInfoMessage(Object object) {
-		sendOutput("[INFO] " + object.toString());
+	public void sendMessage(Object object, MessageType type) {
+		sendOutput(object.toString(), type);
 	}
 
-	public void sendWarningMessage(Object object) {
-		sendOutput("[WARNING] " + object.toString());
+	public void sendMessage(String string, String... args) {
+		for (int i = 0; i < args.length && string.contains("{}"); i++) {
+			string = string.replaceFirst(Pattern.quote("{}"), args[i]);
+		}
+		sendOutput(string, MessageType.DEFAULT);
 	}
 
-	public void sendErrorMessage(Object object) {
-		sendOutput("[ERROR] " + object.toString());
+	public void sendMessage(String string, MessageType type, String... args) {
+		for (int i = 0; i < args.length && string.contains("{}"); i++) {
+			string = string.replaceFirst(Pattern.quote("{}"), args[i]);
+		}
+		sendOutput(string, type);
 	}
-	
-	
 
 }

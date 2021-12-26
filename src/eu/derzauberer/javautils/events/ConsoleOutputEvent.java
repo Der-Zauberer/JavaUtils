@@ -2,17 +2,20 @@ package eu.derzauberer.javautils.events;
 
 import eu.derzauberer.javautils.util.Console;
 import eu.derzauberer.javautils.util.Event;
+import eu.derzauberer.javautils.util.Console.MessageType;
 
 public class ConsoleOutputEvent extends Event {
 	
 	private boolean cancled;
 	private Console console;
 	private String output;
+	private MessageType type;
 	
-	public ConsoleOutputEvent(Console console, String output) {
+	public ConsoleOutputEvent(Console console, String output, MessageType type) {
 		this.cancled = false;
 		this.console = console;
 		this.output = output;
+		this.type = type;
 	}
 	
 	public void setCancled(boolean cancled) {
@@ -33,6 +36,14 @@ public class ConsoleOutputEvent extends Event {
 	
 	public String getOutput() {
 		return output;
+	}
+
+	public void setMessageType(MessageType type) {
+		this.type = type;
+	}
+
+	public MessageType getMessageType() {
+		return type;
 	}
 
 }
