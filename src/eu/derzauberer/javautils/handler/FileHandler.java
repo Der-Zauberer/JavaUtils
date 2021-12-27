@@ -1,8 +1,6 @@
 package eu.derzauberer.javautils.handler;
 
 import java.awt.Desktop;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,7 +8,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -30,56 +27,31 @@ public class FileHandler {
 	}
 
 	public static String readString(File file) {
-		StringBuilder string = new StringBuilder();
+		String string = "";
 		try {
-			BufferedReader reader = Files.newBufferedReader(Paths.get(file.toString()), Charset.forName("UTF-8"));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				string.append(line + "\n");
-			}
-			reader.close();
+			string = new String(Files.readAllBytes(Paths.get(file.toURI())));
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-		return string.toString();
+		return string;
 	}
 
-	public static String[] readLines(File file) {
-		return readString(file).split("\n");
-	}
-	
 	public static void writeString(File file, String string) {
-		writeLines(file, string.split("\n"), false);
+		try {
+			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
 	}
 
 	public static void appendString(File file, String string) {
-		writeLines(file, string.split("\n"), true);
-	}
-	
-	public static void writeLines(File file, String lines[]) {
-		writeLines(file, lines, false);
-	}
-		
-	public static void appendLines(File file, String lines[]) {
-		writeLines(file, lines, true);
-	}
-
-	public static void writeLines(File file, String lines[], boolean append) {
 		try {
-			BufferedWriter writer;
-			if (append) {writer = Files.newBufferedWriter(Paths.get(file.toString()), Charset.forName("UTF-8"), StandardOpenOption.APPEND);}
-			else {writer = Files.newBufferedWriter(Paths.get(file.toString()), Charset.forName("UTF-8"));}
-			for (int i = 0; i < lines.length - 1; i++) {
-				writer.write(lines[i]);
-				writer.newLine();
-			}
-			writer.write(lines[lines.length - 1]);
-			writer.close();
+			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.APPEND);
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
 	}
-
+	
 	public static void openFile(File file) {
 		try {
 			Desktop.getDesktop().open(file);
@@ -110,25 +82,34 @@ public class FileHandler {
 		return getStringFromWebsite(url, false);
 	}
 	
-	public static String getStringFromWebsite(URL url, boolean removeHtmlTags) throws IOException {
-		Scanner scanner = new Scanner(url.openStream());
-		StringBuilder builder = new StringBuilder();
-		while(scanner.hasNext()) {
-			builder.append(scanner.nextLine());
-			builder.append("\n");
+	public static String getStringFromWebsite(URL url, boolean removeHtmlTags) {
+		String string = "";
+		try {
+			Scanner scanner = new Scanner(url.openStream());
+			StringBuilder builder = new StringBuilder();
+			while(scanner.hasNext()) {
+				builder.append(scanner.nextLine());
+				builder.append("\n");
+			}
+			string = builder.toString().substring(0, builder.length() - 1);
+			if (removeHtmlTags) {
+				string = string.replaceAll("<[^>]*>", "");
+			}
+			scanner.close();
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
-		String string = builder.toString().substring(0, builder.length() - 1);
-		if (removeHtmlTags) {
-			string = string.replaceAll("<[^>]*>", "");
-		}
-		scanner.close();
 		return string;
 	}
 	
-	public static void downloadFileFromWebsite(URL url, File file) throws IOException {
-		ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
-		FileOutputStream output = new FileOutputStream(file.getPath());
-		output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
+	public static void downloadFileFromWebsite(URL url, File file) {
+		try {
+			ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
+			FileOutputStream output = new FileOutputStream(file.getPath());
+			output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
 	}
 	
 	public static File getJarDirectory() {
