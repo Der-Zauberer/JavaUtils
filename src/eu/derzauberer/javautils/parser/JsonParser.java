@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 public class JsonParser {
 
 	private String string;
+	private boolean hasParent;
 	private ArrayList<String> structure;
 	private HashMap<String, Object> elements;
 
@@ -19,6 +20,7 @@ public class JsonParser {
 	
 	public JsonParser(String string) {
 		this.string = string;
+		hasParent = false;
 		structure = new ArrayList<>();
 		elements = new HashMap<>();
 		removeSpaces();
@@ -70,12 +72,19 @@ public class JsonParser {
 		}
 	}
 	
+	public void set(List<?> list) {
+		set("null", list);
+	}
+	
 	public void set(String key, List<?> list) {
 		boolean isString = true;
 		List<Object> objects = new ArrayList<>();
 		for (Object element : list) {
 			if (!(element instanceof String)) {
 				isString = false;
+			}
+			if (element instanceof JsonParser) {
+				((JsonParser) element).hasParent = true;
 			}
 		}
 		if (isString) {
@@ -396,7 +405,9 @@ public class JsonParser {
 								counter--;
 							}
 						}
-						array.add(new JsonParser(string.substring(lastBreakPoint, i + 1)));
+						JsonParser parser = new JsonParser(string.substring(lastBreakPoint, i + 1));
+						parser.hasParent = true;
+						array.add(parser);
 					} else {
 						isValue = false;
 						if (name != null) {
@@ -523,7 +534,9 @@ public class JsonParser {
 		boolean isValue = false;
 		boolean nextPosition = false;
 		String lastKey = "";
-		string.append("{" + newLine);
+		if (!elements.containsKey("null")) {
+			string.append("{" + newLine);
+		}
 		for (String key : structure) {
 			String keys[] = key.split("\\.");
 			position = keys.length - 1;
@@ -538,8 +551,7 @@ public class JsonParser {
 			}
 			while (layer != position) {
 				if (layer < position) {
-					addLine(string, layer + 1, tab, qm + keys[layer] + qm + ":" + newLine);
-					addLine(string, layer + 1, tab, "{" + newLine);
+					addLine(string, layer + 1, tab, qm + keys[layer] + qm + ":" + space + "{" + newLine);
 					layer++;
 				} else if (layer > position) {
 					addLine(string, layer, tab, "}" + getSeperator(position, layer - 1, !nextPosition) + newLine);
@@ -552,34 +564,47 @@ public class JsonParser {
 				}
 			}
 			if (elements.get(key) instanceof ArrayList<?>) {
-				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
+				if (key.equals("null")) {
+					addLine(string, position, tab, "[" + newLine);
+					layer--;
+					position--;
+				} else {
+					addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
+				}
 				List<Object> list = getListFromObject(elements.get(key));
-				for (int i = 0; i < list.size(); i++) {
-					if (getJsonObjectFromObject(list.get(i)) != null) {
-						String object;
-						if (oneliner) {
-							object = getJsonObjectFromObject(list.get(i)).toOneLineString();
-							string.append(object);
-						} else {
-							object = getJsonObjectFromObject(list.get(i)).toString();
-							for (String line : object.split("\n")) {
-								addLine(string, position + 2, tab, line);
-								if (string.charAt(string.length() - 1) != '}') {
+				if (list.isEmpty()) {
+					string.deleteCharAt(string.length() - 1);
+					string.append("]" + newLine);
+				} else {
+					for (int i = 0; i < list.size(); i++) {
+						if (getJsonObjectFromObject(list.get(i)) != null) {
+							String object;
+							if (oneliner) {
+								object = getJsonObjectFromObject(list.get(i)).toOneLineString();
+								string.append(object);
+							} else {
+								object = getJsonObjectFromObject(list.get(i)).toString();
+								for (String line : object.split("\n")) {
+									addLine(string, position + 2, tab, line);
+									if (string.charAt(string.length() - 1) != '}') {
+										string.append(newLine);
+									}
+								}
+								if (hasParent) {
 									string.append(newLine);
 								}
 							}
+						} else {
+							addLine(string, position + 2, tab, getStringFromObject(list.get(i), true));
 						}
-					} else {
-						addLine(string, position + 2, tab, getStringFromObject(list.get(i), true));
+						if (i == list.size() - 1) {
+							string.append(newLine);
+						} else {
+							string.append("," + newLine);
+						}
 					}
-					if (i == list.size() - 1) {
-						string.append(newLine);
-					} else {
-						string.append("," + newLine);
-					}
+					addLine(string, position + 1, tab, "]");
 				}
-				addLine(string, position + 1, tab, "]");
-				
 			} else {
 				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + getStringFromObject(elements.get(key), true));
 			}
@@ -593,7 +618,11 @@ public class JsonParser {
 		for (int i = layer; i > 0; i--) {
 			addLine(string, i, tab, "}" + newLine);
 		}
-		string.append("}");
+		if (!elements.containsKey("null")) {
+			string.append("}");
+		} else if (string.charAt(string.length() - 1) == '\n') {
+			string.deleteCharAt(string.length() - 1);
+		}
 		return string.toString();
 	}
 
