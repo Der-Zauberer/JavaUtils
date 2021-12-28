@@ -14,16 +14,18 @@ import java.nio.file.StandardOpenOption;
 import java.util.Scanner;
 
 public class FileHandler {
-
-	public static File createFile(File file) {
+	
+	public static void createFile(File file) {
 		if (!file.exists()) {
+			if (file.getParentFile() != null) {
+				file.getParentFile().mkdirs();
+			}
 			try {
 				file.createNewFile();
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
 		}
-		return file;
 	}
 
 	public static String readString(File file) {
@@ -37,6 +39,7 @@ public class FileHandler {
 	}
 
 	public static void writeString(File file, String string) {
+		createFile(file);
 		try {
 			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException exception) {
@@ -45,37 +48,12 @@ public class FileHandler {
 	}
 
 	public static void appendString(File file, String string) {
+		createFile(file);
 		try {
 			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.APPEND);
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-	}
-	
-	public static void openFile(File file) {
-		try {
-			Desktop.getDesktop().open(file);
-		} catch (IOException exception) {
-			exception.printStackTrace();
-		}
-	}
-
-	public static void openFileInBrowser(String url) {
-		try {
-			Desktop.getDesktop().browse(new URL(url).toURI());
-		} catch (IOException | URISyntaxException exception) {
-			exception.printStackTrace();
-		}
-	}
-
-	public static File createDirectory(String path) {
-		if (!path.startsWith("\\"))
-			path = "\\" + path;
-		File file = new File(getJarDirectory().toString() + path);
-		if (!file.exists()) {
-			file.mkdirs();
-		}
-		return file;
 	}
 	
 	public static String getStringFromWebsite(URL url) throws IOException {
@@ -108,6 +86,22 @@ public class FileHandler {
 			FileOutputStream output = new FileOutputStream(file.getPath());
 			output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
 		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
+	}
+	
+	public static void openFile(File file) {
+		try {
+			Desktop.getDesktop().open(file);
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
+	}
+
+	public static void openFileInBrowser(String url) {
+		try {
+			Desktop.getDesktop().browse(new URL(url).toURI());
+		} catch (IOException | URISyntaxException exception) {
 			exception.printStackTrace();
 		}
 	}
