@@ -9,11 +9,22 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.stream.Stream;
+
+import eu.derzauberer.javautils.action.FileUpdatedAction;
 
 public class FileHandler {
+	
+	private static ArrayList<FileObserver> fileObserver = new ArrayList<>();
+	private static Timer timer = new Timer();
 	
 	public static void createFile(File file) {
 		if (!file.exists()) {
@@ -22,6 +33,18 @@ public class FileHandler {
 			}
 			try {
 				file.createNewFile();
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+		}
+	}
+	
+	public static void deleteFile(File file) {
+		if (file.exists()) {
+			try {
+				Stream<Path> stream = Files.walk(Paths.get(file.toURI()));
+				stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+				stream.close();
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
@@ -97,6 +120,27 @@ public class FileHandler {
 			exception.printStackTrace();
 		}
 	}
+	
+	public static void setOnFileUpdated(File file, FileUpdatedAction action) {
+		if (timer == null) {
+			timer = new Timer();
+		}
+		fileObserver.add(new FileHandler().new FileObserver(file, action));
+	}
+	
+	public static void removeFileFromUpdateObserver(File file) {
+		for (int i = 0; i < fileObserver.size(); i++) {
+			if (file == fileObserver.get(i).file) {
+				fileObserver.get(i).cancel();
+				fileObserver.remove(i);
+				if (fileObserver.isEmpty()) {
+					timer.cancel();
+					timer = null;
+				}
+				return;
+			}
+		}
+	}
 
 	public static void openFileInBrowser(String url) {
 		try {
@@ -115,6 +159,29 @@ public class FileHandler {
 			return file.getParentFile();
 		}
 		return file;
+	}
+	
+	private class FileObserver extends TimerTask {
+		
+		private File file;
+		private FileUpdatedAction action;
+		private long timestamp;
+				
+		public FileObserver(File file, FileUpdatedAction action) {
+			this.file = file;
+			this.action = action;
+			this.timestamp = file.lastModified();
+			FileHandler.timer.schedule(this, 0, 700);
+		}
+		
+		@Override
+		public void run() {
+			if (file.lastModified() != timestamp) {
+				action.onAction(file);
+				timestamp = file.lastModified();
+			}
+		}
+		
 	}
 
 }
