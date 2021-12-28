@@ -176,7 +176,9 @@ public class FileHandler {
 		
 		@Override
 		public void run() {
-			if (file.lastModified() != timestamp) {
+			if (!file.exists()) {
+				FileHandler.removeFileFromUpdateObserver(file);
+			} else if (file.lastModified() != timestamp) {
 				action.onAction(file);
 				timestamp = file.lastModified();
 			}
