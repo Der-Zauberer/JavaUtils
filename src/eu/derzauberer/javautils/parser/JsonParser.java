@@ -100,6 +100,17 @@ public class JsonParser {
 		elements.remove(key);
 	}
 	
+	public void removeSection(String key) {
+		ArrayList<Object> removed = new ArrayList<>();
+		for (String string : structure) {
+			if (string.startsWith(key)) {
+				removed.add(string);
+				elements.remove(key);
+			}
+		}
+		structure.removeAll(removed);
+	}
+	
 	public boolean exist(String key) {
 		if (structure.contains(key)) {
 			return true;

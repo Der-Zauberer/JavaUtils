@@ -24,7 +24,7 @@ import eu.derzauberer.javautils.action.FileUpdatedAction;
 public class FileHandler {
 	
 	private static ArrayList<FileObserver> fileObserver = new ArrayList<>();
-	private static Timer timer = new Timer();
+	private static Timer timer;
 	
 	public static void createFile(File file) {
 		if (!file.exists()) {
