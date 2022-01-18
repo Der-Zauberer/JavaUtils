@@ -26,10 +26,6 @@ public class JsonParser {
 		removeSpaces();
 		parse();
 	}
-
-	private void set(String key, Object object) {
-		setObject(key, object);
-	}
 	
 	public void set(String key, String string) {
 		setObject(key, removeEscapeCodes(string));
@@ -152,119 +148,132 @@ public class JsonParser {
 	}
 	
 	public Object get(String key) {
-		return elements.get(key);
+		return getObject(key);
 	}
 	
 	public String getString(String key) {
-		if (elements.get(key) != null) {
-			return addEscapeCodes(getStringFromObject(elements.get(key), false));
+		if (getObject(key) != null) {
+			return addEscapeCodes(getStringFromObject(getObject(key), false));
 		} else {
 			return null;
 		}
 	}
 	
 	public boolean getBoolean(String key) {
-		if (elements.get(key) != null || elements.get(key) instanceof Boolean) {
-			return (Boolean) elements.get(key);
+		if (getObject(key) != null || getObject(key) instanceof Boolean) {
+			return (Boolean) getObject(key);
 		}
 		return false;
 	}
 	
 	public byte getByte(String key) {
-		Class<?> classtype = elements.get(key).getClass();
-		if (classtype == Byte.class) {return (byte) elements.get(key);}
-		else if (classtype == Short.class) {return (byte) ((short) elements.get(key));}
-		else if (classtype == Integer.class) {return (byte) ((int) elements.get(key));}
-		else if (classtype == Long.class) {return (byte) ((long) elements.get(key));}
-		else if (classtype == Float.class) {return (byte) ((float) elements.get(key));}
-		else if (classtype == Double.class) {return (byte) ((double) elements.get(key));}
-		else if (classtype == String.class) {try {return (byte) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		Class<?> classtype = getObject(key).getClass();
+		if (classtype == Byte.class) {return (byte) getObject(key);}
+		else if (classtype == Short.class) {return (byte) ((short) getObject(key));}
+		else if (classtype == Integer.class) {return (byte) ((int) getObject(key));}
+		else if (classtype == Long.class) {return (byte) ((long) getObject(key));}
+		else if (classtype == Float.class) {return (byte) ((float) getObject(key));}
+		else if (classtype == Double.class) {return (byte) ((double) getObject(key));}
+		else if (classtype == String.class) {try {return (byte) Double.parseDouble(getObject(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
 	}
 	
 	public short getShort(String key) {
-		Class<?> classtype = elements.get(key).getClass();
-		if (classtype == Byte.class) {return (short) ((byte) elements.get(key));}
-		else if (classtype == Short.class) {return (short) elements.get(key);}
-		else if (classtype == Integer.class) {return (short) ((int) elements.get(key));}
-		else if (classtype == Long.class) {return (short) ((long) elements.get(key));}
-		else if (classtype == Float.class) {return (short) ((float) elements.get(key));}
-		else if (classtype == Double.class) {return (short) ((double) elements.get(key));}
-		else if (classtype == String.class) {try {return (short) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		Class<?> classtype = getObject(key).getClass();
+		if (classtype == Byte.class) {return (short) ((byte) getObject(key));}
+		else if (classtype == Short.class) {return (short) getObject(key);}
+		else if (classtype == Integer.class) {return (short) ((int) getObject(key));}
+		else if (classtype == Long.class) {return (short) ((long) getObject(key));}
+		else if (classtype == Float.class) {return (short) ((float) getObject(key));}
+		else if (classtype == Double.class) {return (short) ((double) getObject(key));}
+		else if (classtype == String.class) {try {return (short) Double.parseDouble(getObject(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
 	}
 	
 	public int getInt(String key) {
-		Class<?> classtype = elements.get(key).getClass();
-		if (classtype == Byte.class) {return (int) ((byte) elements.get(key));}
-		else if (classtype == Short.class) {return (int) ((short) elements.get(key));}
-		else if (classtype == Integer.class) {return (int) elements.get(key);}
-		else if (classtype == Long.class) {return (int) ((long) elements.get(key));}
-		else if (classtype == Float.class) { return (int) ((float) elements.get(key));}
-		else if (classtype == Double.class) {return (int) ((double) elements.get(key));}
-		else if (classtype == String.class) {try {return (int) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		Class<?> classtype = getObject(key).getClass();
+		if (classtype == Byte.class) {return (int) ((byte) getObject(key));}
+		else if (classtype == Short.class) {return (int) ((short) getObject(key));}
+		else if (classtype == Integer.class) {return (int) getObject(key);}
+		else if (classtype == Long.class) {return (int) ((long) getObject(key));}
+		else if (classtype == Float.class) { return (int) ((float) getObject(key));}
+		else if (classtype == Double.class) {return (int) ((double) getObject(key));}
+		else if (classtype == String.class) {try {return (int) Double.parseDouble(getObject(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
 	}
 	
 	public long getLong(String key) {
-		Class<?> classtype = elements.get(key).getClass();
-		if (classtype == Byte.class) {return (long) ((byte) elements.get(key));}
-		else if (classtype == Short.class) {return (long) ((short) elements.get(key));}
-		else if (classtype == Integer.class) {return (long) ((int) elements.get(key));}
-		else if (classtype == Long.class) {return (long) elements.get(key);}
-		else if (classtype == Float.class) {return (long) ((float) elements.get(key));}
-		else if (classtype == Double.class) {return (long) ((double) elements.get(key));}
-		else if (classtype == String.class) {try {return (long) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		Class<?> classtype = getObject(key).getClass();
+		if (classtype == Byte.class) {return (long) ((byte) getObject(key));}
+		else if (classtype == Short.class) {return (long) ((short) getObject(key));}
+		else if (classtype == Integer.class) {return (long) ((int) getObject(key));}
+		else if (classtype == Long.class) {return (long) getObject(key);}
+		else if (classtype == Float.class) {return (long) ((float) getObject(key));}
+		else if (classtype == Double.class) {return (long) ((double) getObject(key));}
+		else if (classtype == String.class) {try {return (long) Double.parseDouble(getObject(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
 	}
 	
 	public float getFloat(String key) {
-		Class<?> classtype = elements.get(key).getClass();
-		if (classtype == Byte.class) {return (float) ((byte) elements.get(key));}
-		else if (classtype == Short.class) {return (float) ((short) elements.get(key));}
-		else if (classtype == Integer.class) {return (float) ((int) elements.get(key));}
-		else if (classtype == Long.class) {return (float) ((long) elements.get(key));}
-		else if (classtype == Float.class) {return (float) elements.get(key);}
-		else if (classtype == Double.class) {return (float) ((double) elements.get(key));}
-		else if (classtype == String.class) {try {return (float) Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		Class<?> classtype = getObject(key).getClass();
+		if (classtype == Byte.class) {return (float) ((byte) getObject(key));}
+		else if (classtype == Short.class) {return (float) ((short) getObject(key));}
+		else if (classtype == Integer.class) {return (float) ((int) getObject(key));}
+		else if (classtype == Long.class) {return (float) ((long) getObject(key));}
+		else if (classtype == Float.class) {return (float) getObject(key);}
+		else if (classtype == Double.class) {return (float) ((double) getObject(key));}
+		else if (classtype == String.class) {try {return (float) Double.parseDouble(getObject(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
 	}
 	
 	public double getDouble(String key) {
-		Class<?> classtype = elements.get(key).getClass();
-		if (classtype == Byte.class) {return (double) ((byte) elements.get(key));}
-		else if (classtype == Short.class) {return (double) ((short) elements.get(key));}
-		else if (classtype == Integer.class) {return (double) ((int) elements.get(key));}
-		else if (classtype == Long.class) {return (double) ((long) elements.get(key));}
-		else if (classtype == Float.class) {return (double) ((float) elements.get(key));}
-		else if (classtype == Double.class) {return (double) elements.get(key);}
-		else if (classtype == String.class) {try {return Double.parseDouble(elements.get(key).toString().replace("\"", ""));} catch (Exception exception) {}}
+		Class<?> classtype = getObject(key).getClass();
+		if (classtype == Byte.class) {return (double) ((byte) getObject(key));}
+		else if (classtype == Short.class) {return (double) ((short) getObject(key));}
+		else if (classtype == Integer.class) {return (double) ((int) getObject(key));}
+		else if (classtype == Long.class) {return (double) ((long) getObject(key));}
+		else if (classtype == Float.class) {return (double) ((float) getObject(key));}
+		else if (classtype == Double.class) {return (double) getObject(key);}
+		else if (classtype == String.class) {try {return Double.parseDouble(getObject(key).toString().replace("\"", ""));} catch (Exception exception) {}}
 		return 0;
 	}
 	
 	public JsonParser getJsonObject(String key) {
-		if (elements.get(key) instanceof JsonParser) {
-			return (JsonParser) elements.get(key);
+		if (key == "" || key.isEmpty()) return this;
+		if (getObject(key) instanceof JsonParser) {
+			return (JsonParser) getObject(key);
+		} else if (getObject(key) instanceof List) {
+			JsonParser jsonParser = new JsonParser();
+			jsonParser.setObject("null", get(key));
+			return jsonParser;
 		} else {
 			JsonParser jsonParser = new JsonParser();
-			for (String string : getKeys(key, false)) {
-				jsonParser.set(string, elements.get(string));
+			if ((key.contains(".[") || key.startsWith("[")) && key.contains("].")) {
+				String subKey = key.substring(0, key.lastIndexOf("]") + 1);
+				String newKey = key.substring(key.lastIndexOf("]") + 2);
+				for (String string : getJsonObject(subKey).getKeys(newKey, false)) {
+					jsonParser.setObject(string, getObject(key + "." + string));
+				}
+			} else {
+				for (String string : getKeys(key, false)) {
+					jsonParser.setObject(string, getObject(key + "." + string));
+				}
 			}
 			return jsonParser;
 		}
 	}
 	
 	public List<Object> getObjectList(String key) {
-		return getListFromObject(elements.get(key));
+		return getListFromObject(getObject(key));
 	}
 	
 	public List<String> getStringList(String key) {
-		return getListFromObject(elements.get(key)).stream().map(object -> addEscapeCodes(getStringFromObject(object, false))).collect(Collectors.toList());
+		return getListFromObject(getObject(key)).stream().map(object -> addEscapeCodes(getStringFromObject(object, false))).collect(Collectors.toList());
 	}
 	
 	public List<Boolean> getBooleanList(String key) {
 		List <Boolean> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			if (object instanceof Boolean || object instanceof String) {
 				if (object instanceof Boolean) {
 					list.add((Boolean)object);
@@ -284,7 +293,7 @@ public class JsonParser {
 	
 	public List<Byte> getByteList(String key) {
 		List <Byte> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			Class<?> classtype = object.getClass();
 			if (classtype == Byte.class) {list.add((byte) object);}
 			else if (classtype == Short.class) {list.add((byte) ((short) object));}
@@ -300,7 +309,7 @@ public class JsonParser {
 	
 	public List<Short> getShortList(String key) {
 		List <Short> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			Class<?> classtype = object.getClass();
 			if (classtype == Byte.class) {list.add((short) ((byte) object));}
 			else if (classtype == Short.class) {list.add((short) object);}
@@ -316,7 +325,7 @@ public class JsonParser {
 	
 	public List<Integer> getIntList(String key) {
 		List <Integer> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			Class<?> classtype = object.getClass();
 			if (classtype == Byte.class) {list.add((int) ((byte) object));}
 			else if (classtype == Short.class) {list.add((int) ((short) object));}
@@ -332,7 +341,7 @@ public class JsonParser {
 	
 	public List<Long> getLongList(String key) {
 		List <Long> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			Class<?> classtype = object.getClass();
 			if (classtype == Byte.class) {list.add((long) ((byte) object));}
 			else if (classtype == Short.class) {list.add((long) ((short) object));}
@@ -348,7 +357,7 @@ public class JsonParser {
 	
 	public List<Float> getFloatList(String key) {
 		List <Float> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			Class<?> classtype = object.getClass();
 			if (classtype == Byte.class) {list.add((float) ((byte) object));}
 			else if (classtype == Short.class) {list.add((float) ((short) object));}
@@ -364,7 +373,7 @@ public class JsonParser {
 	
 	public List<Double> getDoubleList(String key) {
 		List <Double> list = new ArrayList<>();
-		for (Object object : getListFromObject(elements.get(key))) {
+		for (Object object : getListFromObject(getObject(key))) {
 			Class<?> classtype = object.getClass();
 			if (classtype == Byte.class) {list.add((double) ((byte) object));}
 			else if (classtype == Short.class) {list.add((double) ((short) object));}
@@ -380,7 +389,7 @@ public class JsonParser {
 	
 	public List<JsonParser> getJsonObjectList(String key) {
 		List <JsonParser> list = new ArrayList<>();
-		getListFromObject(elements.get(key)).forEach(object -> list.add((JsonParser)object));
+		getListFromObject(getObject(key)).forEach(object -> list.add((JsonParser)object));
 		return list;
 	}
 
@@ -492,40 +501,100 @@ public class JsonParser {
 	}
 
 	private void setObject(String key, Object value) {
-		elements.put(key, value);
-		if (!structure.contains(key)) {
-			if (key.contains(".")) {
-				String keys[] = key.split("\\.");
-				int layer = -1;
-				int position = 0;
-				for (String struct : structure) {
-					String structKeys[] = struct.split("\\.");
-					for (int i = 0; i < structKeys.length; i++) {
-						if (!structKeys[i].equals(keys[i])) {
-							if (layer <= i - 1) {
-								layer = i - 1;
-								break;
-							} else {
-								structure.add(position, key);
+		if (!key.startsWith("null") && getKeys().contains("null") && getKeys().size() == 1) {
+			if (key == "") {
+				key = "null";
+			} else {
+				key = "null." + key;
+			}
+		}
+		
+		if ((key.contains(".[") || key.startsWith("[")) && (key.contains("].") || key.endsWith("]"))) {
+			JsonParser parser = null;
+			String newKey = key.substring(key.indexOf(']') + 1);
+			
+			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
+			String subKey = key.substring(0, key.indexOf('['));
+			if (subKey.endsWith(".")) {
+				subKey = subKey.substring(0, subKey.length() - 1);
+			}
+			if (newKey.startsWith(".")) {
+				newKey = newKey.substring(1);
+			}
+			if (index.matches("[0-9]+") && elements.get(subKey) != null) {
+				parser = getJsonObjectList(subKey).get(Integer.parseInt(index));
+				if (newKey.isEmpty() && value instanceof JsonParser) {
+					parser = (JsonParser) value;
+				} else {
+					parser.setObject(newKey, value);
+				}
+			}
+		} else {
+			elements.put(key, value);
+			if (!structure.contains(key)) {
+				if (key.contains(".")) {
+					String keys[] = key.split("\\.");
+					int layer = -1;
+					int position = 0;
+					for (String struct : structure) {
+						String structKeys[] = struct.split("\\.");
+						for (int i = 0; i < structKeys.length; i++) {
+							if (!structKeys[i].equals(keys[i])) {
+								if (layer <= i - 1) {
+									layer = i - 1;
+									break;
+								} else {
+									structure.add(position, key);
+									removeWrongKeys(key, keys);
+									return;
+								}
+							} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
+								structure.add(position + 1, key);
+								removeWrongKeys(key, keys);
+								return;
+							} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
+								structure.add(position + 1, key);
 								removeWrongKeys(key, keys);
 								return;
 							}
-						} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
-							structure.add(position + 1, key);
-							removeWrongKeys(key, keys);
-							return;
-						} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
-							structure.add(position + 1, key);
-							removeWrongKeys(key, keys);
-							return;
 						}
+						position++;
 					}
-					position++;
+					structure.add(position, key);
+				} else {
+					structure.add(key);
 				}
-				structure.add(position, key);
-			} else {
-				structure.add(key);
 			}
+		}
+	}
+	
+	private Object getObject(String key) {
+		if (!key.startsWith("null") && getKeys().contains("null") && getKeys().size() == 1) {
+			if (key == "") {
+				key = "null";
+			} else {
+				key = "null." + key;
+			}
+		}
+		if ((key.contains(".[") || key.startsWith("[")) && (key.contains("].") || key.endsWith("]"))) {
+			JsonParser parser = null;
+			String newKey = key.substring(key.indexOf(']') + 1);
+			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
+			String subKey = key.substring(0, key.indexOf('['));
+			if (subKey.endsWith(".")) {
+				subKey = subKey.substring(0, subKey.length() - 1);
+			}
+			if (newKey.startsWith(".")) {
+				newKey = newKey.substring(1);
+			}
+			if (index.matches("[0-9]+")) {
+				parser = getJsonObjectList(subKey).get(Integer.parseInt(index));
+				return parser.getObject(newKey);
+			}
+			return null;
+		} else {
+			if (key == "" || key.isEmpty()) return this;
+			return elements.get(key);
 		}
 	}
 
