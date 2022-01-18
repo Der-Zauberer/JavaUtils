@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.util;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -12,6 +13,35 @@ import eu.derzauberer.javautils.handler.EventHandler;
 import eu.derzauberer.javautils.handler.FileHandler;
 
 public class Console implements Runnable {
+	
+	public static final String BLACK = "\u001b[30m";
+	public static final String GRAY = "\u001b[30;1m";
+	public static final String WHITE = "\u001b[37m";
+	public static final String RED = "\u001b[31m";
+	public static final String YELLOW = "\u001b[33m";
+	public static final String GREEN = "\u001b[32m";
+	public static final String CYAN = "\u001b[36m";
+	public static final String BLUE = "\u001b[34m";
+	public static final String MAGENTA = "\u001b[35m";
+	
+	public static final String BACKGROUND_BLACK = "\u001b[40m";
+	public static final String BACKGROUND_GRAY = "\u001b[40;1m";
+	public static final String BACKGROUND_WHITE = "\u001b[47m";
+	public static final String BACKGROUND_RED = "\u001b[41m";
+	public static final String BACKGROUND_YELLOW = "\u001b[43m";
+	public static final String BACKGROUND_GREEN = "\u001b[42m";
+	public static final String BACKGROUND_CYAN = "\u001b[46m";
+	public static final String BACKGROUND_BLUE = "\u001b[44m";
+	public static final String BACKGROUND_MAGENTA = "\u001b[45m";
+	
+	public static final String BOLD = "\u001b[1m";
+	public static final String UNDERLINE = "\u001b[4m";
+	public static final String REVERSED = "\u001b[7m";
+	public static final String CROSSED_OUT = "\u001b[9m";
+	
+	public static final String RESET_COLOR = "\u001b[39m";
+	public static final String RESET_BACKGROUND_COLOR = "\u001b[49m";
+	public static final String RESET = "\u001b[0m";
 
 	public enum MessageType {DEFAULT, INFO, SUCCESS, WARNING, ERROR}
 
@@ -26,7 +56,7 @@ public class Console implements Runnable {
 	private File latestLogFile;
 	
 	public Console() {
-		this(true);
+		this(true); 
 	}
 	
 	public Console(boolean start) {
@@ -114,6 +144,9 @@ public class Console implements Runnable {
 		if (event.getMessageType() != MessageType.DEFAULT) {
 			event.setOutput("[" + type.toString() + "] " + event.getOutput());
 		}
+		if (System.console() == null || System.getenv().get("TERM") == null) {
+			event.setOutput(removeEscapeCodes(event.getOutput()));
+		}
 		if (!event.isCancled()) {
 			if (logTimestampEnabled) {
 				outputAction.onAction(getTimeStamp() + event.getOutput());
@@ -121,7 +154,36 @@ public class Console implements Runnable {
 				outputAction.onAction(event.getOutput());
 			}
 		}
-		log(event.getOutput());
+		log(removeEscapeCodes(event.getOutput()));
+	}
+	
+	public static String removeEscapeCodes(String string) {
+		try {
+			for (Field field : Console.class.getFields()) {
+				string = string.replace(field.get(Console.class).toString(), "");
+			}
+		} catch (IllegalArgumentException exception) {
+		} catch (IllegalAccessException exception) {
+		}
+		while (string.contains("\033[38;5;")) {
+			int index = 0;
+			for (int i = string.indexOf("\033[38;5;"); i < string.length(); i++) {
+				if (string.charAt(i) == 'm') {
+					index = i;
+					break;
+				}
+			}
+			string = string.substring(0, string.indexOf("\\") + 5) + string.substring(index + 1);
+		}
+		return string;
+	}
+	
+	public static String get256BitColor(int number) {
+		return "\033[38;5;" + number + "m";
+	}
+	
+	public static String get256BitBackgroundColor(int number) {
+		return "\033[48;5;" + number + "m";
 	}
 	
 	public void sendMessage(Object object) {
