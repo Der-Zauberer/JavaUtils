@@ -152,7 +152,7 @@ public class JsonParser {
 	}
 	
 	public String getString(String key) {
-		if (getObject(key) != null) {
+		if (getObject(key) != null && !(getObject(key) instanceof JsonParser)) {
 			return addEscapeCodes(getStringFromObject(getObject(key), false));
 		} else {
 			return null;
@@ -388,9 +388,13 @@ public class JsonParser {
 	}
 	
 	public List<JsonParser> getJsonObjectList(String key) {
-		List <JsonParser> list = new ArrayList<>();
-		getListFromObject(getObject(key)).forEach(object -> list.add((JsonParser)object));
-		return list;
+		try {
+			List <JsonParser> list = new ArrayList<>();
+			getListFromObject(getObject(key)).forEach(object -> list.add((JsonParser)object));
+			return list;
+		} catch (ClassCastException exception) {
+			return null;
+		}
 	}
 
 	@Override
@@ -587,9 +591,11 @@ public class JsonParser {
 			if (newKey.startsWith(".")) {
 				newKey = newKey.substring(1);
 			}
-			if (index.matches("[0-9]+")) {
+			if (index.matches("[0-9]+") && getJsonObjectList(subKey) != null) {
 				parser = getJsonObjectList(subKey).get(Integer.parseInt(index));
 				return parser.getObject(newKey);
+			} else if (getJsonObjectList(subKey) == null && getObject(subKey) instanceof List<?>) {
+				return getObjectList(subKey).get(Integer.parseInt(index));
 			}
 			return null;
 		} else {

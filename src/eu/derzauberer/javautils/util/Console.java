@@ -3,6 +3,7 @@ package eu.derzauberer.javautils.util;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Calendar;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import eu.derzauberer.javautils.action.ConsoleOutputAction;
@@ -50,6 +51,7 @@ public class Console implements Runnable {
 	private File directory;
 	private ConsoleOutputAction outputAction;
 	private Object sender;
+	private boolean ansiEscapeCodesEnabled;
 	private boolean logEnabled;
 	private boolean logTimestampEnabled;
 	private File logDirectory;
@@ -60,13 +62,7 @@ public class Console implements Runnable {
 	}
 	
 	public Console(boolean start) {
-		if (start) startConsole();
-		directory = FileHandler.getJarDirectory();
-		prefix = "";
-		outputAction = output -> System.out.println(output);
-		sender = System.in;
-		logEnabled = false;
-		logDirectory = new File(FileHandler.getJarDirectory(), "logs");
+		this("", start);
 	}
 	
 	public Console(String prefix) {
@@ -78,6 +74,10 @@ public class Console implements Runnable {
 		directory = FileHandler.getJarDirectory();
 		this.prefix = prefix;
 		outputAction = output -> System.out.println(output);
+		sender = System.in;
+		ansiEscapeCodesEnabled = false;
+		logEnabled = false;
+		logDirectory = new File(FileHandler.getJarDirectory(), "logs");
 	}
 	
 	public void startConsole() {
@@ -92,13 +92,15 @@ public class Console implements Runnable {
 	@SuppressWarnings("resource")
 	@Override
 	public void run() {
-		Scanner scanner = new Scanner(System.in);
-		String input;
-		while (!thread.isInterrupted()) {
-			System.out.print(prefix);
-			input = scanner.nextLine();
-			sendInput(input);
-		}
+		try {
+			Scanner scanner = new Scanner(System.in);
+			String input;
+			while (!thread.isInterrupted()) {
+				System.out.print(prefix);
+				input = scanner.nextLine();
+				sendInput(input);
+			}
+		} catch (NoSuchElementException exception) {}
 	}
 
 	public  void setPrefix(String prefix) {
@@ -144,7 +146,7 @@ public class Console implements Runnable {
 		if (event.getMessageType() != MessageType.DEFAULT) {
 			event.setOutput("[" + type.toString() + "] " + event.getOutput());
 		}
-		if (System.console() == null || System.getenv().get("TERM") == null) {
+		if (!ansiEscapeCodesSupportetBySystem()) {
 			event.setOutput(removeEscapeCodes(event.getOutput()));
 		}
 		if (!event.isCancled()) {
@@ -250,6 +252,18 @@ public class Console implements Runnable {
 			}
 		}
 		return string[0] + "-" + string[1] + "-" + string[2];
+	}
+	
+	public boolean isAnsiEscapeCodesEnabled() {
+		return ansiEscapeCodesEnabled;
+	}
+	
+	public boolean ansiEscapeCodesSupportetBySystem() {
+		return ansiEscapeCodesEnabled || (System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null);
+	}
+	
+	public void setAnsiEscapeCodesEnabled(boolean ansiEscapeCodesEnabled) {
+		this.ansiEscapeCodesEnabled = ansiEscapeCodesEnabled;
 	}
 	
 	public void setLogEnabled(boolean logEnabled) {
