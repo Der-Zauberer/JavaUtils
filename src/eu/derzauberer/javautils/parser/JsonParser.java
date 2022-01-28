@@ -1,11 +1,14 @@
 package eu.derzauberer.javautils.parser;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import eu.derzauberer.javautils.annotations.JsonElement;
 
 public class JsonParser {
 
@@ -89,6 +92,42 @@ public class JsonParser {
 			list.forEach(object -> objects.add(getObjectFromString(getStringFromObject(object, false))));
 		}
 		setObject(key, objects);
+	}
+	
+	public void setClassAsObject(String key, Object object) {
+		for (Field field : object.getClass().getDeclaredFields()) {
+			if (field.getAnnotation(JsonElement.class) != null) {
+				field.setAccessible(true);
+				String name;
+				if (field.getAnnotation(JsonElement.class).key().equals("")) {
+					name = field.getName();
+				} else {
+					name = field.getAnnotation(JsonElement.class).key();
+				}
+				if (key != null && !key.equals("")) {
+					name = key + "." + name;
+				}
+				try {
+					if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
+						setObject(name, field.get(object));
+					} else if (field.get(object) instanceof List<?>) {
+						if (field.getAnnotation(JsonElement.class).isObject() == true) {
+							List<JsonParser> list = new ArrayList<>();
+							for (Object listObject : (List<?>) field.get(object)) {
+								JsonParser parser = new JsonParser();
+								parser.setClassAsObject("", listObject);
+								list.add(parser);
+							}
+							setObject(name, list);
+						} else {
+							setObject(name, field.get(object));
+						}
+					}
+				} catch (IllegalArgumentException exception) {
+				} catch (IllegalAccessException exception) {
+				}
+			}
+		}
 	}
 	
 	public void remove(String key) {
@@ -660,7 +699,7 @@ public class JsonParser {
 				List<Object> list = getListFromObject(elements.get(key));
 				if (list.isEmpty()) {
 					string.deleteCharAt(string.length() - 1);
-					string.append("]" + newLine);
+					string.append("]");
 				} else {
 					for (int i = 0; i < list.size(); i++) {
 						if (getJsonObjectFromObject(list.get(i)) != null) {
