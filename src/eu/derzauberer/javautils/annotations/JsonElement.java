@@ -10,5 +10,4 @@ import java.lang.annotation.Target;
 public @interface JsonElement {
 	
 	public String key() default "";
-	public boolean isObject() default false;
 }

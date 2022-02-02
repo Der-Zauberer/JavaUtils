@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.parser;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -111,7 +112,9 @@ public class JsonParser {
 					if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
 						setObject(name, field.get(object));
 					} else if (field.get(object) instanceof List<?>) {
-						if (field.getAnnotation(JsonElement.class).isObject() == true) {
+						Type type = field.getGenericType();
+						Class<?> classType = getClassFromGenericTypeOfList(type);
+						if (classType != Boolean.class && classType != Byte.class && classType != Short.class && classType != Integer.class && classType != Long.class && classType != Float.class && classType != Double.class && classType != String.class) {
 							List<JsonParser> list = new ArrayList<>();
 							for (Object listObject : (List<?>) field.get(object)) {
 								JsonParser parser = new JsonParser();
@@ -122,7 +125,13 @@ public class JsonParser {
 						} else {
 							setObject(name, field.get(object));
 						}
+					} else {
+						JsonParser parser = new JsonParser();
+						parser.setClassAsObject("", field.get(object));
+						set(name, parser);
 					}
+				} catch (NullPointerException exception) {
+					setObject(name, null);
 				} catch (IllegalArgumentException exception) {
 				} catch (IllegalAccessException exception) {
 				}
@@ -433,6 +442,76 @@ public class JsonParser {
 			return list;
 		} catch (ClassCastException exception) {
 			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void getClassAsObject(String key, Object object) {
+		for (Field field : object.getClass().getDeclaredFields()) {
+			if (field.getAnnotation(JsonElement.class) != null) {
+				field.setAccessible(true);
+				String name;
+				if (field.getAnnotation(JsonElement.class).key().equals("")) {
+					name = field.getName();
+				} else {
+					name = field.getAnnotation(JsonElement.class).key();
+				}
+				if (key != null && !key.equals("")) {
+					name = key + "." + name;
+				}
+				try {
+					if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
+						field.set(object, get(name));
+					} else if (field.get(object) instanceof List<?>) {
+						Type type = field.getGenericType();
+						Class<?> classType = getClassFromGenericTypeOfList(type);
+						if (classType == Boolean.class) {
+							field.set(object, getBooleanList(name));
+						} else if (classType == Byte.class) {
+							field.set(object, getByteList(name));
+						} else if (classType == Short.class) {
+							field.set(object, getShortList(name));
+						} else if (classType == Integer.class) {
+							field.set(object, getIntList(name));
+						} else if (classType == Long.class) {
+							field.set(object, getLongList(name));
+						} else if (classType == Float.class) {
+							field.set(object, getFloatList(name));
+						} else if (classType == Double.class) {
+							field.set(object, getDoubleList(name));
+						} else if (classType == String.class){
+							field.set(object, getStringList(name));
+						} else {
+							try {
+								@SuppressWarnings("rawtypes")
+								List objectList = new ArrayList<>();
+								for (JsonParser listJsonObject : getJsonObjectList(name)) {
+									Object listObject = classType.newInstance();
+									listJsonObject.getClassAsObject("", classType.cast(listObject));
+									objectList.add(classType.cast(listObject));
+								}
+								field.set(object, objectList);
+							} catch (InstantiationException exception) {}
+						}
+					} else {
+						try {
+							JsonParser parser = getJsonObject(name);
+							Object subObject = Class.forName(field.getGenericType().getTypeName()).newInstance();
+							parser.getClassAsObject("", subObject.getClass().cast(subObject));
+							field.set(object, subObject.getClass().cast(subObject));
+						} catch (ClassNotFoundException exception) {
+						} catch (InstantiationException exception) {}
+					}
+				} catch (IllegalArgumentException exception) {
+					try {
+						if (field.get(object) instanceof Number && get(name) == null) {
+							field.set(object, 0);
+						}
+					} catch (IllegalArgumentException innerException) {
+					} catch (IllegalAccessException innerException) {
+					}
+				} catch (IllegalAccessException exception) {}
+			}
 		}
 	}
 
@@ -867,6 +946,16 @@ public class JsonParser {
 			return (JsonParser) object;
 		} else {
 			return null;
+		}
+	}
+	
+	private Class<?> getClassFromGenericTypeOfList(Type type) {
+		try {
+			String name = type.getTypeName();
+			name = name.substring(name.indexOf("<") + 1, name.length() - 1);
+			return Class.forName(name);
+		} catch (ClassNotFoundException e) {
+			return Object.class;
 		}
 	}
 	
