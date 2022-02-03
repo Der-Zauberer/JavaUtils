@@ -21,6 +21,9 @@
       <id>github</id>
       <name>GitHub Der-Zauberer Apache Maven Packages</name>
       <url>https://maven.pkg.github.com/Der-Zauberer/JavaUtils</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </repository>
   </distributionManagement>
 </project>
