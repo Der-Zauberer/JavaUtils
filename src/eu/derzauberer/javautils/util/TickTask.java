@@ -73,7 +73,7 @@ public class TickTask {
 	}
 	
 	public boolean decrementRepeats() {
-		if(repeatsletft > 0) {
+		if(repeatsletft > 1) {
 			repeatsletft--;
 			return false;
 		} else {

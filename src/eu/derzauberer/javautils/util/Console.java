@@ -44,7 +44,7 @@ public class Console implements Runnable {
 	public static final String RESET_BACKGROUND_COLOR = "\u001b[49m";
 	public static final String RESET = "\u001b[0m";
 
-	public enum MessageType {DEFAULT, INFO, SUCCESS, WARNING, ERROR}
+	public enum MessageType {DEFAULT, INFO, SUCCESS, WARNING, ERROR, DEBUG}
 
 	private Thread thread;
 	private String prefix;
