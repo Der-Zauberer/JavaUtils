@@ -98,7 +98,6 @@ public class TickHandler {
 		timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				System.out.println(task.getRepeatsLetft());
 				if (task.decrementTicks() && !task.isRemoved()) {
 					task.getAction().run(task);
 					if(!task.isEndless() && task.decrementRepeats()) {
