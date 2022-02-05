@@ -133,8 +133,8 @@ public class Console implements Runnable {
 	
 	public void sendInput(String string) {
 		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
-		EventHandler.executeEvent(ConsoleInputEvent.class, event);
-		if (!event.isCancled()) {
+		EventHandler.executeEvent(event);
+		if (!event.isCancelled()) {
 			CommandHandler.executeCommand(event.getConsole(), event.getInput());
 		}
 		log(event.getInput());
@@ -142,14 +142,14 @@ public class Console implements Runnable {
 	
 	private void sendOutput(String output, MessageType type) {
 		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output, type);
-		EventHandler.executeEvent(ConsoleOutputEvent.class, event);
+		EventHandler.executeEvent(event);
 		if (event.getMessageType() != MessageType.DEFAULT) {
 			event.setOutput("[" + type.toString() + "] " + event.getOutput());
 		}
 		if (!ansiEscapeCodesSupportetBySystem()) {
 			event.setOutput(removeEscapeCodes(event.getOutput()));
 		}
-		if (!event.isCancled()) {
+		if (!event.isCancelled()) {
 			if (logTimestampEnabled) {
 				outputAction.onAction(getTimeStamp() + event.getOutput());
 			} else {

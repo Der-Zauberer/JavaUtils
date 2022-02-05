@@ -5,22 +5,16 @@ import eu.derzauberer.javautils.util.Event;
 
 public class ClientMessageRecieveEvent extends Event {
 	
-	private boolean cancled;
 	private Client client;
 	private String message;
 	
 	public ClientMessageRecieveEvent(Client client, String message) {
-		this.cancled = false;
 		this.client = client;
 		this.message = message;
 	}
 	
-	public void setCancled(boolean cancled) {
-		this.cancled = cancled;
-	}
-	
-	public boolean isCancled() {
-		return cancled;
+	public void setCancled(boolean cancelled) {
+		this.setCancelled(cancelled);
 	}
 	
 	public Client getClient() {

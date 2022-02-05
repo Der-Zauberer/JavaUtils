@@ -42,7 +42,7 @@ public class Client implements Runnable {
 		action = (client, message) -> {};
 		selfdisconnect = false;
 		ClientConnectEvent event = new ClientConnectEvent(this);
-		EventHandler.executeEvent(ClientConnectEvent.class, event);
+		EventHandler.executeEvent(event);
 		if (!isPartOfServer()) {
 			thread = new Thread(this);
 			thread.start();
@@ -56,8 +56,8 @@ public class Client implements Runnable {
 			try {
 				message = input.readLine();
 				ClientMessageRecieveEvent event = new ClientMessageRecieveEvent(this, message);
-				EventHandler.executeEvent(ClientMessageRecieveEvent.class, event);
-				if (!event.isCancled()) {
+				EventHandler.executeEvent(event);
+				if (!event.isCancelled()) {
 					onMessageReceive(message);
 				}
 			} catch (SocketException socketException) {
@@ -77,13 +77,13 @@ public class Client implements Runnable {
 			cause = DisconnectCause.CONNECTTIONCLOSED;
 		}
 		ClientDisconnectEvent event = new ClientDisconnectEvent(this, cause);
-		EventHandler.executeEvent(ClientDisconnectEvent.class, event);
+		EventHandler.executeEvent(event);
 	}
 
 	public void sendMessage(String message) {
 		ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
-		EventHandler.executeEvent(ClientMessageSendEvent.class, event);
-		if (!event.isCancled()) {
+		EventHandler.executeEvent(event);
+		if (!event.isCancelled()) {
 			output.println(message);
 		}
 	}

@@ -6,24 +6,18 @@ import eu.derzauberer.javautils.util.Console.MessageType;
 
 public class ConsoleOutputEvent extends Event {
 	
-	private boolean cancled;
 	private Console console;
 	private String output;
 	private MessageType type;
 	
 	public ConsoleOutputEvent(Console console, String output, MessageType type) {
-		this.cancled = false;
 		this.console = console;
 		this.output = output;
 		this.type = type;
 	}
 	
-	public void setCancled(boolean cancled) {
-		this.cancled = cancled;
-	}
-	
-	public boolean isCancled() {
-		return cancled;
+	public void setCancelled(boolean cancelled) {
+		this.setCancelled(cancelled);
 	}
 	
 	public Console getConsole() {

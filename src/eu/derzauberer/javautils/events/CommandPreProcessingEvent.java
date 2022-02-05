@@ -6,7 +6,6 @@ import eu.derzauberer.javautils.util.Event;
 
 public class CommandPreProcessingEvent extends Event {
 
-	private boolean cancled;
 	private Console console;
 	private Command command;
 	private String string;
@@ -14,7 +13,6 @@ public class CommandPreProcessingEvent extends Event {
 	private String args[];
 	
 	public CommandPreProcessingEvent(Console console, Command command, String string, String label, String args[]) {
-		this.cancled = false;
 		this.console = console;
 		this.command = command;
 		this.string = string;
@@ -22,12 +20,8 @@ public class CommandPreProcessingEvent extends Event {
 		this.args = args;
 	}
 	
-	public void setCancled(boolean cancled) {
-		this.cancled = cancled;
-	}
-	
-	public boolean isCancled() {
-		return cancled;
+	public void setCancelled(boolean cancelled) {
+		this.setCancelled(cancelled);
 	}
 	
 	public Console getConsole() {

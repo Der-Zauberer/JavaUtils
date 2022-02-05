@@ -5,22 +5,16 @@ import eu.derzauberer.javautils.util.Event;
 
 public class ConsoleInputEvent extends Event {
 	
-	private boolean cancled;
 	private Console console;
 	private String input;
 	
 	public ConsoleInputEvent(Console console, String input) {
-		this.cancled = false;
 		this.console = console;
 		this.input = input;
 	}
 	
-	public void setCancled(boolean cancled) {
-		this.cancled = cancled;
-	}
-	
-	public boolean isCancled() {
-		return cancled;
+	public void setCancelled(boolean cancelled) {
+		this.setCancelled(cancelled);
 	}
 	
 	public Console getConsole() {
