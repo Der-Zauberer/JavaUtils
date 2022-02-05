@@ -18,6 +18,7 @@ public class CommandExecutionFailedEvent extends Event {
 		this.string = string;
 		this.label = label;
 		this.args = args;
+		execute();
 	}
 	
 	public Console getConsole() {

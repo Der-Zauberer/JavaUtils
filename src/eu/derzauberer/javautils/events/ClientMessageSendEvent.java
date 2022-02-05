@@ -11,6 +11,7 @@ public class ClientMessageSendEvent extends Event {
 	public ClientMessageSendEvent(Client client, String message) {
 		this.client = client;
 		this.message = message;
+		execute();
 	}
 	
 	public void setCancelled(boolean cancelled) {

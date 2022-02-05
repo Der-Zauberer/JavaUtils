@@ -14,6 +14,7 @@ public class ConsoleOutputEvent extends Event {
 		this.console = console;
 		this.output = output;
 		this.type = type;
+		execute();
 	}
 	
 	public void setCancelled(boolean cancelled) {

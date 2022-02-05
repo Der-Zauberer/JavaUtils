@@ -18,6 +18,7 @@ public class CommandPreProcessingEvent extends Event {
 		this.string = string;
 		this.label = label;
 		this.args = args;
+		execute();
 	}
 	
 	public void setCancelled(boolean cancelled) {

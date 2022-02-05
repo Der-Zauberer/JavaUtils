@@ -10,7 +10,6 @@ import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.handler.CommandHandler;
-import eu.derzauberer.javautils.handler.EventHandler;
 import eu.derzauberer.javautils.handler.FileHandler;
 
 public class Console implements Runnable {
@@ -133,7 +132,6 @@ public class Console implements Runnable {
 	
 	public void sendInput(String string) {
 		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
-		EventHandler.executeEvent(event);
 		if (!event.isCancelled()) {
 			CommandHandler.executeCommand(event.getConsole(), event.getInput());
 		}
@@ -142,7 +140,6 @@ public class Console implements Runnable {
 	
 	private void sendOutput(String output, MessageType type) {
 		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output, type);
-		EventHandler.executeEvent(event);
 		if (event.getMessageType() != MessageType.DEFAULT) {
 			event.setOutput("[" + type.toString() + "] " + event.getOutput());
 		}

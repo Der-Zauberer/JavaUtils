@@ -16,6 +16,7 @@ public class ClientDisconnectEvent extends Event {
 	public ClientDisconnectEvent(Client client, DisconnectCause cause) {
 		this.client = client;
 		this.cause = cause;
+		execute();
 	}
 	
 	public Client getClient() {

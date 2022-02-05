@@ -35,24 +35,19 @@ public class CommandHandler {
 					return true;
 				}
 				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, commands.get(string), string, label, args);
-				EventHandler.executeEvent(event);
 				if (!event.isCancelled()) {
 					boolean success = commands.get(label).onCommand(event.getConsole(), event.getLabel(), event.getArgs());
 					if (!success) {
-						CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getConsole(), event.getCommand(), event.getString(), event.getLabel(), event.getArgs());
-						EventHandler.executeEvent(commandExecutionFailedEvent);
+						new CommandExecutionFailedEvent(event.getConsole(), event.getCommand(), event.getString(), event.getLabel(), event.getArgs());
 					}
 					return success;
 				} else {
-					CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args);
-					EventHandler.executeEvent(commandNotFoundEvent);
+					new CommandNotFoundEvent(console, command, label, args);
 					return false;
 				}
-				
 			}
 		}
-		CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(console, command, label, args);
-		EventHandler.executeEvent(commandNotFoundEvent);
+		new CommandNotFoundEvent(console, command, label, args);
 		return false;
 	}
 

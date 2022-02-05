@@ -9,6 +9,7 @@ public class ClientConnectEvent extends Event {
 	
 	public ClientConnectEvent(Client client) {
 		this.client = client;
+		execute();
 	}
 	
 	public Client getClient() {

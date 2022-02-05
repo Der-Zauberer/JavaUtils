@@ -7,14 +7,12 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
 import eu.derzauberer.javautils.events.ClientMessageRecieveEvent;
 import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent.DisconnectCause;
-import eu.derzauberer.javautils.handler.EventHandler;
 
 public class Client implements Runnable {
 
@@ -41,8 +39,7 @@ public class Client implements Runnable {
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		action = (client, message) -> {};
 		selfdisconnect = false;
-		ClientConnectEvent event = new ClientConnectEvent(this);
-		EventHandler.executeEvent(event);
+		new ClientConnectEvent(this);
 		if (!isPartOfServer()) {
 			thread = new Thread(this);
 			thread.start();
@@ -56,7 +53,6 @@ public class Client implements Runnable {
 			try {
 				message = input.readLine();
 				ClientMessageRecieveEvent event = new ClientMessageRecieveEvent(this, message);
-				EventHandler.executeEvent(event);
 				if (!event.isCancelled()) {
 					onMessageReceive(message);
 				}
@@ -76,13 +72,11 @@ public class Client implements Runnable {
 		if (selfdisconnect) {
 			cause = DisconnectCause.CONNECTTIONCLOSED;
 		}
-		ClientDisconnectEvent event = new ClientDisconnectEvent(this, cause);
-		EventHandler.executeEvent(event);
+		new ClientDisconnectEvent(this, cause);
 	}
 
 	public void sendMessage(String message) {
 		ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
-		EventHandler.executeEvent(event);
 		if (!event.isCancelled()) {
 			output.println(message);
 		}
