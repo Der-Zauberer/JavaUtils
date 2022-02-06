@@ -2,8 +2,11 @@ package eu.derzauberer.javautils.handler;
 
 import java.awt.Desktop;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -22,10 +25,10 @@ import java.util.stream.Stream;
 import eu.derzauberer.javautils.action.FileUpdatedAction;
 
 public class FileHandler {
-	
+
 	private static ArrayList<FileObserver> fileObserver = new ArrayList<>();
 	private static Timer timer;
-	
+
 	public static void createFile(File file) {
 		if (!file.exists()) {
 			if (file.getParentFile() != null) {
@@ -38,7 +41,7 @@ public class FileHandler {
 			}
 		}
 	}
-	
+
 	public static void deleteFile(File file) {
 		if (file.exists()) {
 			try {
@@ -48,6 +51,32 @@ public class FileHandler {
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
+		}
+	}
+
+	public static void copyDirectory(File original, File copy) {
+		try {
+			if (original.isDirectory()) {
+				if (!copy.exists()) {
+					copy.mkdir();
+				}
+				String[] children = original.list();
+				for (int i = 0; i < children.length; i++) {
+					copyDirectory(new File(original, children[i]), new File(copy, children[i]));
+				}
+			} else {
+				InputStream input = new FileInputStream(original);
+				OutputStream output = new FileOutputStream(copy);
+				byte[] buffer = new byte[1024];
+				int lennght = 0;
+				while ((lennght = input.read(buffer)) > 0) {
+					output.write(buffer, 0, lennght);
+				}
+				input.close();
+				output.close();
+			}
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
 	}
 
@@ -64,7 +93,8 @@ public class FileHandler {
 	public static void writeString(File file, String string) {
 		createFile(file);
 		try {
-			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE,
+					StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
@@ -78,17 +108,17 @@ public class FileHandler {
 			exception.printStackTrace();
 		}
 	}
-	
+
 	public static String getStringFromWebsite(URL url) throws IOException {
 		return getStringFromWebsite(url, false);
 	}
-	
+
 	public static String getStringFromWebsite(URL url, boolean removeHtmlTags) {
 		String string = "";
 		try {
 			Scanner scanner = new Scanner(url.openStream());
 			StringBuilder builder = new StringBuilder();
-			while(scanner.hasNext()) {
+			while (scanner.hasNext()) {
 				builder.append(scanner.nextLine());
 				builder.append("\n");
 			}
@@ -102,7 +132,7 @@ public class FileHandler {
 		}
 		return string;
 	}
-	
+
 	public static void downloadFileFromWebsite(URL url, File file) {
 		try {
 			ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
@@ -112,7 +142,7 @@ public class FileHandler {
 			exception.printStackTrace();
 		}
 	}
-	
+
 	public static void openFile(File file) {
 		try {
 			Desktop.getDesktop().open(file);
@@ -120,14 +150,14 @@ public class FileHandler {
 			exception.printStackTrace();
 		}
 	}
-	
+
 	public static void setOnFileUpdated(File file, FileUpdatedAction action) {
 		if (timer == null) {
 			timer = new Timer();
 		}
 		fileObserver.add(new FileHandler().new FileObserver(file, action));
 	}
-	
+
 	public static void removeFileFromUpdateObserver(File file) {
 		for (int i = 0; i < fileObserver.size(); i++) {
 			if (file == fileObserver.get(i).file) {
@@ -149,7 +179,18 @@ public class FileHandler {
 			exception.printStackTrace();
 		}
 	}
-	
+
+	public static File getJarFile() {
+		File file = null;
+		try {
+			file = new File(FileHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+		} catch (URISyntaxException exception) {}
+		if (file.getName().endsWith(".jar")) {
+			return file;
+		}
+		return file;
+	}
+
 	public static File getJarDirectory() {
 		File file = null;
 		try {
@@ -160,20 +201,20 @@ public class FileHandler {
 		}
 		return file;
 	}
-	
+
 	private class FileObserver extends TimerTask {
-		
+
 		private File file;
 		private FileUpdatedAction action;
 		private long timestamp;
-				
+
 		public FileObserver(File file, FileUpdatedAction action) {
 			this.file = file;
 			this.action = action;
 			this.timestamp = file.lastModified();
 			FileHandler.timer.schedule(this, 0, 700);
 		}
-		
+
 		@Override
 		public void run() {
 			if (!file.exists()) {

@@ -9,8 +9,9 @@ public class TickTask {
 	private int repeats;
 	private boolean endless;
 	private boolean removed;
-	private int ticksleft;
-	private int repeatsletft;
+	private int ticksLeft;
+	private int repeatsLetft;
+	private long repeatCounter;
 	
 	public TickTask(TickTaskAction action, int ticks) {
 		this(action, ticks, 0);
@@ -30,8 +31,9 @@ public class TickTask {
 		this.repeats = repeats;
 		this.endless = endless;
 		this.removed = false;
-		this.ticksleft = this.ticks;
-		this.repeatsletft = this.repeats;
+		this.ticksLeft = this.ticks;
+		this.repeatsLetft = this.repeats;
+		this.repeatCounter = 0;
 	}
 	
 	public TickTaskAction getAction() {
@@ -59,22 +61,22 @@ public class TickTask {
 	}
 	
 	public boolean decrementTicks() {
-		if(ticksleft > 1) {
-			ticksleft--;
+		if(ticksLeft > 1) {
+			ticksLeft--;
 			return false;
 		} else {
-			ticksleft = ticks;
+			ticksLeft = ticks;
 			return true;
 		}
 	}
 	
 	public int getTicksLetft() {
-		return ticksleft;
+		return ticksLeft;
 	}
 	
 	public boolean decrementRepeats() {
-		if(repeatsletft > 1) {
-			repeatsletft--;
+		if(repeatsLetft > 1) {
+			repeatsLetft--;
 			return false;
 		} else {
 			return true;
@@ -82,7 +84,19 @@ public class TickTask {
 	}
 	
 	public int getRepeatsLetft() {
-		return repeatsletft;
+		return repeatsLetft;
+	}
+	
+	public void incrementRepeatCounter() {
+		if (repeatCounter < Long.MAX_VALUE) {
+			repeatCounter++;
+		} else {
+			repeatCounter = 0;
+		}
+	}
+	
+	public long getRepeatCounter() {
+		return repeatCounter;
 	}
 	
 }

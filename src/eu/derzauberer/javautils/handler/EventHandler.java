@@ -15,6 +15,7 @@ public class EventHandler {
 	public static void registerEvents(Listener listener) {
 		for (Method method : listener.getClass().getDeclaredMethods()) {
 			if (method.getAnnotation(EventListener.class) != null) {
+				method.setAccessible(true);
 				methods.put(method, listener);
 			}
 		}

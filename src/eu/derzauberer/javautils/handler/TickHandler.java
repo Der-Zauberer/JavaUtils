@@ -15,8 +15,7 @@ public class TickHandler {
 	private static boolean restart = false;
 	
 	private static ArrayList<TickTask> tasks = new ArrayList<>();
-	private static HashMap<TickTask, TimerTask> asyncTasks = new HashMap<>();
-	private static HashMap<TickTask, Integer> asyncSpeed = new HashMap<>();
+	private static HashMap<TickTask, Integer> asyncTasks = new HashMap<>();
 	
 	public static void start() {
 		if (!isRunning) {
@@ -35,13 +34,15 @@ public class TickHandler {
 				}
 			};
 			timer.schedule(timertask, 0, tickspeed);
-			asyncTasks.keySet().forEach((task) -> createAsyncTask(task, asyncTasks.get(task), asyncSpeed.get(task)));
+			asyncTasks.keySet().forEach((task) -> createAsyncTask(task, asyncTasks.get(task)));
 		}
 	}
 	
 	public static void stop() {
 		if (isRunning) {
+			isRunning = false;
 			timer.cancel();
+			timer = new Timer();
 		}
 	}
 	
@@ -58,13 +59,12 @@ public class TickHandler {
 	}
 	
 	public static void addAsyncTask(TickTask task, int tickspeed) {
-		createAsyncTask(task, null, tickspeed);
+		createAsyncTask(task, tickspeed);
 	}
 	
 	public static void removeAsyncTask(TickTask task) {
-		asyncTasks.get(task).cancel();
+		task.remove();
 		asyncTasks.remove(task);
-		asyncSpeed.remove(task);
 	}
 	
 	public static void setTickSpeed(long tickspeed) {
@@ -83,6 +83,8 @@ public class TickHandler {
 				task.getAction().run(task);
 				if(!task.isEndless() && task.decrementRepeats()) {
 					deletetasks.add(task);
+				} else {
+					task.incrementRepeatCounter();
 				}
 			} 
 			if(task.isRemoved() && !deletetasks.contains(task)) {
@@ -94,26 +96,28 @@ public class TickHandler {
 		}
 	}
 	
-	private static void createAsyncTask(TickTask task, TimerTask timerTask, int tickspeed) {
-		timerTask = new TimerTask() {
+	private static void createAsyncTask(TickTask task, int tickspeed) {
+		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
 				if (task.decrementTicks() && !task.isRemoved()) {
 					task.getAction().run(task);
 					if(!task.isEndless() && task.decrementRepeats()) {
 						task.remove();
+					} else {
+						task.incrementRepeatCounter();
 					}
 				}
 				if (task.isRemoved()) {
 					asyncTasks.remove(task);
-					asyncSpeed.remove(task);
 					this.cancel();
 				}
 			}
 		};
-		asyncTasks.put(task, timerTask);
-		asyncSpeed.put(task, tickspeed);
-		timer.schedule(timerTask, 0, tickspeed);
+		asyncTasks.put(task, tickspeed);
+		if (isRunning) {
+			timer.schedule(timerTask, 0, tickspeed);
+		}
 	}
 	
 	protected static Timer getTimer() {
