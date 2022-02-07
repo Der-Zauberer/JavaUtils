@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -37,7 +38,7 @@ public class FileHandler {
 			try {
 				file.createNewFile();
 			} catch (IOException exception) {
-				exception.printStackTrace();
+				throw new UncheckedIOException(exception);
 			}
 		}
 	}
@@ -49,7 +50,7 @@ public class FileHandler {
 				stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
 				stream.close();
 			} catch (IOException exception) {
-				exception.printStackTrace();
+				throw new UncheckedIOException(exception);
 			}
 		}
 	}
@@ -76,7 +77,7 @@ public class FileHandler {
 				output.close();
 			}
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 	}
 
@@ -85,7 +86,7 @@ public class FileHandler {
 		try {
 			string = new String(Files.readAllBytes(Paths.get(file.toURI())));
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 		return string;
 	}
@@ -96,7 +97,7 @@ public class FileHandler {
 			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE,
 					StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 	}
 
@@ -105,7 +106,7 @@ public class FileHandler {
 		try {
 			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.APPEND);
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 	}
 
@@ -128,7 +129,7 @@ public class FileHandler {
 			}
 			scanner.close();
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 		return string;
 	}
@@ -139,7 +140,7 @@ public class FileHandler {
 			FileOutputStream output = new FileOutputStream(file.getPath());
 			output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 	}
 
@@ -147,7 +148,7 @@ public class FileHandler {
 		try {
 			Desktop.getDesktop().open(file);
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			throw new UncheckedIOException(exception);
 		}
 	}
 
@@ -175,7 +176,9 @@ public class FileHandler {
 	public static void openFileInBrowser(String url) {
 		try {
 			Desktop.getDesktop().browse(new URL(url).toURI());
-		} catch (IOException | URISyntaxException exception) {
+		} catch (IOException exception) {
+			throw new UncheckedIOException(exception);
+		} catch (URISyntaxException exception) {
 			exception.printStackTrace();
 		}
 	}
@@ -184,7 +187,9 @@ public class FileHandler {
 		File file = null;
 		try {
 			file = new File(FileHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-		} catch (URISyntaxException exception) {}
+		} catch (URISyntaxException exception) {
+			exception.printStackTrace();
+		}
 		if (file.getName().endsWith(".jar")) {
 			return file;
 		}
@@ -195,7 +200,9 @@ public class FileHandler {
 		File file = null;
 		try {
 			file = new File(FileHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-		} catch (URISyntaxException exception) {}
+		} catch (URISyntaxException exception) {
+			exception.printStackTrace();
+		}
 		if (file.getName().endsWith(".jar")) {
 			return file.getParentFile();
 		}
