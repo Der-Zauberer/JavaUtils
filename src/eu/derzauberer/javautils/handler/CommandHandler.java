@@ -63,9 +63,7 @@ public class CommandHandler {
 	}
 
 	public static boolean getCondition(String args[], String condition, int position) {
-		if (args.length - 1 >= position && args[position] != null && args[position].equalsIgnoreCase(condition))
-			return true;
-		return false;
+		return args.length - 1 >= position && args[position] != null && args[position].equalsIgnoreCase(condition);
 	}
 
 	public static boolean hasCondition(String args[], String condition) {

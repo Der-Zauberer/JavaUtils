@@ -31,6 +31,10 @@ public class JsonParser {
 		parse();
 	}
 	
+	public void setNull(String key) {
+		setObject(key, null);
+	}
+	
 	public void set(String key, String string) {
 		setObject(key, removeEscapeCodes(string));
 	}
@@ -72,10 +76,6 @@ public class JsonParser {
 		}
 	}
 	
-	public void set(List<?> list) {
-		set("null", list);
-	}
-	
 	public void set(String key, List<?> list) {
 		boolean isString = true;
 		List<Object> objects = new ArrayList<>();
@@ -95,7 +95,7 @@ public class JsonParser {
 		setObject(key, objects);
 	}
 	
-	public void setClassAsObject(String key, Object object) {
+	public void setClassAsJsonObject(String key, Object object) {
 		for (Field field : object.getClass().getDeclaredFields()) {
 			if (field.getAnnotation(JsonElement.class) != null) {
 				field.setAccessible(true);
@@ -118,7 +118,7 @@ public class JsonParser {
 							List<JsonParser> list = new ArrayList<>();
 							for (Object listObject : (List<?>) field.get(object)) {
 								JsonParser parser = new JsonParser();
-								parser.setClassAsObject("", listObject);
+								parser.setClassAsJsonObject("", listObject);
 								list.add(parser);
 							}
 							setObject(name, list);
@@ -127,7 +127,7 @@ public class JsonParser {
 						}
 					} else {
 						JsonParser parser = new JsonParser();
-						parser.setClassAsObject("", field.get(object));
+						parser.setClassAsJsonObject("", field.get(object));
 						set(name, parser);
 					}
 				} catch (NullPointerException exception) {
@@ -156,10 +156,7 @@ public class JsonParser {
 	}
 	
 	public boolean exist(String key) {
-		if (structure.contains(key)) {
-			return true;
-		}
-		return false;
+		return structure.contains(key);
 	}
 	
 	public boolean isEmpty() {
@@ -236,7 +233,7 @@ public class JsonParser {
 	}
 	
 	public JsonParser getJsonObject(String key) {
-		if (key == "" || key.isEmpty()) return this;
+		if (key.isEmpty()) return this;
 		if (getObject(key) instanceof JsonParser) {
 			return (JsonParser) getObject(key);
 		} else if (getObject(key) instanceof List) {
@@ -335,7 +332,7 @@ public class JsonParser {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void getClassAsObject(String key, Object object) {
+	public void getClassAsJsonObject(String key, Object object) {
 		for (Field field : object.getClass().getDeclaredFields()) {
 			if (field.getAnnotation(JsonElement.class) != null) {
 				field.setAccessible(true);
@@ -376,7 +373,7 @@ public class JsonParser {
 								List objectList = new ArrayList<>();
 								for (JsonParser listJsonObject : getJsonObjectList(name)) {
 									Object listObject = classType.newInstance();
-									listJsonObject.getClassAsObject("", classType.cast(listObject));
+									listJsonObject.getClassAsJsonObject("", classType.cast(listObject));
 									objectList.add(classType.cast(listObject));
 								}
 								field.set(object, objectList);
@@ -386,7 +383,7 @@ public class JsonParser {
 						try {
 							JsonParser parser = getJsonObject(name);
 							Object subObject = Class.forName(field.getGenericType().getTypeName()).newInstance();
-							parser.getClassAsObject("", subObject.getClass().cast(subObject));
+							parser.getClassAsJsonObject("", subObject.getClass().cast(subObject));
 							field.set(object, subObject.getClass().cast(subObject));
 						} catch (ClassNotFoundException exception) {
 						} catch (InstantiationException exception) {}
@@ -462,7 +459,7 @@ public class JsonParser {
 					}
 					if (string.charAt(i) == '}' && !isArray) {
 						name = null;
-						if (key != "" && key.substring(0, key.length() - 1).contains(".")) {
+						if (!key.isEmpty() && key.substring(0, key.length() - 1).contains(".")) {
 							key = key.substring(0, key.length() - 1);
 							key = key.substring(0, key.lastIndexOf('.'));
 							key += ".";
@@ -513,7 +510,7 @@ public class JsonParser {
 
 	private void setObject(String key, Object value) {
 		if (!key.startsWith("null") && getKeys().contains("null") && getKeys().size() == 1) {
-			if (key == "") {
+			if (key.isEmpty()) {
 				key = "null";
 			} else {
 				key = "null." + key;
@@ -758,11 +755,7 @@ public class JsonParser {
 		} else {
 			return false;
 		}
-		if (key1.split("\\.").length == key2.split("\\.").length) {
-			if (!key1.equals(key2)) {
-				return true;
-			}
-		}
+		if (!key1.equals(key2) && key1.split("\\.").length == key2.split("\\.").length) return true;
 		return false;
 	}
 	
@@ -863,7 +856,7 @@ public class JsonParser {
 				else if (type == Float.class) {return (T) new Float(((Number)object).floatValue());}
 				else if (type == Double.class) {return (T) new Double(((Number)object).doubleValue());}
 			} else if (object instanceof Boolean) {
-				if ((boolean) object == true) {
+				if ((boolean) object) {
 					return getNumberFromObject(new Integer(1), type);
 				} else {
 					return getNumberFromObject(new Integer(0), type);
