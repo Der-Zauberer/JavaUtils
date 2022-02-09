@@ -1,9 +1,9 @@
 package eu.derzauberer.javautils.action;
 
-import eu.derzauberer.javautils.util.Client;
+import eu.derzauberer.javautils.events.ClientMessageRecieveEvent;
 
 public interface ClientMessageReceiveAction {
 	
-	public abstract void onAction(Client client, String message);
+	public abstract void onAction(ClientMessageRecieveEvent event);
 
 }

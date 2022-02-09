@@ -37,7 +37,7 @@ public class Client implements Runnable {
 		this.socket = socket;
 		output = new PrintStream(socket.getOutputStream(), true);
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		action = (client, message) -> {};
+		action = (event) -> {};
 		selfdisconnect = false;
 		new ClientConnectEvent(this);
 		if (!isPartOfServer()) {
@@ -52,9 +52,14 @@ public class Client implements Runnable {
 		while ((thread == null || !thread.isInterrupted()) && !isClosed()) {
 			try {
 				message = input.readLine();
+				if (isPartOfServer() && server.isClosed()) {
+					server.removeClientFromHandler(this);
+					close();
+					break;
+				}
 				ClientMessageRecieveEvent event = new ClientMessageRecieveEvent(this, message);
 				if (!event.isCancelled()) {
-					onMessageReceive(message);
+					onMessageReceive(event);
 				}
 			} catch (SocketException socketException) {
 				if (isPartOfServer()) server.removeClientFromHandler(this);
@@ -82,8 +87,11 @@ public class Client implements Runnable {
 		}
 	}
 	
-	public void onMessageReceive(String message) {
-		action.onAction(this, message);
+	protected void onMessageReceive(ClientMessageRecieveEvent event) {
+		if (isPartOfServer()) {
+			server.onMessageRecieve(event);
+		}
+		action.onAction(event);
 	}
 
 	public void setOnMessageRecieve(ClientMessageReceiveAction action) {
@@ -93,7 +101,6 @@ public class Client implements Runnable {
 	public void close() {
 		try {
 			socket.close();
-			thread.interrupt();
 			selfdisconnect = true;
 		} catch (IOException exception) {
 			exception.printStackTrace();
@@ -115,10 +122,7 @@ public class Client implements Runnable {
 	}
 	
 	public boolean isPartOfServer() {
-		if(server != null) {
-			return true;
-		}
-		return false;
+		return server != null;
 	}
 	
 	public Server getServer() {
