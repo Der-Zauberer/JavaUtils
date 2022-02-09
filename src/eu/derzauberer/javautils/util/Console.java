@@ -6,6 +6,8 @@ import java.util.Calendar;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+
+import eu.derzauberer.javautils.action.ConsoleInputAction;
 import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
@@ -48,6 +50,7 @@ public class Console implements Runnable {
 	private Thread thread;
 	private String prefix;
 	private File directory;
+	private ConsoleInputAction inputAction;
 	private ConsoleOutputAction outputAction;
 	private Object sender;
 	private boolean ansiEscapeCodesEnabled;
@@ -72,7 +75,8 @@ public class Console implements Runnable {
 		if (start) startConsole();
 		directory = FileHandler.getJarDirectory();
 		this.prefix = prefix;
-		outputAction = output -> System.out.println(output);
+		inputAction = event -> {};
+		outputAction = event -> System.out.println(event.getOutput());
 		sender = System.in;
 		ansiEscapeCodesEnabled = false;
 		logEnabled = false;
@@ -118,7 +122,11 @@ public class Console implements Runnable {
 		return directory;
 	}
 	
-	public void setOutputAction(ConsoleOutputAction outputAction) {
+	public void setOnInput(ConsoleInputAction inputAction) {
+		this.inputAction = inputAction;
+	}
+	
+	public void setOnOutput(ConsoleOutputAction outputAction) {
 		this.outputAction = outputAction;
 	}
 	
@@ -133,9 +141,10 @@ public class Console implements Runnable {
 	public void sendInput(String string) {
 		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
 		if (!event.isCancelled()) {
+			inputAction.onAction(event);
 			CommandHandler.executeCommand(event.getConsole(), event.getInput());
+			log(event.getInput());
 		}
-		log(event.getInput());
 	}
 	
 	private void sendOutput(String output, MessageType type) {
@@ -146,14 +155,13 @@ public class Console implements Runnable {
 		if (!ansiEscapeCodesSupportetBySystem()) {
 			event.setOutput(removeEscapeCodes(event.getOutput()));
 		}
-		if (!event.isCancelled()) {
-			if (logTimestampEnabled) {
-				outputAction.onAction(getTimeStamp() + event.getOutput());
-			} else {
-				outputAction.onAction(event.getOutput());
-			}
+		if (logTimestampEnabled) {
+			event.setOutput(getTimeStamp() + event.getOutput());
 		}
-		log(removeEscapeCodes(event.getOutput()));
+		if (!event.isCancelled()) {
+			outputAction.onAction(event);
+			log(removeEscapeCodes(event.getOutput()));
+		}
 	}
 	
 	public static String removeEscapeCodes(String string) {
