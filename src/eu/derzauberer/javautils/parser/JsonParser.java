@@ -31,6 +31,11 @@ public class JsonParser {
 		parse();
 	}
 	
+	public JsonParser(Object object) {
+		this("");
+		setClassAsJsonObject("", object);
+	}
+	
 	public void setNull(String key) {
 		setObject(key, null);
 	}
@@ -96,45 +101,34 @@ public class JsonParser {
 	}
 	
 	public void setClassAsJsonObject(String key, Object object) {
-		for (Field field : object.getClass().getDeclaredFields()) {
-			if (field.getAnnotation(JsonElement.class) != null) {
-				field.setAccessible(true);
-				String name;
-				if (field.getAnnotation(JsonElement.class).key().equals("")) {
-					name = field.getName();
-				} else {
-					name = field.getAnnotation(JsonElement.class).key();
-				}
-				if (key != null && !key.equals("")) {
-					name = key + "." + name;
-				}
-				try {
-					if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
-						setObject(name, field.get(object));
-					} else if (field.get(object) instanceof List<?>) {
-						Type type = field.getGenericType();
-						Class<?> classType = getClassFromGenericTypeOfList(type);
-						if (classType != Boolean.class && classType != Byte.class && classType != Short.class && classType != Integer.class && classType != Long.class && classType != Float.class && classType != Double.class && classType != String.class) {
-							List<JsonParser> list = new ArrayList<>();
-							for (Object listObject : (List<?>) field.get(object)) {
-								JsonParser parser = new JsonParser();
-								parser.setClassAsJsonObject("", listObject);
-								list.add(parser);
-							}
-							setObject(name, list);
-						} else {
-							setObject(name, field.get(object));
+		HashMap<Field, String> fields = getFieldsFromClass(key, object);
+		for (Field field : fields.keySet()) {
+			try {
+				if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
+					setObject(fields.get(field), field.get(object));
+				} else if (field.get(object) instanceof List<?>) {
+					Type type = field.getGenericType();
+					Class<?> classType = getClassFromGenericTypeOfList(type);
+					if (classType != Boolean.class && classType != Byte.class && classType != Short.class && classType != Integer.class && classType != Long.class && classType != Float.class && classType != Double.class && classType != String.class) {
+						List<JsonParser> list = new ArrayList<>();
+						for (Object listObject : (List<?>) field.get(object)) {
+							JsonParser parser = new JsonParser();
+							parser.setClassAsJsonObject("", listObject);
+							list.add(parser);
 						}
+						setObject(fields.get(field), list);
 					} else {
-						JsonParser parser = new JsonParser();
-						parser.setClassAsJsonObject("", field.get(object));
-						set(name, parser);
+						setObject(fields.get(field), field.get(object));
 					}
-				} catch (NullPointerException exception) {
-					setObject(name, null);
-				} catch (IllegalArgumentException exception) {
-				} catch (IllegalAccessException exception) {
+				} else {
+					JsonParser parser = new JsonParser();
+					parser.setClassAsJsonObject("", field.get(object));
+					set(fields.get(field), parser);
 				}
+			} catch (NullPointerException exception) {
+				setObject(fields.get(field), null);
+			} catch (IllegalArgumentException exception) {
+			} catch (IllegalAccessException exception) {
 			}
 		}
 	}
@@ -266,59 +260,31 @@ public class JsonParser {
 	}
 	
 	public List<Boolean> getBooleanList(String key) {
-		List <Boolean> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getBooleanFromObject(object));
-		}
-		return list;
+		return getBooleanFromList(key);
 	}
 	
 	public List<Byte> getByteList(String key) {
-		List <Byte> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, Byte.class));
-		}
-		return list;
+		return getNumberFromList(key, Byte.class);
 	}
 	
 	public List<Short> getShortList(String key) {
-		List <Short> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, Short.class));
-		}
-		return list;
+		return getNumberFromList(key, Short.class);
 	}
 	
 	public List<Integer> getIntList(String key) {
-		List <Integer> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, Integer.class));
-		}
-		return list;
+		return getNumberFromList(key, Integer.class);
 	}
 	
 	public List<Long> getLongList(String key) {
-		List <Long> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, Long.class));
-		}
-		return list;
+		return getNumberFromList(key, Long.class);
 	}
 	
 	public List<Float> getFloatList(String key) {
-		List <Float> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, Float.class));
-		}
-		return list;
+		return getNumberFromList(key, Float.class);
 	}
 	
 	public List<Double> getDoubleList(String key) {
-		List <Double> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, Double.class));
-		}
-		return list;
+		return getNumberFromList(key, Double.class);
 	}
 	
 	public List<JsonParser> getJsonObjectList(String key) {
@@ -333,71 +299,60 @@ public class JsonParser {
 	
 	@SuppressWarnings("unchecked")
 	public void getClassAsJsonObject(String key, Object object) {
-		for (Field field : object.getClass().getDeclaredFields()) {
-			if (field.getAnnotation(JsonElement.class) != null) {
-				field.setAccessible(true);
-				String name;
-				if (field.getAnnotation(JsonElement.class).key().equals("")) {
-					name = field.getName();
-				} else {
-					name = field.getAnnotation(JsonElement.class).key();
-				}
-				if (key != null && !key.equals("")) {
-					name = key + "." + name;
-				}
-				try {
-					if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
-						field.set(object, get(name));
-					} else if (field.get(object) instanceof List<?>) {
-						Type type = field.getGenericType();
-						Class<?> classType = getClassFromGenericTypeOfList(type);
-						if (classType == Boolean.class) {
-							field.set(object, getBooleanList(name));
-						} else if (classType == Byte.class) {
-							field.set(object, getByteList(name));
-						} else if (classType == Short.class) {
-							field.set(object, getShortList(name));
-						} else if (classType == Integer.class) {
-							field.set(object, getIntList(name));
-						} else if (classType == Long.class) {
-							field.set(object, getLongList(name));
-						} else if (classType == Float.class) {
-							field.set(object, getFloatList(name));
-						} else if (classType == Double.class) {
-							field.set(object, getDoubleList(name));
-						} else if (classType == String.class){
-							field.set(object, getStringList(name));
-						} else {
-							try {
-								@SuppressWarnings("rawtypes")
-								List objectList = new ArrayList<>();
-								for (JsonParser listJsonObject : getJsonObjectList(name)) {
-									Object listObject = classType.newInstance();
-									listJsonObject.getClassAsJsonObject("", classType.cast(listObject));
-									objectList.add(classType.cast(listObject));
-								}
-								field.set(object, objectList);
-							} catch (InstantiationException exception) {}
-						}
+		HashMap<Field, String> fields = getFieldsFromClass(key, object);
+		for (Field field : fields.keySet()) {
+			try {
+				if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
+					field.set(object, get(fields.get(field)));
+				} else if (field.get(object) instanceof List<?>) {
+					Type type = field.getGenericType();
+					Class<?> classType = getClassFromGenericTypeOfList(type);
+					if (classType == Boolean.class) {
+						field.set(object, getBooleanList(fields.get(field)));
+					} else if (classType == Byte.class) {
+						field.set(object, getByteList(fields.get(field)));
+					} else if (classType == Short.class) {
+						field.set(object, getShortList(fields.get(field)));
+					} else if (classType == Integer.class) {
+						field.set(object, getIntList(fields.get(field)));
+					} else if (classType == Long.class) {
+						field.set(object, getLongList(fields.get(field)));
+					} else if (classType == Float.class) {
+						field.set(object, getFloatList(fields.get(field)));
+					} else if (classType == Double.class) {
+						field.set(object, getDoubleList(fields.get(field)));
+					} else if (classType == String.class){
+						field.set(object, getStringList(fields.get(field)));
 					} else {
 						try {
-							JsonParser parser = getJsonObject(name);
-							Object subObject = Class.forName(field.getGenericType().getTypeName()).newInstance();
-							parser.getClassAsJsonObject("", subObject.getClass().cast(subObject));
-							field.set(object, subObject.getClass().cast(subObject));
-						} catch (ClassNotFoundException exception) {
+							@SuppressWarnings("rawtypes")
+							List objectList = new ArrayList<>();
+							for (JsonParser listJsonObject : getJsonObjectList(fields.get(field))) {
+								Object listObject = classType.newInstance();
+								listJsonObject.getClassAsJsonObject("", classType.cast(listObject));
+								objectList.add(classType.cast(listObject));
+							}
+							field.set(object, objectList);
 						} catch (InstantiationException exception) {}
 					}
-				} catch (IllegalArgumentException exception) {
+				} else {
 					try {
-						if (field.get(object) instanceof Number && get(name) == null) {
-							field.set(object, 0);
-						}
-					} catch (IllegalArgumentException innerException) {
-					} catch (IllegalAccessException innerException) {
+						JsonParser parser = getJsonObject(fields.get(field));
+						Object subObject = Class.forName(field.getGenericType().getTypeName()).newInstance();
+						parser.getClassAsJsonObject("", subObject.getClass().cast(subObject));
+						field.set(object, subObject.getClass().cast(subObject));
+					} catch (ClassNotFoundException exception) {
+					} catch (InstantiationException exception) {}
+				}
+			} catch (IllegalArgumentException exception) {
+				try {
+					if (field.get(object) instanceof Number && get(fields.get(field)) == null) {
+						field.set(object, 0);
 					}
-				} catch (IllegalAccessException exception) {}
-			}
+				} catch (IllegalArgumentException innerException) {
+				} catch (IllegalAccessException innerException) {
+				}
+			} catch (IllegalAccessException exception) {}
 		}
 	}
 
@@ -578,7 +533,7 @@ public class JsonParser {
 	
 	private Object getObject(String key) {
 		if (!key.startsWith("null") && getKeys().contains("null") && getKeys().size() == 1) {
-			if (key == "") {
+			if (key.isEmpty()) {
 				key = "null";
 			} else {
 				key = "null." + key;
@@ -603,7 +558,7 @@ public class JsonParser {
 			}
 			return null;
 		} else {
-			if (key == "" || key.isEmpty()) return this;
+			if (key.isEmpty()) return this;
 			return elements.get(key);
 		}
 	}
@@ -845,6 +800,14 @@ public class JsonParser {
 		return false;
 	}
 	
+	private List<Boolean> getBooleanFromList(String key) {
+		List <Boolean> list = new ArrayList<>();
+		for (Object object : getListFromObject(getObject(key))) {
+			list.add(getBooleanFromObject(object));
+		}
+		return list;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private <T extends Number> T getNumberFromObject(Object object, Class<T> type) {
 		if (object != null) {
@@ -878,6 +841,14 @@ public class JsonParser {
 		return getNumberFromObject(new Integer(0), type);
 	}
 	
+	private <T extends Number> List<T> getNumberFromList(String key, Class<T> type) {
+		List <T> list = new ArrayList<>();
+		for (Object object : getListFromObject(getObject(key))) {
+			list.add(getNumberFromObject(object, type));
+		}
+		return list;
+	}
+	
 	private List<Object> getListFromObject(Object object) {
 	    return new ArrayList<>((Collection<?>)object);
 	}
@@ -888,6 +859,26 @@ public class JsonParser {
 		} else {
 			return null;
 		}
+	}
+	
+	private HashMap<Field, String> getFieldsFromClass(String key, Object object) {
+		HashMap<Field, String> fields = new HashMap<>();
+		for (Field field : object.getClass().getDeclaredFields()) {
+			if (field.getAnnotation(JsonElement.class) != null) {
+				field.setAccessible(true);
+				String name;
+				if (field.getAnnotation(JsonElement.class).key().equals("")) {
+					name = field.getName();
+				} else {
+					name = field.getAnnotation(JsonElement.class).key();
+				}
+				if (key != null && !key.equals("")) {
+					name = key + "." + name;
+				}
+				fields.put(field, name);
+			}
+		}
+		return fields;
 	}
 	
 	private Class<?> getClassFromGenericTypeOfList(Type type) {
