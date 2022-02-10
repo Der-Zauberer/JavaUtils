@@ -6,7 +6,6 @@ import java.util.Calendar;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-
 import eu.derzauberer.javautils.action.ConsoleInputAction;
 import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
@@ -48,8 +47,10 @@ public class Console implements Runnable {
 	public enum MessageType {DEFAULT, INFO, SUCCESS, WARNING, ERROR, DEBUG}
 
 	private Thread thread;
-	private String prefix;
+	private String inputPrefix;
 	private File directory;
+	private MessageType defaultType;
+	private boolean debugEnabled;
 	private ConsoleInputAction inputAction;
 	private ConsoleOutputAction outputAction;
 	private Object sender;
@@ -67,14 +68,16 @@ public class Console implements Runnable {
 		this("", start);
 	}
 	
-	public Console(String prefix) {
-		this(prefix, true);
+	public Console(String inputPrefix) {
+		this(inputPrefix, true);
 	}
 	
-	public Console(String prefix, boolean start) {
+	public Console(String inputPrefix, boolean start) {
 		if (start) startConsole();
 		directory = FileHandler.getJarDirectory();
-		this.prefix = prefix;
+		this.inputPrefix = inputPrefix;
+		defaultType = MessageType.DEFAULT;
+		debugEnabled = false;
 		inputAction = event -> {};
 		outputAction = event -> System.out.println(event.getOutput());
 		sender = System.in;
@@ -99,19 +102,19 @@ public class Console implements Runnable {
 			Scanner scanner = new Scanner(System.in);
 			String input;
 			while (!thread.isInterrupted()) {
-				System.out.print(prefix);
+				System.out.print(inputPrefix);
 				input = scanner.nextLine();
 				sendInput(input);
 			}
 		} catch (NoSuchElementException exception) {}
 	}
 
-	public  void setPrefix(String prefix) {
-		this.prefix = prefix;
+	public  void setInputPrefix(String inputPrefix) {
+		this.inputPrefix = inputPrefix;
 	}
 
-	public String getPrefix() {
-		return prefix;
+	public String getInputPrefix() {
+		return inputPrefix;
 	}
 
 	public void setDirectory(File directory) {
@@ -120,6 +123,22 @@ public class Console implements Runnable {
 	
 	public File getDirectory() {
 		return directory;
+	}
+	
+	public void setDefaultType(MessageType defaultType) {
+		this.defaultType = defaultType;
+	}
+	
+	public MessageType getDefaultType() {
+		return defaultType;
+	}
+	
+	public void setDebugEnabled(boolean debugEnabled) {
+		this.debugEnabled = debugEnabled;
+	}
+	
+	public boolean isDebugEnabled() {
+		return debugEnabled;
 	}
 	
 	public void setOnInput(ConsoleInputAction inputAction) {
@@ -148,19 +167,21 @@ public class Console implements Runnable {
 	}
 	
 	private void sendOutput(String output, MessageType type) {
-		ConsoleOutputEvent event = new ConsoleOutputEvent(this, output, type);
-		if (event.getMessageType() != MessageType.DEFAULT) {
-			event.setOutput("[" + type.toString() + "] " + event.getOutput());
-		}
-		if (!ansiEscapeCodesSupportetBySystem()) {
-			event.setOutput(removeEscapeCodes(event.getOutput()));
-		}
-		if (logTimestampEnabled) {
-			event.setOutput(getTimeStamp() + event.getOutput());
-		}
-		if (!event.isCancelled()) {
-			outputAction.onAction(event);
-			log(removeEscapeCodes(event.getOutput()));
+		if (type != MessageType.DEBUG || debugEnabled) {
+			ConsoleOutputEvent event = new ConsoleOutputEvent(this, output, type);
+			if (event.getMessageType() != MessageType.DEFAULT) {
+				event.setOutput("[" + type.toString() + "] " + event.getOutput());
+			}
+			if (!ansiEscapeCodesSupportetBySystem()) {
+				event.setOutput(removeEscapeCodes(event.getOutput()));
+			}
+			if (logTimestampEnabled) {
+				event.setOutput(getTimeStamp() + event.getOutput());
+			}
+			if (!event.isCancelled()) {
+				outputAction.onAction(event);
+				log(removeEscapeCodes(event.getOutput()));
+			}
 		}
 	}
 	
@@ -194,7 +215,7 @@ public class Console implements Runnable {
 	}
 	
 	public void sendMessage(Object object) {
-		sendOutput(object.toString(), MessageType.DEFAULT);
+		sendOutput(object.toString(), defaultType);
 	}
 
 	public void sendMessage(Object object, MessageType type) {
@@ -205,7 +226,7 @@ public class Console implements Runnable {
 		for (int i = 0; i < args.length && string.contains("{}"); i++) {
 			string = string.replaceFirst(Pattern.quote("{}"), args[i]);
 		}
-		sendOutput(string, MessageType.DEFAULT);
+		sendOutput(string, defaultType);
 	}
 
 	public void sendMessage(String string, MessageType type, String... args) {
