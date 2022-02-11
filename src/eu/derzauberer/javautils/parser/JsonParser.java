@@ -464,14 +464,13 @@ public class JsonParser {
 	}
 
 	private void setObject(String key, Object value) {
-		if (!key.startsWith("null") && getKeys().contains("null") && getKeys().size() == 1) {
+		if (!key.startsWith("null") && ((getKeys().contains("null") && getKeys().size() == 1) || (getKeys().size() == 0 && key.isEmpty() && value instanceof List<?>))) {
 			if (key.isEmpty()) {
 				key = "null";
 			} else {
 				key = "null." + key;
 			}
 		}
-		
 		if ((key.contains(".[") || key.startsWith("[")) && (key.contains("].") || key.endsWith("]"))) {
 			JsonParser parser = null;
 			String newKey = key.substring(key.indexOf(']') + 1);
@@ -850,7 +849,11 @@ public class JsonParser {
 	}
 	
 	private List<Object> getListFromObject(Object object) {
-	    return new ArrayList<>((Collection<?>)object);
+		try {
+			return new ArrayList<>((Collection<?>)object);
+		} catch (ClassCastException | NullPointerException exception) {
+			return new ArrayList<>();
+		}
 	}
 	
 	private JsonParser getJsonObjectFromObject(Object object) {
