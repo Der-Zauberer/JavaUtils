@@ -73,7 +73,7 @@ public class Console implements Runnable {
 	}
 	
 	public Console(String inputPrefix, boolean start) {
-		if (start) startConsole();
+		if (start) start();
 		directory = FileHandler.getJarDirectory();
 		this.inputPrefix = inputPrefix;
 		defaultType = MessageType.DEFAULT;
@@ -86,12 +86,12 @@ public class Console implements Runnable {
 		logDirectory = new File(FileHandler.getJarDirectory(), "logs");
 	}
 	
-	public void startConsole() {
+	public void start() {
 		thread = new Thread(this);
 		thread.start();
 	}
 
-	public void stopConsole() {
+	public void stop() {
 		thread.interrupt();
 	}
 	
