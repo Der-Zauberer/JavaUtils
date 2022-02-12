@@ -82,20 +82,16 @@ public class JsonParser {
 	}
 	
 	public void set(String key, List<?> list) {
-		boolean isString = true;
 		List<Object> objects = new ArrayList<>();
 		for (Object element : list) {
-			if (!(element instanceof String)) {
-				isString = false;
+			if (element instanceof String) {
+				objects.add(removeEscapeCodes(element.toString()));
+			} else {
+				if (element instanceof JsonParser) {
+					((JsonParser) element).hasParent = true;
+				}
+				objects.add(element);
 			}
-			if (element instanceof JsonParser) {
-				((JsonParser) element).hasParent = true;
-			}
-		}
-		if (isString) {
-			list.forEach(object -> objects.add(removeEscapeCodes(object.toString())));
-		} else {
-			list.forEach(object -> objects.add(getObjectFromString(getStringFromObject(object, false))));
 		}
 		setObject(key, objects);
 	}
