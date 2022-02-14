@@ -6,13 +6,13 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
-import eu.derzauberer.javautils.events.ClientMessageRecieveEvent;
+import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
 import eu.derzauberer.javautils.events.ClientMessageSendEvent;
-import eu.derzauberer.javautils.events.ClientDisconnectEvent.DisconnectCause;
 
 public class Client implements Runnable {
 
@@ -22,7 +22,7 @@ public class Client implements Runnable {
 	private PrintStream output;
 	private BufferedReader input;
 	private ClientMessageReceiveAction action;
-	private boolean selfdisconnect;
+	private boolean disconnected;
 
 	public Client(String host, int port) throws UnknownHostException, IOException {
 		this(new Socket(host, port));
@@ -38,7 +38,7 @@ public class Client implements Runnable {
 		output = new PrintStream(socket.getOutputStream(), true);
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		action = (event) -> {};
-		selfdisconnect = false;
+		disconnected = false;
 		new ClientConnectEvent(this);
 		if (!isPartOfServer()) {
 			thread = new Thread(this);
@@ -49,35 +49,20 @@ public class Client implements Runnable {
 	@Override
 	public void run() {
 		String message;
-		while ((thread == null || !thread.isInterrupted()) && !isClosed()) {
-			try {
+		try {
+			while (!isClosed()) {
 				message = input.readLine();
-				if (isPartOfServer() && server.isClosed()) {
-					server.removeClientFromHandler(this);
-					close();
-					break;
-				}
-				ClientMessageRecieveEvent event = new ClientMessageRecieveEvent(this, message);
+				if (message.equals("null")) break;
+				ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, message);
 				if (!event.isCancelled()) {
 					onMessageReceive(event);
 				}
-			} catch (SocketException socketException) {
-				if (isPartOfServer()) server.removeClientFromHandler(this);
-				close();
-				break;
-			} catch (NullPointerException nullPointerException) {
-				if (isPartOfServer()) server.removeClientFromHandler(this);
-				close();
-				break;
-			} catch (IOException exception) {
-				exception.printStackTrace();
 			}
+		} catch (SocketTimeoutException | SocketException | NullPointerException exception) {
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
-		DisconnectCause cause = DisconnectCause.CONNECTIONLOST;
-		if (selfdisconnect) {
-			cause = DisconnectCause.CONNECTTIONCLOSED;
-		}
-		new ClientDisconnectEvent(this, cause);
+		close();
 	}
 
 	public void sendMessage(String message) {
@@ -87,7 +72,7 @@ public class Client implements Runnable {
 		}
 	}
 	
-	protected void onMessageReceive(ClientMessageRecieveEvent event) {
+	protected void onMessageReceive(ClientMessageReceiveEvent event) {
 		if (isPartOfServer()) {
 			server.onMessageRecieve(event);
 		}
@@ -97,28 +82,38 @@ public class Client implements Runnable {
 	public void setOnMessageRecieve(ClientMessageReceiveAction action) {
 		this.action = action;
 	}
+	
+	public void setTimeout(int timeout) {
+		try {
+			socket.setSoTimeout(timeout);
+		} catch (SocketException exception) {}
+	}
+	
+	public int getTimeout() {
+		try {
+			return socket.getSoTimeout();
+		} catch (SocketException exception) {
+			return 0;
+		}
+	}
 
 	public void close() {
-		try {
-			socket.close();
-			selfdisconnect = true;
-		} catch (IOException exception) {
-			exception.printStackTrace();
+		if (!disconnected) {
+			disconnected = true;
+			try {
+				socket.close();
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+			new ClientDisconnectEvent(this);
+			if (isPartOfServer()) {
+				server.getClients().remove(this);
+			}
 		}
 	}
 	
 	public boolean isClosed() {
 		return socket.isClosed();
-	}
-
-	public void reopen(String host, int port) throws UnknownHostException, IOException {
-		socket = new Socket(host, port);
-		thread.start();
-	}
-
-	public void reopen(Socket socket) {
-		this.socket = socket;
-		thread.start();
 	}
 	
 	public boolean isPartOfServer() {

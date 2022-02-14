@@ -3,12 +3,12 @@ package eu.derzauberer.javautils.events;
 import eu.derzauberer.javautils.util.Client;
 import eu.derzauberer.javautils.util.Event;
 
-public class ClientMessageRecieveEvent extends Event {
+public class ClientMessageReceiveEvent extends Event {
 	
 	private Client client;
 	private String message;
 	
-	public ClientMessageRecieveEvent(Client client, String message) {
+	public ClientMessageReceiveEvent(Client client, String message) {
 		this.client = client;
 		this.message = message;
 		execute();

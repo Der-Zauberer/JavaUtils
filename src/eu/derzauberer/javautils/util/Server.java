@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
-import eu.derzauberer.javautils.events.ClientMessageRecieveEvent;
+import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
+import eu.derzauberer.javautils.events.ServerCloseEvent;
 
 public class Server implements Runnable {
 	
@@ -18,6 +20,7 @@ public class Server implements Runnable {
 	private ExecutorService service;
 	private Thread thread;
 	private ClientMessageReceiveAction action;
+	private int clientTimeout;
 	
 	public Server(int port) throws IOException {
 		this(new ServerSocket(port));
@@ -29,24 +32,27 @@ public class Server implements Runnable {
 		action = (event) -> {};
 		service = Executors.newCachedThreadPool();
 		thread = new Thread(this);
+		clientTimeout = 0;
 		thread.start();
 	}
 	
 	@Override
 	public void run() {
-		while (!thread.isInterrupted() && !server.isClosed()) {
-			try {
-				Socket socket = server.accept();
-				Client client = new Client(socket, this);
-				service.submit(client);
-				clients.add(client);
-			} catch (SocketException exception) {
-				if (!server.isClosed()) close();
-				return;
-			} catch (IOException exception) {
-				exception.printStackTrace();
+		try {
+			while (!server.isClosed()) {
+				try {
+					Socket socket = server.accept();
+					Client client = new Client(socket, this);
+					client.setTimeout(clientTimeout);
+					service.submit(client);
+					clients.add(client);
+				} catch (RejectedExecutionException exception) {}
 			}
+		} catch (SocketTimeoutException | SocketException exception) {
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
+		if (!server.isClosed()) close();
 	}
 	
 	public void sendBroadcastMessage(String message) {
@@ -55,7 +61,7 @@ public class Server implements Runnable {
 		}
 	}
 	
-	protected void onMessageRecieve(ClientMessageRecieveEvent event) {
+	protected void onMessageRecieve(ClientMessageReceiveEvent event) {
 		action.onAction(event);
 	}
 	
@@ -63,23 +69,50 @@ public class Server implements Runnable {
 		this.action = action;
 	}
 	
-	public void close() {
+	public void setServerTimeout(int timeout) {
 		try {
-			server.close();
-			clients.forEach(client -> client.close());
-			thread.interrupt();
+			server.setSoTimeout(timeout);
+		} catch (SocketException exception) {}
+	}
+	
+	public int getServerTimeout() {
+		try {
+			return server.getSoTimeout();
 		} catch (IOException exception) {
-			exception.printStackTrace();
+			return 0;
+		}
+	}
+	
+	public void setClientTimeout(int timeout) {
+		clientTimeout = timeout;
+		for (Client client : getClients()) {
+			if (!client.isClosed()) {
+				client.setTimeout(timeout);
+			}
+		}
+	}
+	
+	public int getClientTimeout() {
+		return clientTimeout;
+	}
+	
+	public void close() {
+		if (!server.isClosed()) {
+			try {
+				server.close();
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+			for (int i = 0; i < clients.size(); i++) {
+				clients.get(i).close();
+			}
+			new ServerCloseEvent(this);
+			service.shutdown();
 		}
 	}
 	
 	public boolean isClosed() {
 		return server.isClosed();
-	}
-
-	public void reopen(int port) throws UnknownHostException, IOException {
-		server = new ServerSocket(port);
-		thread.start();
 	}
 	
 	public ServerSocket getServerSocket() {
@@ -88,10 +121,6 @@ public class Server implements Runnable {
 	
 	public ArrayList<Client> getClients() {
 		return clients;
-	}
-	
-	public void removeClientFromHandler(Client client) {
-		clients.remove(client);
 	}
 
 }
