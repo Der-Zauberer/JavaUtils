@@ -61,11 +61,11 @@ public class Server implements Runnable {
 		}
 	}
 	
-	protected void onMessageRecieve(ClientMessageReceiveEvent event) {
+	protected void onMessageReceive(ClientMessageReceiveEvent event) {
 		action.onAction(event);
 	}
 	
-	public void setOnMessageRecieve(ClientMessageReceiveAction action) {
+	public void setOnMessageReceive(ClientMessageReceiveAction action) {
 		this.action = action;
 	}
 	

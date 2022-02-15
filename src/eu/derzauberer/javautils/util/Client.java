@@ -74,12 +74,12 @@ public class Client implements Runnable {
 	
 	protected void onMessageReceive(ClientMessageReceiveEvent event) {
 		if (isPartOfServer()) {
-			server.onMessageRecieve(event);
+			server.onMessageReceive(event);
 		}
 		action.onAction(event);
 	}
 
-	public void setOnMessageRecieve(ClientMessageReceiveAction action) {
+	public void setOnMessageReceive(ClientMessageReceiveAction action) {
 		this.action = action;
 	}
 	
