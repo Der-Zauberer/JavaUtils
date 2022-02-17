@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.util;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -94,6 +95,14 @@ public class Server implements Runnable {
 	
 	public int getClientTimeout() {
 		return clientTimeout;
+	}
+	
+	public InetAddress getAdress() {
+		return server.getInetAddress();
+	}
+	
+	public int getLocalPort() {
+		return server.getLocalPort();
 	}
 	
 	public void close() {

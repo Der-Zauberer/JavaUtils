@@ -27,7 +27,6 @@ public class JsonParser {
 		hasParent = false;
 		structure = new ArrayList<>();
 		elements = new HashMap<>();
-		removeSpaces();
 		parse();
 	}
 	
@@ -362,6 +361,7 @@ public class JsonParser {
 	}
 
 	private void parse() {
+		removeSpaces();
 		String key = "";
 		String name = null;
 		String value = null;
@@ -676,10 +676,17 @@ public class JsonParser {
 	}
 
 	private void removeSpaces() {
-		string = string.replace(" ", "");
-		string = string.replace("\n", "");
-		string = string.replace("\r", "");
-		string = string.replace("\t", "");
+		StringBuilder string = new StringBuilder(this.string);
+		boolean isString = false;
+		for (int i = 0; i < string.length(); i++) {
+			if (string.charAt(i) == '"') {
+				isString = !isString;
+			} else if (!isString && (string.charAt(i) == ' ' || string.charAt(i) == '\n' || string.charAt(i) == '\r' || string.charAt(i) == '\t')) {
+				string.deleteCharAt(i);
+				i--;
+			}
+		}
+		this.string = string.toString();
 	}
 
 	private void addLine(StringBuilder stringbuilder, int layer, String tab, String line) {

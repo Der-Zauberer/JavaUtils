@@ -214,6 +214,14 @@ public class Console implements Runnable {
 		return "\033[48;5;" + number + "m";
 	}
 	
+	public String nextInput() {
+		String input = "";
+		Scanner scanner = new Scanner(System.in);
+		input = scanner.next();
+		scanner.close();
+		return input;
+	}
+	
 	public void sendMessage(Object object) {
 		sendOutput(object.toString(), defaultType);
 	}

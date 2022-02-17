@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -95,6 +96,22 @@ public class Client implements Runnable {
 		} catch (SocketException exception) {
 			return 0;
 		}
+	}
+	
+	public InetAddress getAdress() {
+		return socket.getInetAddress();
+	}
+	
+	public int getPort() {
+		return socket.getPort();
+	}
+	
+	public InetAddress getLocalAdress() {
+		return socket.getLocalAddress();
+	}
+	
+	public int getLocalPort() {
+		return socket.getLocalPort();
 	}
 
 	public void close() {
