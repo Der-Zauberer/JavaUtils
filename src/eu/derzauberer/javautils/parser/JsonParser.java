@@ -35,64 +35,81 @@ public class JsonParser {
 		setClassAsJsonObject("", object);
 	}
 	
-	public void setNull(String key) {
+	public JsonParser setNull(String key) {
 		setObject(key, null);
+		return this;
 	}
 	
-	public void set(String key, String string) {
-		setObject(key, removeEscapeCodes(string));
-	}
-	
-	public void set(String key, boolean value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, byte value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, short value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, int value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, long value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, float value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, double value) {
-		setObject(key, value);
-	}
-	
-	public void set(String key, JsonParser object) {
-		if (!key.endsWith(".")) {
-			key += ".";
+	public JsonParser set(String key, String string) {
+		if (!isNull(key, string)) {
+			setObject(key, removeEscapeCodes(string));
 		}
-		for (String string : object.getKeys()) {
-			setObject(key + string, object.get(string));
-		}
+		return this;
 	}
 	
-	public void set(String key, List<?> list) {
-		List<Object> objects = new ArrayList<>();
-		for (Object element : list) {
-			if (element instanceof String) {
-				objects.add(removeEscapeCodes(element.toString()));
-			} else {
-				if (element instanceof JsonParser) {
-					((JsonParser) element).hasParent = true;
-				}
-				objects.add(element);
+	public JsonParser set(String key, boolean value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, byte value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, short value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, int value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, long value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, float value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, double value) {
+		setObject(key, value);
+		return this;
+	}
+	
+	public JsonParser set(String key, JsonParser object) {
+		if (!isNull(key, object)) {
+			if (!key.endsWith(".")) {
+				key += ".";
+			}
+			for (String string : object.getKeys()) {
+				setObject(key + string, object.get(string));
 			}
 		}
-		setObject(key, objects);
+		return this;
+	}
+	
+	public JsonParser set(String key, List<?> list) {
+		if (!isNull(key, list)) {
+			List<Object> objects = new ArrayList<>();
+			for (Object element : list) {
+				if (element instanceof String) {
+					objects.add(removeEscapeCodes(element.toString()));
+				} else {
+					if (element instanceof JsonParser) {
+						((JsonParser) element).hasParent = true;
+					}
+					objects.add(element);
+				}
+			}
+			setObject(key, objects);
+		}
+		return this;
 	}
 	
 	public void setClassAsJsonObject(String key, Object object) {
@@ -128,12 +145,13 @@ public class JsonParser {
 		}
 	}
 	
-	public void remove(String key) {
+	public JsonParser remove(String key) {
 		structure.remove(key);
 		elements.remove(key);
+		return this;
 	}
 	
-	public void removeSection(String key) {
+	public JsonParser removeSection(String key) {
 		ArrayList<Object> removed = new ArrayList<>();
 		for (String string : structure) {
 			if (string.startsWith(key)) {
@@ -142,6 +160,7 @@ public class JsonParser {
 			}
 		}
 		structure.removeAll(removed);
+		return this;
 	}
 	
 	public boolean exist(String key) {
@@ -760,6 +779,14 @@ public class JsonParser {
 			
 		}
 		return string;
+	}
+	
+	private boolean isNull(String key, Object object) {
+		if (object == null) {
+			setNull(key);
+			return true;
+		}
+		return false;
 	}
 	
 	private boolean isNumericString(String string) {
