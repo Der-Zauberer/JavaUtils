@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
+import eu.derzauberer.javautils.events.ClientDisconnectEvent.DisconnectCause;
 import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
 import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 
@@ -24,6 +25,7 @@ public class Client implements Runnable {
 	private BufferedReader input;
 	private ClientMessageReceiveAction action;
 	private boolean disconnected;
+	private DisconnectCause cause;
 
 	public Client(String host, int port) throws UnknownHostException, IOException {
 		this(new Socket(host, port));
@@ -59,9 +61,15 @@ public class Client implements Runnable {
 					onMessageReceive(event);
 				}
 			}
-		} catch (SocketTimeoutException | SocketException | NullPointerException exception) {
+		} catch (SocketTimeoutException exception) {
+			cause = DisconnectCause.TIMEOUT;
+		} catch (SocketException | NullPointerException exception) {
+			
 		} catch (IOException exception) {
 			exception.printStackTrace();
+		}
+		if (cause == null) {
+			cause = DisconnectCause.DISCONNECTED;
 		}
 		close();
 	}
@@ -122,7 +130,10 @@ public class Client implements Runnable {
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
-			new ClientDisconnectEvent(this);
+			if (cause == null) {
+				cause = DisconnectCause.CLOSED;
+			}
+			new ClientDisconnectEvent(this, cause);
 			if (isPartOfServer()) {
 				server.getClients().remove(this);
 			}
