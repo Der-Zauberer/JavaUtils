@@ -11,7 +11,6 @@ import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.handler.CommandHandler;
-import eu.derzauberer.javautils.handler.FileHandler;
 
 public class Console implements Runnable {
 	
@@ -74,7 +73,7 @@ public class Console implements Runnable {
 	
 	public Console(String inputPrefix, boolean start) {
 		if (start) start();
-		directory = FileHandler.getJarDirectory();
+		directory = FileUtil.getJarDirectory();
 		this.inputPrefix = inputPrefix;
 		defaultType = MessageType.DEFAULT;
 		debugEnabled = false;
@@ -83,7 +82,7 @@ public class Console implements Runnable {
 		sender = System.in;
 		ansiEscapeCodesEnabled = false;
 		logEnabled = false;
-		logDirectory = new File(FileHandler.getJarDirectory(), "logs");
+		logDirectory = new File(FileUtil.getJarDirectory(), "logs");
 	}
 	
 	public void start() {
@@ -256,7 +255,7 @@ public class Console implements Runnable {
 			if (!string.endsWith("\n")) {
 				string += "\n";
 			}
-			FileHandler.appendString(latestLogFile, string);
+			FileUtil.appendString(latestLogFile, string);
 		}
 	}
 	

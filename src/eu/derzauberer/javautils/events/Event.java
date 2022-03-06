@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.events;
 
 import eu.derzauberer.javautils.handler.EventHandler;
 

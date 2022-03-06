@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.sockets;
 
 import java.io.IOException;
 import java.net.InetAddress;

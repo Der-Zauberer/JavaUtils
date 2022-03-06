@@ -1,7 +1,6 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.util.Event;
-import eu.derzauberer.javautils.util.Server;
+import eu.derzauberer.javautils.sockets.Server;
 
 public class ServerCloseEvent extends Event {
 

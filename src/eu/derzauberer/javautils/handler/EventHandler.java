@@ -4,17 +4,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import eu.derzauberer.javautils.annotations.EventListener;
-import eu.derzauberer.javautils.util.Event;
-import eu.derzauberer.javautils.util.Listener;
+import eu.derzauberer.javautils.annotations.Listener;
+import eu.derzauberer.javautils.events.Event;
+import eu.derzauberer.javautils.util.EventListener;
 
 public class EventHandler {
 
-	private static HashMap<Method, Listener> methods = new HashMap<>();
+	private static HashMap<Method, EventListener> methods = new HashMap<>();
 	
-	public static void registerEvents(Listener listener) {
+	public static void registerEvents(EventListener listener) {
 		for (Method method : listener.getClass().getDeclaredMethods()) {
-			if (method.getAnnotation(EventListener.class) != null) {
+			if (method.getAnnotation(Listener.class) != null) {
 				method.setAccessible(true);
 				methods.put(method, listener);
 			}
@@ -30,7 +30,7 @@ public class EventHandler {
 		for (Method method : methods.keySet()) {
 			for (Class<?> type : method.getParameterTypes()) {
 				if (type == event.getClass()) {
-					switch (method.getAnnotation(EventListener.class).priority()) {
+					switch (method.getAnnotation(Listener.class).priority()) {
 					case HIGHEST: highestPriority.add(method); break;
 					case HIGHT: hightPriority.add(method); break;
 					case NORMAL: normalPriority.add(method); break;

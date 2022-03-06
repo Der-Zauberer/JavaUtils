@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.handler;
+package eu.derzauberer.javautils.util;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 import eu.derzauberer.javautils.action.FileUpdatedAction;
 
-public class FileHandler {
+public class FileUtil {
 
 	private static ArrayList<FileObserver> fileObserver = new ArrayList<>();
 	private static Timer timer;
@@ -156,7 +156,7 @@ public class FileHandler {
 		if (timer == null) {
 			timer = new Timer();
 		}
-		fileObserver.add(new FileHandler().new FileObserver(file, action));
+		fileObserver.add(new FileUtil().new FileObserver(file, action));
 	}
 
 	public static void removeFileFromUpdateObserver(File file) {
@@ -186,7 +186,7 @@ public class FileHandler {
 	public static File getJarFile() {
 		File file = null;
 		try {
-			file = new File(FileHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			file = new File(FileUtil.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 		} catch (URISyntaxException exception) {
 			exception.printStackTrace();
 		}
@@ -199,7 +199,7 @@ public class FileHandler {
 	public static File getJarDirectory() {
 		File file = null;
 		try {
-			file = new File(FileHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			file = new File(FileUtil.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 		} catch (URISyntaxException exception) {
 			exception.printStackTrace();
 		}
@@ -219,13 +219,13 @@ public class FileHandler {
 			this.file = file;
 			this.action = action;
 			this.timestamp = file.lastModified();
-			FileHandler.timer.schedule(this, 0, 700);
+			FileUtil.timer.schedule(this, 0, 700);
 		}
 
 		@Override
 		public void run() {
 			if (!file.exists()) {
-				FileHandler.removeFileFromUpdateObserver(file);
+				FileUtil.removeFileFromUpdateObserver(file);
 			} else if (file.lastModified() != timestamp) {
 				action.onAction(file);
 				timestamp = file.lastModified();

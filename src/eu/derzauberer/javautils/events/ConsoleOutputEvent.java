@@ -1,7 +1,6 @@
 package eu.derzauberer.javautils.events;
 
 import eu.derzauberer.javautils.util.Console;
-import eu.derzauberer.javautils.util.Event;
 import eu.derzauberer.javautils.util.Console.MessageType;
 
 public class ConsoleOutputEvent extends Event {

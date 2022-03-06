@@ -1,7 +1,6 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.util.Client;
-import eu.derzauberer.javautils.util.Event;
+import eu.derzauberer.javautils.sockets.Client;
 
 public class ClientMessageSendEvent extends Event {
 	

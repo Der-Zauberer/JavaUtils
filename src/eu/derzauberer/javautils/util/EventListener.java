@@ -1,3 +1,3 @@
 package eu.derzauberer.javautils.util;
 
-public interface Listener {}
+public interface EventListener {}
