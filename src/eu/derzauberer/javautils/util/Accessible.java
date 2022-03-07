@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import eu.derzauberer.javautils.annotations.AccessableField;
+import eu.derzauberer.javautils.annotations.AccessibleField;
 
 public interface Accessible {
 	
@@ -42,7 +42,7 @@ public interface Accessible {
 	}
 	
 	public default int getFieldPosition(Field field) {
-		return field.getAnnotation(AccessableField.class).position();
+		return field.getAnnotation(AccessibleField.class).position();
 	}
 	
 	public default void setFieldValue(String name, Object object) {
@@ -72,7 +72,7 @@ public interface Accessible {
 	public default List<Field> getAccessibleFields() {
 		List<Field> fields = new ArrayList<>();
 		for (Field field : this.getClass().getDeclaredFields()) {
-			if (field.isAnnotationPresent(AccessableField.class)) {
+			if (field.isAnnotationPresent(AccessibleField.class)) {
 				field.setAccessible(true);
 				fields.add(field);
 			}
@@ -80,8 +80,8 @@ public interface Accessible {
 		Collections.sort(fields, new Comparator<Field>() {
 			@Override
 			public int compare(Field field1, Field field2) {
-				int value1 = field1.getAnnotation(AccessableField.class).position();
-				int value2 = field2.getAnnotation(AccessableField.class).position();
+				int value1 = field1.getAnnotation(AccessibleField.class).position();
+				int value2 = field2.getAnnotation(AccessibleField.class).position();
 				if (value1 == value2) return 0;
 				if (value1 < 0) return 1;
 				if (value2 < 0) return -1;
