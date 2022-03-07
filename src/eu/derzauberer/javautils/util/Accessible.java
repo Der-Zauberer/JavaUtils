@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,14 +10,30 @@ import eu.derzauberer.javautils.annotations.AccessableField;
 
 public interface Accessible {
 	
-	public default Field getField(String name) {
+	public static <T> T instanciate(Class<T> clazz) {
 		try {
-			Field field = this.getClass().getDeclaredField(name);
-			if (field.isAnnotationPresent(AccessableField.class)) {
-				field.setAccessible(true);
+			Object instance = clazz.newInstance();
+			return clazz.cast(instance);
+		} catch (InstantiationException | IllegalAccessException exception) {
+			return null;
+		}
+	}
+	
+	public static <T> T instanciate(Class<T> clazz, Class<?> constructurTypes, Object... constructerArgs) {
+		try {
+			Object instance = clazz.getConstructor(constructurTypes).newInstance(constructerArgs);
+			return clazz.cast(instance);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exception) {
+			return null;
+		}
+	}
+	
+	public default Field getField(String name) {
+		for (Field field : getAccessibleFields()) {
+			if (field.getName().equals(name)) {
 				return field;
 			}
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException exception) {}
+		}
 		return null;
 	}
 	
