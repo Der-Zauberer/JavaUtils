@@ -35,36 +35,35 @@ public class DataUtil {
 				else if (clazz == Float.class) return clazz.cast(new Float(((Number)object).floatValue()));
 				else if (clazz == Double.class) return clazz.cast(new Double(((Number)object).doubleValue()));
 			} else if (object instanceof Boolean) {
-				if ((boolean) object) {
-					return getNumberFromObject(clazz, new Integer(1)); 
-				} else { 
-					return getNumberFromObject(clazz, new Integer(0));
-				}
+				if ((boolean) object) return getNumberFromObject(clazz, 1);
+				else return getNumberFromObject(clazz, 0);
+			} else if (object instanceof Character) {
+				return getNumberFromObject(clazz, new Integer((Character) object).intValue());
 			} else if (object instanceof String) {
 				if (object.toString().equalsIgnoreCase("true")) {
-					return getNumberFromObject(clazz, new Integer(1));
+					return getNumberFromObject(clazz, 1);
 				} else if (object.toString().equalsIgnoreCase("false")) {
-					return getNumberFromObject(clazz, new Integer(0));
+					return getNumberFromObject(clazz, 0);
 				} else if (isNumericString(object.toString())) {
 					try {
 						return getNumberFromObject(clazz, Double.parseDouble(object.toString()));
 					} catch (NumberFormatException exception) {
-						return getNumberFromObject(clazz, new Integer(0));
+						return getNumberFromObject(clazz, 0);
 					}
 				}
 			}
 		}
-		return getNumberFromObject(clazz, new Integer(0));
+		return clazz.cast(0);
 	}
 	
-	public static String getStringFromObject(Object object, boolean stringWithQotationMark) {
+	public static Character getCharacterFromObject(Object object) {
 		if (object != null) {
 			if (object instanceof Boolean) {
-				return object.toString().toLowerCase();
-			} else if (stringWithQotationMark){
-				return "\"" + object.toString() + "\"";
-			} else {
-				return object.toString();
+				if ((boolean) object) return 't'; else return 'f'; 
+			} else if (object instanceof Number) {
+				return (char) ((Number) object).intValue();
+			} else if (object instanceof String && !((String) object).isEmpty()) {
+				return ((String) object).toCharArray()[0];
 			}
 		}
 		return null;
@@ -77,10 +76,12 @@ public class DataUtil {
 			return clazz.cast(getBooleanFromObject(object));
 		} else if (clazz == Number.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class) {
 			return clazz.cast(getNumberFromObject((Class<? extends Number>) clazz, object));
+		} else if (clazz == Character.class) {
+			return clazz.cast(getCharacterFromObject(object));
 		} else if (clazz == String.class) {
-			return clazz.cast(getStringFromObject(object, false));
+			return clazz.cast(object.toString());
 		} else {
-			throw new IllegalArgumentException("Type " + clazz.toGenericString() + " is not a allowed type!");
+			throw new IllegalArgumentException("Type " + clazz.toGenericString() + " is not an allowed type!");
 		}
 	}
 	
@@ -108,12 +109,7 @@ public class DataUtil {
 		return null;
 	}
 	
-	public static boolean isPrimitiveType(Class<?> clazz) {
-		if (clazz == Boolean.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class || clazz == Character.class || clazz == String.class) return true;
-		return false;
-	}
-	
-	public Class<?> getClassFromGenericTypeOfList(Type type) {
+	public static Class<?> getClassFromGenericTypeOfList(Type type) {
 		try {
 			String name = type.getTypeName();
 			name = name.substring(name.indexOf("<") + 1, name.length() - 1);
@@ -123,13 +119,43 @@ public class DataUtil {
 		}
 	}
 	
-	private static boolean isNumericString(String string) {
+	public static Class<?> getWrapperFromPrimitive(Class<?> clazz) {
+		if (clazz.isPrimitive()) {
+			if (clazz == boolean.class) return Boolean.class;
+			else if (clazz == byte.class) return Byte.class;
+			else if (clazz == short.class) return Short.class;
+			else if (clazz == int.class) return Integer.class;
+			else if (clazz == long.class) return Long.class;
+			else if (clazz == float.class) return Float.class;
+			else if (clazz == double.class) return Double.class;
+			else if (clazz == char.class) return Character.class;
+		}
+		return clazz;
+	}
+	
+	public static boolean isPrimitiveWrapperType(Class<?> clazz) {
+		return clazz == Boolean.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class || clazz == Character.class || clazz == String.class;
+	}
+	
+	public static boolean isPrimitiveType(Class<?> clazz) {
+		return clazz.isPrimitive() || clazz == Boolean.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class || clazz == Character.class || clazz == String.class;
+	}
+	
+	public static boolean isBooleanString(String string) {
+		return string.equalsIgnoreCase("true") || string.equalsIgnoreCase("false");
+	}
+	
+	public static boolean isNumericString(String string) {
 		Pattern numericRegex = Pattern.compile(
 		        "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
 		        "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
 		        "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +
 		        "[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*");
 		return numericRegex.matcher(string).matches();
+	}
+	
+	public static boolean isIntegerString(String string) {
+		return string.matches("^(-?|\\+?)\\d+$");
 	}
 	
 }

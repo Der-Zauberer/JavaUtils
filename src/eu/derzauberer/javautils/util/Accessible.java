@@ -1,5 +1,6 @@
 package eu.derzauberer.javautils.util;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -12,16 +13,20 @@ public interface Accessible {
 	
 	public static <T> T instanciate(Class<T> clazz) {
 		try {
-			Object instance = clazz.newInstance();
+			Constructor<?> constructor = clazz.getDeclaredConstructor();
+			constructor.setAccessible(true);
+			Object instance = constructor.newInstance();
 			return clazz.cast(instance);
-		} catch (InstantiationException | IllegalAccessException exception) {
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exception) {
 			return null;
 		}
 	}
 	
 	public static <T> T instanciate(Class<T> clazz, Class<?> constructurTypes, Object... constructerArgs) {
 		try {
-			Object instance = clazz.getConstructor(constructurTypes).newInstance(constructerArgs);
+			Constructor<?> constructor = clazz.getConstructor(constructurTypes);
+			constructor.setAccessible(true);
+			Object instance = constructor.newInstance(constructerArgs);
 			return clazz.cast(instance);
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exception) {
 			return null;
