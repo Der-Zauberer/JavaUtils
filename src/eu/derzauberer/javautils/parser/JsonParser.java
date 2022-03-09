@@ -291,9 +291,10 @@ public class JsonParser {
 	public <T extends Accessible> T deserializeJson(String key, Class<T> clazz) {
 		Accessible accessible = Accessible.instanciate(clazz);
 		for (Field field : accessible.getAccessibleFields()) {
+			if (field.getType().isArray()) throw new ClassCastException("Array of type " + field.getGenericType().getTypeName() + " is not allowed, use java.util.List<?> instead!");
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
-			if (getObject(name) != null || getJsonObject(name) != null) {
+			if (getObject(name) != null || !getJsonObject(name).isEmpty()) {
 				Object value = getObject(name);
 				if (DataUtil.isPrimitiveType(field.getType())) {
 					value = DataUtil.getPrimitiveType(value, DataUtil.getWrapperFromPrimitive(field.getType()));
@@ -310,7 +311,7 @@ public class JsonParser {
 					accessible.setFieldValue(field, value);
 				} else if (value instanceof List<?>) {
 					Class<?> listClass = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
-					if (DataUtil.isPrimitiveType(clazz)) {
+					if (DataUtil.isPrimitiveType(listClass)) {
 						value = getList(name, listClass);
 						accessible.setFieldValue(field, value);
 					} else {
