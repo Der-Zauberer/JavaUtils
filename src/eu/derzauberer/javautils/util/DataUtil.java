@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class DataUtil {
 	
-	public static Boolean getBooleanFromObject(Object object) {
+	public static Boolean getBoolean(Object object) {
 		if (object != null) {
 			if (object instanceof Boolean) return (Boolean) object; 
 			if (object instanceof Number) {
@@ -24,7 +24,7 @@ public class DataUtil {
 		return false;
 	}
 	
-	public static <T extends Number> T getNumberFromObject(Class<T> clazz, Object object) {
+	public static <T extends Number> T getNumber(Object object, Class<T> clazz) {
 		if (object != null) {
 			if (object instanceof Number) {
 				if (clazz == Number.class) return clazz.cast(object);
@@ -35,20 +35,20 @@ public class DataUtil {
 				else if (clazz == Float.class) return clazz.cast(new Float(((Number)object).floatValue()));
 				else if (clazz == Double.class) return clazz.cast(new Double(((Number)object).doubleValue()));
 			} else if (object instanceof Boolean) {
-				if ((boolean) object) return getNumberFromObject(clazz, 1);
-				else return getNumberFromObject(clazz, 0);
+				if ((boolean) object) return getNumber(1, clazz);
+				else return getNumber(0, clazz);
 			} else if (object instanceof Character) {
-				return getNumberFromObject(clazz, new Integer((Character) object).intValue());
+				return getNumber(new Integer((Character) object).intValue(), clazz);
 			} else if (object instanceof String) {
 				if (object.toString().equalsIgnoreCase("true")) {
-					return getNumberFromObject(clazz, 1);
+					return getNumber(1, clazz);
 				} else if (object.toString().equalsIgnoreCase("false")) {
-					return getNumberFromObject(clazz, 0);
+					return getNumber(0, clazz);
 				} else if (isNumericString(object.toString())) {
 					try {
-						return getNumberFromObject(clazz, Double.parseDouble(object.toString()));
+						return getNumber(Double.parseDouble(object.toString()), clazz);
 					} catch (NumberFormatException exception) {
-						return getNumberFromObject(clazz, 0);
+						return getNumber(0, clazz);
 					}
 				}
 			}
@@ -56,13 +56,14 @@ public class DataUtil {
 		return clazz.cast(0);
 	}
 	
-	public static Character getCharacterFromObject(Object object) {
+	public static Character getCharacter(Object object) {
 		if (object != null) {
 			if (object instanceof Boolean) {
 				if ((boolean) object) return 't'; else return 'f'; 
 			} else if (object instanceof Number) {
 				return (char) ((Number) object).intValue();
 			} else if (object instanceof String && !((String) object).isEmpty()) {
+				if (((String) object).length() > 1 && isNumericString((String) object)) return (char) getNumber(object, Integer.class).intValue();
 				return ((String) object).toCharArray()[0];
 			}
 		}
@@ -70,14 +71,14 @@ public class DataUtil {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> T getPrimitiveTypeFromObject(Class<T> clazz, Object object) {
+	public static <T> T getPrimitiveType(Object object, Class<T> clazz) {
 		if (object.getClass() == clazz) return clazz.cast(object);
 		if (clazz == Boolean.class) {
-			return clazz.cast(getBooleanFromObject(object));
+			return clazz.cast(getBoolean(object));
 		} else if (clazz == Number.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class) {
-			return clazz.cast(getNumberFromObject((Class<? extends Number>) clazz, object));
+			return clazz.cast(getNumber(object, (Class<? extends Number>) clazz));
 		} else if (clazz == Character.class) {
-			return clazz.cast(getCharacterFromObject(object));
+			return clazz.cast(getCharacter(object));
 		} else if (clazz == String.class) {
 			return clazz.cast(object.toString());
 		} else {
@@ -86,7 +87,7 @@ public class DataUtil {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> List<T> getListFromObject(Class<T> clazz, Object object) {
+	public static <T> List<T> getList(Object object, Class<T> clazz) {
 		try {
 			return new ArrayList<>((Collection<T>)object);
 		} catch (ClassCastException | NullPointerException exception) {
@@ -94,17 +95,17 @@ public class DataUtil {
 		}
 	}
 	
-	public static <T> List<T> getFromPrimitiveTypeList(Class<T> clazz, List<?> list) {
+	public static <T> List<T> getPrimitiveTypeList(List<?> list, Class<T> clazz) {
 		List <T> newList = new ArrayList<>();
 		for (Object object : list) {
-			newList.add(getPrimitiveTypeFromObject(clazz, object));
+			newList.add(getPrimitiveType(object, clazz));
 		}
 		return newList;
 	}
 	
-	public static <T> List<T> getFromPrimitiveTypeList(Class<T> clazz, Object object) {
+	public static <T> List<T> getPrimitiveTypeList(Object object, Class<T> clazz) {
 		if (object instanceof List<?>) {
-			return getFromPrimitiveTypeList(clazz, getListFromObject(Object.class, object));
+			return getPrimitiveTypeList(getList(object, Object.class), clazz);
 		}
 		return null;
 	}
@@ -115,7 +116,7 @@ public class DataUtil {
 			name = name.substring(name.indexOf("<") + 1, name.length() - 1);
 			return Class.forName(name);
 		} catch (ClassNotFoundException exception) {
-			return Object.class;
+			return null;
 		}
 	}
 	

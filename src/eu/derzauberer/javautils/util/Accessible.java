@@ -11,7 +11,7 @@ import eu.derzauberer.javautils.annotations.AccessibleField;
 
 public interface Accessible {
 	
-	public static <T> T instanciate(Class<T> clazz) {
+	public static <T extends Accessible> T instanciate(Class<T> clazz) {
 		try {
 			Constructor<?> constructor = clazz.getDeclaredConstructor();
 			constructor.setAccessible(true);

@@ -1,15 +1,11 @@
 package eu.derzauberer.javautils.parser;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import eu.derzauberer.javautils.annotations.JsonElement;
+import eu.derzauberer.javautils.util.Accessible;
+import eu.derzauberer.javautils.util.DataUtil;
 
 public class JsonParser {
 
@@ -30,9 +26,9 @@ public class JsonParser {
 		parse();
 	}
 	
-	public JsonParser(Object object) {
+	public JsonParser(Accessible accessible) {
 		this("");
-		setClassAsJsonObject("", object);
+		serializeJson("", accessible);
 	}
 	
 	public JsonParser setNull(String key) {
@@ -97,52 +93,19 @@ public class JsonParser {
 	public JsonParser set(String key, List<?> list) {
 		if (!isNull(key, list)) {
 			List<Object> objects = new ArrayList<>();
-			for (Object element : list) {
-				if (element instanceof String) {
-					objects.add(removeEscapeCodes(element.toString()));
+			for (Object object : list) {
+				if (object instanceof String) {
+					objects.add(removeEscapeCodes(object.toString()));
 				} else {
-					if (element instanceof JsonParser) {
-						((JsonParser) element).hasParent = true;
+					if (object instanceof JsonParser) {
+						((JsonParser) object).hasParent = true;
 					}
-					objects.add(element);
+					objects.add(object);
 				}
 			}
 			setObject(key, objects);
 		}
 		return this;
-	}
-	
-	public void setClassAsJsonObject(String key, Object object) {
-		HashMap<Field, String> fields = getFieldsFromClass(key, object);
-		for (Field field : fields.keySet()) {
-			try {
-				if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
-					setObject(fields.get(field), field.get(object));
-				} else if (field.get(object) instanceof List<?>) {
-					Type type = field.getGenericType();
-					Class<?> classType = getClassFromGenericTypeOfList(type);
-					if (classType != Boolean.class && classType != Byte.class && classType != Short.class && classType != Integer.class && classType != Long.class && classType != Float.class && classType != Double.class && classType != String.class) {
-						List<JsonParser> list = new ArrayList<>();
-						for (Object listObject : (List<?>) field.get(object)) {
-							JsonParser parser = new JsonParser();
-							parser.setClassAsJsonObject("", listObject);
-							list.add(parser);
-						}
-						setObject(fields.get(field), list);
-					} else {
-						setObject(fields.get(field), field.get(object));
-					}
-				} else {
-					JsonParser parser = new JsonParser();
-					parser.setClassAsJsonObject("", field.get(object));
-					set(fields.get(field), parser);
-				}
-			} catch (NullPointerException exception) {
-				setObject(fields.get(field), null);
-			} catch (IllegalArgumentException exception) {
-			} catch (IllegalAccessException exception) {
-			}
-		}
 	}
 	
 	public JsonParser remove(String key) {
@@ -190,7 +153,7 @@ public class JsonParser {
 	public List<String> getKeys(String key, boolean fullkeys) {
 		List<String> keys = getKeys();
 		for (int i = 0; i < keys.size(); i++) {
-			if (!keys.get(i).startsWith(key)) {
+			if (!(keys.get(i).equals(key) || (keys.get(i).length() > key.length() && keys.get(i).startsWith(key + ".")))) {
 				keys.remove(i);
 				i--;
 			} else if (!fullkeys) {
@@ -213,31 +176,35 @@ public class JsonParser {
 	}
 	
 	public boolean getBoolean(String key) {
-		return getBooleanFromObject(getObject(key));
+		return DataUtil.getBoolean(getObject(key));
 	}
 	
 	public byte getByte(String key) {
-		return getNumberFromObject(getObject(key), Byte.class);
+		return DataUtil.getNumber(getObject(key), Byte.class);
 	}
 	
 	public short getShort(String key) {
-		return getNumberFromObject(getObject(key), Short.class);
+		return DataUtil.getNumber(getObject(key), Short.class);
 	}
 	
 	public int getInt(String key) {
-		return getNumberFromObject(getObject(key), Integer.class);
+		return DataUtil.getNumber(getObject(key), Integer.class);
 	}
 	
 	public long getLong(String key) {
-		return getNumberFromObject(getObject(key), Long.class);
+		return DataUtil.getNumber(getObject(key), Long.class);
 	}
 	
 	public float getFloat(String key) {
-		return getNumberFromObject(getObject(key), Float.class);
+		return DataUtil.getNumber(getObject(key), Float.class);
 	}
 	
 	public double getDouble(String key) {
-		return getNumberFromObject(getObject(key), Double.class);
+		return DataUtil.getNumber(getObject(key), Double.class);
+	}
+	
+	public <T> T getData(String key, Class<T> clazz) {
+		return DataUtil.getPrimitiveType(getObject(key), clazz);
 	}
 	
 	public JsonParser getJsonObject(String key) {
@@ -257,117 +224,118 @@ public class JsonParser {
 					jsonParser.setObject(string, getObject(key + "." + string));
 				}
 			} else {
-				for (String string : getKeys(key, false)) {
-					jsonParser.setObject(string, getObject(key + "." + string));
+				try {
+					for (String string : getKeys(key, false)) {
+						jsonParser.setObject(string, getObject(key + "." + string));
+					}
+				} catch (StringIndexOutOfBoundsException exception) {
+					return null;
 				}
 			}
 			return jsonParser;
 		}
 	}
 	
+	public <T> List<T> getList(String key, Class<T> clazz) {
+		List<T> list = new ArrayList<>();
+		if (DataUtil.isPrimitiveWrapperType(clazz)) {
+			list = DataUtil.getPrimitiveTypeList(getObject(key), clazz);
+		} else {
+			list = DataUtil.getList(getObject(key), clazz);
+		}
+		for (Object object : list) {
+			if (object instanceof String) {
+				object = addEscapeCodes((String) object);
+			}
+		}
+		return list;
+	}
+	
 	public List<Object> getObjectList(String key) {
-		return getListFromObject(getObject(key));
+		return DataUtil.getList(getObject(key), Object.class);
 	}
 	
 	public List<String> getStringList(String key) {
-		return getListFromObject(getObject(key)).stream().map(object -> addEscapeCodes(getStringFromObject(object, false))).collect(Collectors.toList());
-	}
-	
-	public List<Boolean> getBooleanList(String key) {
-		return getBooleanFromList(key);
-	}
-	
-	public List<Byte> getByteList(String key) {
-		return getNumberFromList(key, Byte.class);
-	}
-	
-	public List<Short> getShortList(String key) {
-		return getNumberFromList(key, Short.class);
-	}
-	
-	public List<Integer> getIntList(String key) {
-		return getNumberFromList(key, Integer.class);
-	}
-	
-	public List<Long> getLongList(String key) {
-		return getNumberFromList(key, Long.class);
-	}
-	
-	public List<Float> getFloatList(String key) {
-		return getNumberFromList(key, Float.class);
-	}
-	
-	public List<Double> getDoubleList(String key) {
-		return getNumberFromList(key, Double.class);
+		return getList(key, String.class);
 	}
 	
 	public List<JsonParser> getJsonObjectList(String key) {
-		try {
-			List <JsonParser> list = new ArrayList<>();
-			getListFromObject(getObject(key)).forEach(object -> list.add((JsonParser)object));
-			return list;
-		} catch (ClassCastException exception) {
-			return null;
-		}
+		return getList(key, JsonParser.class);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void getClassAsJsonObject(String key, Object object) {
-		HashMap<Field, String> fields = getFieldsFromClass(key, object);
-		for (Field field : fields.keySet()) {
-			try {
-				if (field.get(object) instanceof Number || field.get(object) instanceof Boolean || field.get(object) instanceof String) {
-					field.set(object, get(fields.get(field)));
-				} else if (field.get(object) instanceof List<?>) {
-					Type type = field.getGenericType();
-					Class<?> classType = getClassFromGenericTypeOfList(type);
-					if (classType == Boolean.class) {
-						field.set(object, getBooleanList(fields.get(field)));
-					} else if (classType == Byte.class) {
-						field.set(object, getByteList(fields.get(field)));
-					} else if (classType == Short.class) {
-						field.set(object, getShortList(fields.get(field)));
-					} else if (classType == Integer.class) {
-						field.set(object, getIntList(fields.get(field)));
-					} else if (classType == Long.class) {
-						field.set(object, getLongList(fields.get(field)));
-					} else if (classType == Float.class) {
-						field.set(object, getFloatList(fields.get(field)));
-					} else if (classType == Double.class) {
-						field.set(object, getDoubleList(fields.get(field)));
-					} else if (classType == String.class){
-						field.set(object, getStringList(fields.get(field)));
+	public JsonParser serializeJson(String key, Accessible accessible) {
+		for (Field field : accessible.getAccessibleFields()) {
+			Object value = accessible.getFieldValue(field);
+			String name = field.getName();
+			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
+			if (value instanceof List<?>) {
+				if (!DataUtil.isPrimitiveWrapperType(DataUtil.getClassFromGenericTypeOfList(field.getGenericType()))) {
+					List<JsonParser> parser = new ArrayList<>();
+					for (Object object : (List<?>) value) {
+						if (object instanceof Accessible) parser.add(new JsonParser((Accessible) object)); 
+ 					}
+					set(name, parser);
+				} else {
+					set(name, (List<?>) value);
+				}
+			} else if (value instanceof Accessible) {
+				serializeJson(name, (Accessible) value);
+			} else {
+				setObject(name, value);
+			}
+		}
+		return this;
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public <T extends Accessible> T deserializeJson(String key, Class<T> clazz) {
+		Accessible accessible = Accessible.instanciate(clazz);
+		for (Field field : accessible.getAccessibleFields()) {
+			String name = field.getName();
+			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
+			if (getObject(name) != null || getJsonObject(name) != null) {
+				Object value = getObject(name);
+				if (DataUtil.isPrimitiveType(field.getType())) {
+					value = DataUtil.getPrimitiveType(value, DataUtil.getWrapperFromPrimitive(field.getType()));
+					if (clazz.isPrimitive()) {
+						if (field.getType() == boolean.class) value = Boolean.valueOf((Boolean) value);
+						else if (field.getType() == byte.class) value = Byte.valueOf((Byte) value);
+						else if (field.getType() == short.class) value = Short.valueOf((Short) value);
+						else if (field.getType() == int.class) value = Integer.valueOf((Integer) value);
+						else if (field.getType() == long.class) value = Long.valueOf((Long) value);
+						else if (field.getType() == float.class) value = Float.valueOf((Float) value);
+						else if (field.getType() == double.class) value = Double.valueOf((Double) value);
+						else if (field.getType() == char.class) value = Character.valueOf((Character) value);
+					}
+					accessible.setFieldValue(field, value);
+				} else if (value instanceof List<?>) {
+					Class<?> listClass = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
+					if (DataUtil.isPrimitiveType(clazz)) {
+						value = getList(name, listClass);
+						accessible.setFieldValue(field, value);
 					} else {
 						try {
-							@SuppressWarnings("rawtypes")
-							List objectList = new ArrayList<>();
-							for (JsonParser listJsonObject : getJsonObjectList(fields.get(field))) {
-								Object listObject = classType.newInstance();
-								listJsonObject.getClassAsJsonObject("", classType.cast(listObject));
-								objectList.add(classType.cast(listObject));
+							List list = new ArrayList<>();
+							for (JsonParser parser : getJsonObjectList(name)) {
+								list.add(parser.deserializeJson("", (Class<T>) listClass));
 							}
-							field.set(object, objectList);
-						} catch (InstantiationException exception) {}
+							accessible.setFieldValue(field, list);
+						} catch (Exception exception) {
+							exception.printStackTrace();
+						}
 					}
 				} else {
 					try {
-						JsonParser parser = getJsonObject(fields.get(field));
-						Object subObject = Class.forName(field.getGenericType().getTypeName()).newInstance();
-						parser.getClassAsJsonObject("", subObject.getClass().cast(subObject));
-						field.set(object, subObject.getClass().cast(subObject));
-					} catch (ClassNotFoundException exception) {
-					} catch (InstantiationException exception) {}
-				}
-			} catch (IllegalArgumentException exception) {
-				try {
-					if (field.get(object) instanceof Number && get(fields.get(field)) == null) {
-						field.set(object, 0);
+						Accessible object = getJsonObject(name).deserializeJson("", (Class<T>) field.getType());
+						accessible.setFieldValue(field, object);
+					} catch (Exception exception) {
+						exception.printStackTrace();
 					}
-				} catch (IllegalArgumentException innerException) {
-				} catch (IllegalAccessException innerException) {
+					
 				}
-			} catch (IllegalAccessException exception) {}
+			}
 		}
+		return clazz.cast(accessible);
 	}
 
 	@Override
@@ -630,7 +598,7 @@ public class JsonParser {
 				} else {
 					addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
 				}
-				List<Object> list = getListFromObject(elements.get(key));
+				List<Object> list = DataUtil.getList(elements.get(key), Object.class);
 				if (list.isEmpty()) {
 					string.deleteCharAt(string.length() - 1);
 					string.append("]");
@@ -756,7 +724,7 @@ public class JsonParser {
 			return true;
 		} else if (string.equalsIgnoreCase("false")) {
 			return false;
-		} else if (isNumericString(string)) {
+		} else if (DataUtil.isNumericString(string)) {
 			if (!string.contains(".")) {
 				long number = Long.parseLong(string);
 				if (Byte.MIN_VALUE <= number && number <= Byte.MAX_VALUE) {
@@ -789,100 +757,13 @@ public class JsonParser {
 		return false;
 	}
 	
-	private boolean isNumericString(String string) {
-		Pattern numericRegex = Pattern.compile(
-		        "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
-		        "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
-		        "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +
-		        "[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*");
-		return numericRegex.matcher(string).matches();
-	}
-	
 	private String getStringFromObject(Object object, boolean stringWithQotationMark) {
 		if (object == null) {
 			return null;
-		} else if (object instanceof Boolean) {
-			return object.toString().toLowerCase();
-		} else if (object instanceof Number) {
-			return object.toString();
-		} else if (stringWithQotationMark){
+		} else if (!(object instanceof Boolean || object instanceof Number) && stringWithQotationMark){
 			return "\"" + object.toString() + "\"";
 		} else {
 			return object.toString();
-		}
-	}
-	
-	private Boolean getBooleanFromObject(Object object) {
-		if (object != null) {
-			if (object instanceof Boolean) {
-				return (Boolean) object;
-			} else if (object instanceof Number) {
-				if (((Number)object).longValue() == 0) {return false;} else {return true;}
-			} else if (object instanceof String) {
-				if (object.toString().equalsIgnoreCase("true")) {return true;} 
-				else if (object.toString().equalsIgnoreCase("false")) {return false;}
-				else if (isNumericString(object.toString())) {
-					if (Double.parseDouble(object.toString().replace("\"", "")) == 0) {return false;} else {return true;}
-				}
-			}
-		}
-		return false;
-	}
-	
-	private List<Boolean> getBooleanFromList(String key) {
-		List <Boolean> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getBooleanFromObject(object));
-		}
-		return list;
-	}
-	
-	@SuppressWarnings("unchecked")
-	private <T extends Number> T getNumberFromObject(Object object, Class<T> type) {
-		if (object != null) {
-			if (object instanceof Number) {
-				if (type == Byte.class) {return (T) new Byte(((Number)object).byteValue());}
-				else if (type == Short.class) {return (T) new Short(((Number)object).shortValue());}
-				else if (type == Integer.class) {return (T) new Integer(((Number)object).intValue());}
-				else if (type == Long.class) {return (T) new Long(((Number)object).longValue());}
-				else if (type == Float.class) {return (T) new Float(((Number)object).floatValue());}
-				else if (type == Double.class) {return (T) new Double(((Number)object).doubleValue());}
-			} else if (object instanceof Boolean) {
-				if ((boolean) object) {
-					return getNumberFromObject(new Integer(1), type);
-				} else {
-					return getNumberFromObject(new Integer(0), type);
-				}
-			} else if (object instanceof String) {
-				if (object.toString().equalsIgnoreCase("true")) {
-					return getNumberFromObject(new Integer(1), type);
-				} else if (object.toString().equalsIgnoreCase("false")) {
-					return getNumberFromObject(new Integer(0), type);
-				} else if (isNumericString(object.toString())) {
-					try {
-						return getNumberFromObject(Double.parseDouble(object.toString().replace("\"", "")), type);
-					} catch (NumberFormatException exception) {
-						return getNumberFromObject(new Integer(0), type);
-					}
-				}
-			}
-		}
-		return getNumberFromObject(new Integer(0), type);
-	}
-	
-	private <T extends Number> List<T> getNumberFromList(String key, Class<T> type) {
-		List <T> list = new ArrayList<>();
-		for (Object object : getListFromObject(getObject(key))) {
-			list.add(getNumberFromObject(object, type));
-		}
-		return list;
-	}
-	
-	private List<Object> getListFromObject(Object object) {
-		try {
-			return new ArrayList<>((Collection<?>)object);
-		} catch (ClassCastException | NullPointerException exception) {
-			return new ArrayList<>();
 		}
 	}
 	
@@ -891,36 +772,6 @@ public class JsonParser {
 			return (JsonParser) object;
 		} else {
 			return null;
-		}
-	}
-	
-	private HashMap<Field, String> getFieldsFromClass(String key, Object object) {
-		HashMap<Field, String> fields = new HashMap<>();
-		for (Field field : object.getClass().getDeclaredFields()) {
-			if (field.getAnnotation(JsonElement.class) != null) {
-				field.setAccessible(true);
-				String name;
-				if (field.getAnnotation(JsonElement.class).key().equals("")) {
-					name = field.getName();
-				} else {
-					name = field.getAnnotation(JsonElement.class).key();
-				}
-				if (key != null && !key.equals("")) {
-					name = key + "." + name;
-				}
-				fields.put(field, name);
-			}
-		}
-		return fields;
-	}
-	
-	private Class<?> getClassFromGenericTypeOfList(Type type) {
-		try {
-			String name = type.getTypeName();
-			name = name.substring(name.indexOf("<") + 1, name.length() - 1);
-			return Class.forName(name);
-		} catch (ClassNotFoundException e) {
-			return Object.class;
 		}
 	}
 	
