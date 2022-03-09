@@ -19,7 +19,6 @@ public class Server implements Runnable {
 	private ServerSocket server;
 	private ArrayList<Client> clients;
 	private ExecutorService service;
-	private Thread thread;
 	private ClientMessageReceiveAction action;
 	private int clientTimeout;
 	
@@ -32,7 +31,7 @@ public class Server implements Runnable {
 		clients = new ArrayList<>();
 		action = (event) -> {};
 		service = Executors.newCachedThreadPool();
-		thread = new Thread(this);
+		Thread thread = new Thread(this);
 		clientTimeout = 0;
 		thread.start();
 	}

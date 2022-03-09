@@ -700,8 +700,7 @@ public class JsonParser {
 		} else {
 			return false;
 		}
-		if (!key1.equals(key2) && key1.split("\\.").length == key2.split("\\.").length) return true;
-		return false;
+		return !key1.equals(key2) && key1.split("\\.").length == key2.split("\\.").length;
 	}
 	
 	private void removeWrongKeys(String key, String[] keys) {
