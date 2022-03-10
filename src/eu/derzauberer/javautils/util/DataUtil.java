@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class DataUtil {
 	
-	public static Boolean getBoolean(Object object) {
+	public static boolean getBoolean(Object object) {
 		if (object != null) {
 			if (object instanceof Boolean) return (Boolean) object; 
 			if (object instanceof Number) {
@@ -24,7 +24,9 @@ public class DataUtil {
 		return false;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static <T extends Number> T getNumber(Object object, Class<T> clazz) {
+		clazz = (Class<T>) getWrapperFromPrimitive(clazz);
 		if (object != null) {
 			if (object instanceof Number) {
 				if (clazz == Number.class) return clazz.cast(object);
@@ -53,10 +55,10 @@ public class DataUtil {
 				}
 			}
 		}
-		return clazz.cast(0);
+		return getNumber(0, clazz);
 	}
 	
-	public static Character getCharacter(Object object) {
+	public static char getCharacter(Object object) {
 		if (object != null) {
 			if (object instanceof Boolean) {
 				if ((boolean) object) return 't'; else return 'f'; 
@@ -67,23 +69,26 @@ public class DataUtil {
 				return ((String) object).toCharArray()[0];
 			}
 		}
-		return null;
+		return ' ';
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> T getPrimitiveType(Object object, Class<T> clazz) {
+	public static <T> T getObject(Object object, Class<T> clazz) {
+		clazz = (Class<T>) getWrapperFromPrimitive(clazz);
 		if (object.getClass() == clazz) return clazz.cast(object);
+		T value = null;
 		if (clazz == Boolean.class) {
-			return clazz.cast(getBoolean(object));
+			value = clazz.cast(getBoolean(object));
 		} else if (clazz == Number.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class) {
-			return clazz.cast(getNumber(object, (Class<? extends Number>) clazz));
+			value = clazz.cast(getNumber(object, (Class<? extends Number>) clazz));
 		} else if (clazz == Character.class) {
-			return clazz.cast(getCharacter(object));
+			value = clazz.cast(getCharacter(object));
 		} else if (clazz == String.class) {
-			return clazz.cast(object.toString());
+			value = clazz.cast(object.toString());
 		} else {
 			throw new IllegalArgumentException("Type " + clazz.toGenericString() + " is not an allowed type!");
 		}
+		return value;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -98,7 +103,7 @@ public class DataUtil {
 	public static <T> List<T> getPrimitiveTypeList(List<?> list, Class<T> clazz) {
 		List <T> newList = new ArrayList<>();
 		for (Object object : list) {
-			newList.add(getPrimitiveType(object, clazz));
+			newList.add(getObject(object, clazz));
 		}
 		return newList;
 	}

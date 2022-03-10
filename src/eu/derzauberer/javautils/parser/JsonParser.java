@@ -180,31 +180,31 @@ public class JsonParser {
 	}
 	
 	public byte getByte(String key) {
-		return DataUtil.getNumber(getObject(key), Byte.class);
+		return DataUtil.getNumber(getObject(key), byte.class);
 	}
 	
 	public short getShort(String key) {
-		return DataUtil.getNumber(getObject(key), Short.class);
+		return DataUtil.getNumber(getObject(key), short.class);
 	}
 	
 	public int getInt(String key) {
-		return DataUtil.getNumber(getObject(key), Integer.class);
+		return DataUtil.getNumber(getObject(key), int.class);
 	}
 	
 	public long getLong(String key) {
-		return DataUtil.getNumber(getObject(key), Long.class);
+		return DataUtil.getNumber(getObject(key), long.class);
 	}
 	
 	public float getFloat(String key) {
-		return DataUtil.getNumber(getObject(key), Float.class);
+		return DataUtil.getNumber(getObject(key), float.class);
 	}
 	
 	public double getDouble(String key) {
-		return DataUtil.getNumber(getObject(key), Double.class);
+		return DataUtil.getNumber(getObject(key), double.class);
 	}
 	
 	public <T> T getData(String key, Class<T> clazz) {
-		return DataUtil.getPrimitiveType(getObject(key), clazz);
+		return DataUtil.getObject(getObject(key), clazz);
 	}
 	
 	public JsonParser getJsonObject(String key) {
@@ -243,10 +243,8 @@ public class JsonParser {
 		} else {
 			list = DataUtil.getList(getObject(key), clazz);
 		}
-		for (Object object : list) {
-			if (object instanceof String) {
-				object = addEscapeCodes((String) object);
-			}
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i) instanceof String) list.set(i, clazz.cast(addEscapeCodes((String) list.get(i)))); 
 		}
 		return list;
 	}
@@ -281,6 +279,7 @@ public class JsonParser {
 			} else if (value instanceof Accessible) {
 				serializeJson(name, (Accessible) value);
 			} else {
+				if (value instanceof String) value = removeEscapeCodes((String) value);
 				setObject(name, value);
 			}
 		}
@@ -297,17 +296,8 @@ public class JsonParser {
 			if (getObject(name) != null || !getJsonObject(name).isEmpty()) {
 				Object value = getObject(name);
 				if (DataUtil.isPrimitiveType(field.getType())) {
-					value = DataUtil.getPrimitiveType(value, DataUtil.getWrapperFromPrimitive(field.getType()));
-					if (clazz.isPrimitive()) {
-						if (field.getType() == boolean.class) value = Boolean.valueOf((Boolean) value);
-						else if (field.getType() == byte.class) value = Byte.valueOf((Byte) value);
-						else if (field.getType() == short.class) value = Short.valueOf((Short) value);
-						else if (field.getType() == int.class) value = Integer.valueOf((Integer) value);
-						else if (field.getType() == long.class) value = Long.valueOf((Long) value);
-						else if (field.getType() == float.class) value = Float.valueOf((Float) value);
-						else if (field.getType() == double.class) value = Double.valueOf((Double) value);
-						else if (field.getType() == char.class) value = Character.valueOf((Character) value);
-					}
+					value = DataUtil.getObject(value, DataUtil.getWrapperFromPrimitive(field.getType()));
+					if (value instanceof String) value = addEscapeCodes((String) value);
 					accessible.setFieldValue(field, value);
 				} else if (value instanceof List<?>) {
 					Class<?> listClass = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
