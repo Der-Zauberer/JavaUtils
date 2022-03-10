@@ -164,4 +164,12 @@ public class DataUtil {
 		return string.matches("^(-?|\\+?)\\d+$");
 	}
 	
+	public static boolean isValidIdName(String string) {
+		return string.matches("^([a-zA-Z0-9]|-|_)+$");
+	}
+	
+	public static boolean isValidName(String string) {
+		return string.matches("^([a-zA-Z0-9]|[ÄÖÜäöüß]|-|_)+$");
+	}
+	
 }
