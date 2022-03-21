@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.xml.crypto.Data;
-
 import eu.derzauberer.javautils.util.Accessible;
 import eu.derzauberer.javautils.util.AccessibleField;
 import eu.derzauberer.javautils.util.DataUtil;
@@ -32,7 +29,7 @@ public class JsonParser {
 	
 	public JsonParser(Object object) {
 		this("");
-		serializeJson("", object);
+		serializeJson(object);
 	}
 	
 	public JsonParser setNull(String key) {
@@ -265,6 +262,10 @@ public class JsonParser {
 		return getList(key, JsonParser.class);
 	}
 	
+	public JsonParser serializeJson(Object object) {
+		return serializeJson("", object);
+	}
+	
 	public JsonParser serializeJson(String key, Object object) {
 		Accessible accessible = new Accessible(object);
 		for (AccessibleField field : accessible.getAccessibleFields()) {
@@ -289,6 +290,10 @@ public class JsonParser {
 			}
 		}
 		return this;
+	}
+	
+	public <T> T deserializeJson(Class<T> clazz) {
+		return deserializeJson("", clazz);
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -317,14 +322,14 @@ public class JsonParser {
 								}
 							} else {
 								for (JsonParser parserObject : getJsonObjectList(name)) {
-									list.add(parserObject.deserializeJson("", DataUtil.getClassFromGenericTypeOfList(field.getGenericType())));
+									list.add(parserObject.deserializeJson(DataUtil.getClassFromGenericTypeOfList(field.getGenericType())));
 								}
 							}
 							field.setValue(list);
 						}
 					} else {
 						JsonParser value = getJsonObject(name);
-						if (!value.isEmpty()) field.setValue(value.deserializeJson("", field.getClassType()));
+						if (!value.isEmpty()) field.setValue(value.deserializeJson(field.getClassType()));
 					}
 				}
 			}
