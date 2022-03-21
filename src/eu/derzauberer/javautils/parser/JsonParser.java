@@ -1,10 +1,14 @@
 package eu.derzauberer.javautils.parser;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+
+import javax.xml.crypto.Data;
+
 import eu.derzauberer.javautils.util.Accessible;
+import eu.derzauberer.javautils.util.AccessibleField;
 import eu.derzauberer.javautils.util.DataUtil;
 
 public class JsonParser {
@@ -26,9 +30,9 @@ public class JsonParser {
 		parse();
 	}
 	
-	public JsonParser(Accessible accessible) {
+	public JsonParser(Object object) {
 		this("");
-		serializeJson("", accessible);
+		serializeJson("", object);
 	}
 	
 	public JsonParser setNull(String key) {
@@ -126,7 +130,7 @@ public class JsonParser {
 		return this;
 	}
 	
-	public boolean exist(String key) {
+	public boolean exists(String key) {
 		return structure.contains(key);
 	}
 	
@@ -238,7 +242,7 @@ public class JsonParser {
 	
 	public <T> List<T> getList(String key, Class<T> clazz) {
 		List<T> list = new ArrayList<>();
-		if (DataUtil.isPrimitiveWrapperType(clazz)) {
+		if (DataUtil.isPrimitiveType(clazz)) {
 			list = DataUtil.getPrimitiveTypeList(getObject(key), clazz);
 		} else {
 			list = DataUtil.getList(getObject(key), clazz);
@@ -261,72 +265,70 @@ public class JsonParser {
 		return getList(key, JsonParser.class);
 	}
 	
-	public JsonParser serializeJson(String key, Accessible accessible) {
-		for (Field field : accessible.getAccessibleFields()) {
-			Object value = accessible.getFieldValue(field);
+	public JsonParser serializeJson(String key, Object object) {
+		Accessible accessible = new Accessible(object);
+		for (AccessibleField field : accessible.getAccessibleFields()) {
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
-			if (value instanceof List<?>) {
-				if (!DataUtil.isPrimitiveWrapperType(DataUtil.getClassFromGenericTypeOfList(field.getGenericType()))) {
-					List<JsonParser> parser = new ArrayList<>();
-					for (Object object : (List<?>) value) {
-						if (object instanceof Accessible) parser.add(new JsonParser((Accessible) object)); 
- 					}
-					set(name, parser);
-				} else {
-					set(name, (List<?>) value);
+			if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && DataUtil.isInstanceOfPrimitiveType(field.getValue()))) {
+				setObject(name, field.getValue());
+			} else if (field.getValue() instanceof List) {
+				List<Object> objectList = new ArrayList<>();
+				@SuppressWarnings("rawtypes")
+				List list = (List) field.getValue();
+				for (Object listObject : list) {
+					if (DataUtil.isPrimitiveType(listObject.getClass())) {
+						objectList.add(DataUtil.getObject(listObject, listObject.getClass()));
+					} else {
+						objectList.add(new JsonParser(listObject));
+					}
 				}
-			} else if (value instanceof Accessible) {
-				serializeJson(name, (Accessible) value);
+				set(name, objectList);
 			} else {
-				if (value instanceof String) value = removeEscapeCodes((String) value);
-				setObject(name, value);
+				serializeJson(name, field.getValue());
 			}
 		}
 		return this;
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T extends Accessible> T deserializeJson(String key, Class<T> clazz) {
-		Accessible accessible = Accessible.instanciate(clazz);
-		for (Field field : accessible.getAccessibleFields()) {
-			if (field.getType().isArray()) throw new ClassCastException("Array of type " + field.getGenericType().getTypeName() + " is not allowed, use java.util.List<?> instead!");
+	public <T> T deserializeJson(String key, Class<T> clazz) {
+		Accessible accessible = new Accessible(clazz);
+		for (AccessibleField field : accessible.getAccessibleFields()) {
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
-			if (getObject(name) != null || !getJsonObject(name).isEmpty()) {
-				Object value = getObject(name);
-				if (DataUtil.isPrimitiveType(field.getType())) {
-					value = DataUtil.getObject(value, DataUtil.getWrapperFromPrimitive(field.getType()));
-					if (value instanceof String) value = addEscapeCodes((String) value);
-					accessible.setFieldValue(field, value);
-				} else if (value instanceof List<?>) {
-					Class<?> listClass = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
-					if (DataUtil.isPrimitiveType(listClass)) {
-						value = getList(name, listClass);
-						accessible.setFieldValue(field, value);
-					} else {
-						try {
-							List list = new ArrayList<>();
-							for (JsonParser parser : getJsonObjectList(name)) {
-								list.add(parser.deserializeJson("", (Class<T>) listClass));
-							}
-							accessible.setFieldValue(field, list);
-						} catch (Exception exception) {
-							exception.printStackTrace();
+				if (getObject(name) != null || (getJsonObject(name) != null && !getJsonObject(name).isEmpty())) {
+					if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && getObject(name) != null && DataUtil.isPrimitiveType(getObject(name).getClass()))) {
+						field.setValue(getData(name, field.getClassType()));
+					} else if (field.getClassType() == Object.class) {
+						field.setValue(getJsonObject(name).toOneLineString());
+					} else if ((field.getClassType() == List.class || field.getClassType() == ArrayList.class || field.getClassType() == LinkedList.class) && field.getGenericType() != null) {
+						List list = null;
+						if (field.getClassType() == List.class || field.getClassType() == ArrayList.class) {
+							list = new ArrayList<>();
+						} else if (field.getClassType() == LinkedList.class) {
+							list = new LinkedList<>();
 						}
+						if (list != null) {
+							Class<?> listType = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
+							if (DataUtil.isPrimitiveType(listType) || listType == Object.class) {
+								for (Object object : getList(name, listType)) {
+									list.add(object);
+								}
+							} else {
+								for (JsonParser parserObject : getJsonObjectList(name)) {
+									list.add(parserObject.deserializeJson("", DataUtil.getClassFromGenericTypeOfList(field.getGenericType())));
+								}
+							}
+							field.setValue(list);
+						}
+					} else {
+						JsonParser value = getJsonObject(name);
+						if (!value.isEmpty()) field.setValue(value.deserializeJson("", field.getClassType()));
 					}
-				} else {
-					try {
-						Accessible object = getJsonObject(name).deserializeJson("", (Class<T>) field.getType());
-						accessible.setFieldValue(field, object);
-					} catch (Exception exception) {
-						exception.printStackTrace();
-					}
-					
 				}
 			}
-		}
-		return clazz.cast(accessible);
+		return clazz.cast(accessible.getObject());
 	}
 
 	@Override
@@ -581,7 +583,7 @@ public class JsonParser {
 					}
 				}
 			}
-			if (elements.get(key) instanceof ArrayList<?>) {
+			if (elements.get(key) instanceof List<?>) {
 				if (key.equals("null")) {
 					addLine(string, position, tab, "[" + newLine);
 					layer--;
@@ -589,7 +591,7 @@ public class JsonParser {
 				} else {
 					addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
 				}
-				List<Object> list = DataUtil.getList(elements.get(key), Object.class);
+				List<Object> list = DataUtil.getList(getObject(key), Object.class);
 				if (list.isEmpty()) {
 					string.deleteCharAt(string.length() - 1);
 					string.append("]");

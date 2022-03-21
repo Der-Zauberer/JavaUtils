@@ -171,7 +171,7 @@ public class Console implements Runnable {
 			if (event.getMessageType() != MessageType.DEFAULT) {
 				event.setOutput("[" + type.toString() + "] " + event.getOutput());
 			}
-			if (!ansiEscapeCodesSupportetBySystem()) {
+			if (!ansiEscapeCodesSupportedBySystem()) {
 				event.setOutput(removeEscapeCodes(event.getOutput()));
 			}
 			if (logTimestampEnabled) {
@@ -291,7 +291,7 @@ public class Console implements Runnable {
 		return ansiEscapeCodesEnabled;
 	}
 	
-	public boolean ansiEscapeCodesSupportetBySystem() {
+	public boolean ansiEscapeCodesSupportedBySystem() {
 		return ansiEscapeCodesEnabled || (System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null);
 	}
 	

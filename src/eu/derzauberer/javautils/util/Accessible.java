@@ -7,86 +7,62 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import eu.derzauberer.javautils.annotations.AccessibleField;
 
-public interface Accessible {
+public class Accessible {
 	
-	public static <T extends Accessible> T instanciate(Class<T> clazz) {
+	private Object object;
+	
+	public <T> Accessible(Class<T> clazz) {
 		try {
 			Constructor<?> constructor = clazz.getDeclaredConstructor();
 			constructor.setAccessible(true);
-			Object instance = constructor.newInstance();
-			return clazz.cast(instance);
+			object = constructor.newInstance();
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exception) {
-			return null;
+			throw new IllegalArgumentException("This object does not contain a standard constructor!");
 		}
 	}
 	
-	public static <T> T instanciate(Class<T> clazz, Class<?> constructurTypes, Object... constructerArgs) {
+	public <T> Accessible(Class<T> clazz, Class<?> constructurTypes, Object... constructerArgs) {
 		try {
-			Constructor<?> constructor = clazz.getConstructor(constructurTypes);
+			Constructor<?> constructor = clazz.getDeclaredConstructor(constructurTypes);
 			constructor.setAccessible(true);
-			Object instance = constructor.newInstance(constructerArgs);
-			return clazz.cast(instance);
+			object = constructor.newInstance(constructerArgs);
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException exception) {
-			return null;
+			throw new IllegalArgumentException("This object does not contain a constructor with these arguments!");
 		}
 	}
 	
-	public default Field getField(String name) {
-		for (Field field : getAccessibleFields()) {
-			if (field.getName().equals(name)) {
-				return field;
-			}
+	public <T> Accessible(Object object) {
+		this.object = object;
+	}
+	
+	public AccessibleField getAccessibleField(String name) {
+		for (AccessibleField field : getAccessibleFields()) {
+			if (field.getName().equals(name)) return field; 
 		}
 		return null;
 	}
 	
-	public default int getFieldPosition(String name) {
-		return getFieldPosition(getField(name));
-	}
-	
-	public default int getFieldPosition(Field field) {
-		return field.getAnnotation(AccessibleField.class).position();
-	}
-	
-	public default void setFieldValue(String name, Object object) {
-		setFieldValue(getField(name), object);
-	}
-	
-	public default void setFieldValue(Field field, Object object) {
-		try {
-			field.set(this, object);
-		} catch (IllegalArgumentException | IllegalAccessException exception) {
-			exception.printStackTrace();
+	public List<String> getAccessibleFieldNames() {
+		List<String> fields = new ArrayList<>();
+		for (AccessibleField field : getAccessibleFields()) {
+			fields.add(field.getName());
 		}
+		return fields;
 	}
 	
-	public default Object getFieldValue(String name) {
-		return getFieldValue(getField(name));
-	}
-	
-	public default Object getFieldValue(Field field) {
-		try {
-			return field.get(this);
-		} catch (IllegalArgumentException | IllegalAccessException exception) {
-			return null;
-		}
-	}
-	
-	public default List<Field> getAccessibleFields() {
-		List<Field> fields = new ArrayList<>();
-		for (Field field : this.getClass().getDeclaredFields()) {
-			if (field.isAnnotationPresent(AccessibleField.class)) {
-				field.setAccessible(true);
-				fields.add(field);
+	public List<AccessibleField> getAccessibleFields() {
+		List<AccessibleField> fields = new ArrayList<>();
+		for (Field field : object.getClass().getDeclaredFields()) {
+			if (getAnnotation(field) != null) {
+				fields.add(new AccessibleField(object, field));
 			}
 		}
-		Collections.sort(fields, new Comparator<Field>() {
+		Collections.sort(fields, new Comparator<AccessibleField>() {
 			@Override
-			public int compare(Field field1, Field field2) {
-				int value1 = field1.getAnnotation(AccessibleField.class).position();
-				int value2 = field2.getAnnotation(AccessibleField.class).position();
+			public int compare(AccessibleField field1, AccessibleField field2) {
+				int value1 = field1.getPosition();
+				int value2 = field2.getPosition();
 				if (value1 == value2) return 0;
 				if (value1 < 0) return 1;
 				if (value2 < 0) return -1;
@@ -94,6 +70,14 @@ public interface Accessible {
 			}
 		});
 		return fields;
+	}
+	
+	public Object getObject() {
+		return object;
+	}
+	
+	private eu.derzauberer.javautils.annotations.AccessibleField getAnnotation(Field field) {
+		return field.getAnnotation(eu.derzauberer.javautils.annotations.AccessibleField.class);
 	}
 
 }

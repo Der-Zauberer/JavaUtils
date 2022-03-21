@@ -74,6 +74,7 @@ public class DataUtil {
 	
 	@SuppressWarnings("unchecked")
 	public static <T> T getObject(Object object, Class<T> clazz) {
+		if (clazz == Object.class) return clazz.cast(object);
 		clazz = (Class<T>) getWrapperFromPrimitive(clazz);
 		if (object.getClass() == clazz) return clazz.cast(object);
 		T value = null;
@@ -145,6 +146,10 @@ public class DataUtil {
 	
 	public static boolean isPrimitiveType(Class<?> clazz) {
 		return clazz.isPrimitive() || clazz == Boolean.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class || clazz == Character.class || clazz == String.class;
+	}
+	
+	public static boolean isInstanceOfPrimitiveType(Object object) {
+		return object instanceof Boolean || object instanceof Byte || object instanceof Short || object instanceof Integer || object instanceof Long || object instanceof Float || object instanceof Double || object instanceof Character || object instanceof String;
 	}
 	
 	public static boolean isBooleanString(String string) {
