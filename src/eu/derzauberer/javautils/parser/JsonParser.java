@@ -38,9 +38,7 @@ public class JsonParser {
 	}
 	
 	public JsonParser set(String key, String string) {
-		if (!isNull(key, string)) {
-			setObject(key, removeEscapeCodes(string));
-		}
+		setObject(key, string);
 		return this;
 	}
 	
@@ -169,11 +167,7 @@ public class JsonParser {
 	}
 	
 	public String getString(String key) {
-		if (getObject(key) != null && !(getObject(key) instanceof JsonParser)) {
-			return addEscapeCodes(getStringFromObject(getObject(key), false));
-		} else {
-			return null;
-		}
+		return DataUtil.getObject(getObject(key), String.class);
 	}
 	
 	public boolean getBoolean(String key) {
@@ -271,22 +265,26 @@ public class JsonParser {
 		for (AccessibleField field : accessible.getAccessibleFields()) {
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
-			if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && DataUtil.isInstanceOfPrimitiveType(field.getValue()))) {
-				setObject(name, field.getValue());
-			} else if (field.getValue() instanceof List) {
-				List<Object> objectList = new ArrayList<>();
-				@SuppressWarnings("rawtypes")
-				List list = (List) field.getValue();
-				for (Object listObject : list) {
-					if (DataUtil.isPrimitiveType(listObject.getClass())) {
-						objectList.add(DataUtil.getObject(listObject, listObject.getClass()));
-					} else {
-						objectList.add(new JsonParser(listObject));
+			if (field.getValue() != null) {
+				if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && DataUtil.isInstanceOfPrimitiveType(field.getValue()))) {
+					setObject(name, field.getValue());
+				} else if (field.getValue() instanceof JsonParser) {
+					set(name, (JsonParser) field.getValue());
+				} else if (field.getValue() instanceof List) {
+					List<Object> objectList = new ArrayList<>();
+					@SuppressWarnings("rawtypes")
+					List list = (List) field.getValue();
+					for (Object listObject : list) {
+						if (DataUtil.isPrimitiveType(listObject.getClass())) {
+							objectList.add(DataUtil.getObject(listObject, listObject.getClass()));
+						} else {
+							objectList.add(new JsonParser(listObject));
+						}
 					}
+					set(name, objectList);
+				} else {
+					serializeJson(name, field.getValue());
 				}
-				set(name, objectList);
-			} else {
-				serializeJson(name, field.getValue());
 			}
 		}
 		return this;
@@ -305,8 +303,6 @@ public class JsonParser {
 				if (getObject(name) != null || (getJsonObject(name) != null && !getJsonObject(name).isEmpty())) {
 					if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && getObject(name) != null && DataUtil.isPrimitiveType(getObject(name).getClass()))) {
 						field.setValue(getData(name, field.getClassType()));
-					} else if (field.getClassType() == Object.class) {
-						field.setValue(getJsonObject(name).toOneLineString());
 					} else if ((field.getClassType() == List.class || field.getClassType() == ArrayList.class || field.getClassType() == LinkedList.class) && field.getGenericType() != null) {
 						List list = null;
 						if (field.getClassType() == List.class || field.getClassType() == ArrayList.class) {
@@ -329,7 +325,8 @@ public class JsonParser {
 						}
 					} else {
 						JsonParser value = getJsonObject(name);
-						if (!value.isEmpty()) field.setValue(value.deserializeJson(field.getClassType()));
+						if (new Accessible(field.getClassType()).getAccessibleFields().isEmpty()) field.setValue(value);
+						else if (!value.isEmpty()) field.setValue(value.deserializeJson(field.getClassType()));
 					}
 				}
 			}
@@ -473,6 +470,7 @@ public class JsonParser {
 				}
 			}
 		} else {
+			if (value instanceof String) value = removeEscapeCodes((String) value);
 			elements.put(key, value);
 			if (!structure.contains(key)) {
 				if (key.contains(".")) {
@@ -539,7 +537,9 @@ public class JsonParser {
 			return null;
 		} else {
 			if (key.isEmpty()) return this;
-			return elements.get(key);
+			Object value = elements.get(key);
+			if (value instanceof String) value = addEscapeCodes((String) value);
+			return value;
 		}
 	}
 
