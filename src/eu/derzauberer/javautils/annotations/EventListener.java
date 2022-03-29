@@ -9,6 +9,6 @@ import eu.derzauberer.javautils.events.Event.EventPriority;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Listener {
+public @interface EventListener {
 	public EventPriority priority() default EventPriority.NORMAL;
 }
