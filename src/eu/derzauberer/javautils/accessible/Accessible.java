@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.accessible;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import eu.derzauberer.javautils.util.Accessible;
-import eu.derzauberer.javautils.util.AccessibleField;
+
+import eu.derzauberer.javautils.accessible.Accessible;
+import eu.derzauberer.javautils.accessible.AccessibleField;
 import eu.derzauberer.javautils.util.DataUtil;
 
 public class JsonParser {
