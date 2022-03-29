@@ -14,7 +14,7 @@ public class ConsoleInputEvent extends Event {
 	}
 	
 	public void setCancelled(boolean cancelled) {
-		this.setCancelled(cancelled);
+		super.setCancelled(cancelled);
 	}
 	
 	public Console getConsole() {

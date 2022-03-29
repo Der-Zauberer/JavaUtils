@@ -14,7 +14,7 @@ public class ClientMessageReceiveEvent extends Event {
 	}
 	
 	public void setCancled(boolean cancelled) {
-		this.setCancelled(cancelled);
+		super.setCancelled(cancelled);
 	}
 	
 	public Client getClient() {
