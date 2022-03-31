@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-
 import eu.derzauberer.javautils.accessible.Accessible;
 import eu.derzauberer.javautils.accessible.AccessibleField;
 import eu.derzauberer.javautils.util.DataUtil;
@@ -442,106 +441,89 @@ public class JsonParser {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void setObject(String key, Object value) {
-		if (!key.startsWith("null") && ((getKeys().contains("null") && getKeys().size() == 1) || (getKeys().size() == 0 && key.isEmpty() && value instanceof List<?>))) {
-			if (key.isEmpty()) {
-				key = "null";
-			} else {
-				key = "null." + key;
-			}
-		}
-		if ((key.contains(".[") || key.startsWith("[")) && (key.contains("].") || key.endsWith("]"))) {
-			JsonParser parser = null;
+		if (value instanceof String) value = removeEscapeCodes((String) value);
+		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
+		else if (key.isEmpty()) key = "null";
+		JsonParser parser = this;
+		while (key.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
 			String newKey = key.substring(key.indexOf(']') + 1);
-			
 			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
 			String subKey = key.substring(0, key.indexOf('['));
-			if (subKey.endsWith(".")) {
-				subKey = subKey.substring(0, subKey.length() - 1);
-			}
-			if (newKey.startsWith(".")) {
-				newKey = newKey.substring(1);
-			}
-			if (index.matches("[0-9]+") && elements.get(subKey) != null) {
-				parser = getJsonObjectList(subKey).get(Integer.parseInt(index));
-				if (newKey.isEmpty() && value instanceof JsonParser) {
-					parser = (JsonParser) value;
+			if (subKey.endsWith(".")) subKey = subKey.substring(0, subKey.length() - 1);
+			if (newKey.startsWith(".")) newKey = newKey.substring(1);
+			if (index.matches("^\\d+$") && parser.elements.get(subKey) != null) {
+				int i = Integer.parseInt(index);
+				List list = (List) parser.elements.get(subKey);
+				key = newKey;
+				if (key.isEmpty()) {
+					if (!list.isEmpty()) {
+						list.set(i, value);
+						return;
+					}
 				} else {
-					parser.setObject(newKey, value);
+					parser = (JsonParser) list.get(i);
 				}
 			}
-		} else {
-			if (value instanceof String) value = removeEscapeCodes((String) value);
-			elements.put(key, value);
-			if (!structure.contains(key)) {
-				if (key.contains(".")) {
-					String keys[] = key.split("\\.");
-					int layer = -1;
-					int position = 0;
-					for (String struct : structure) {
-						String structKeys[] = struct.split("\\.");
-						for (int i = 0; i < structKeys.length; i++) {
-							if (!structKeys[i].equals(keys[i])) {
-								if (layer <= i - 1) {
-									layer = i - 1;
-									break;
-								} else {
-									structure.add(position, key);
-									removeWrongKeys(key, keys);
-									return;
-								}
-							} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
-								structure.add(position + 1, key);
-								removeWrongKeys(key, keys);
-								return;
-							} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
-								structure.add(position + 1, key);
+		}
+		elements.put(key, value);
+		if (!structure.contains(key)) {
+			if (key.contains(".")) {
+				String keys[] = key.split("\\.");
+				int layer = -1;
+				int position = 0;
+				for (String struct : structure) {
+					String structKeys[] = struct.split("\\.");
+					for (int i = 0; i < structKeys.length; i++) {
+						if (!structKeys[i].equals(keys[i])) {
+							if (layer <= i - 1) {
+								layer = i - 1;
+								break;
+							} else {
+								structure.add(position, key);
 								removeWrongKeys(key, keys);
 								return;
 							}
+						} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
+							structure.add(position + 1, key);
+							removeWrongKeys(key, keys);
+							return;
+						} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
+							structure.add(position + 1, key);
+							removeWrongKeys(key, keys);
+							return;
 						}
-						position++;
 					}
-					structure.add(position, key);
-				} else {
-					structure.add(key);
+					position++;
 				}
+				structure.add(position, key);
+			} else {
+				structure.add(key);
 			}
 		}
 	}
 	
 	private Object getObject(String key) {
-		if (!key.startsWith("null") && getKeys().contains("null") && getKeys().size() == 1) {
-			if (key.isEmpty()) {
-				key = "null";
-			} else {
-				key = "null." + key;
-			}
-		}
-		if ((key.contains(".[") || key.startsWith("[")) && (key.contains("].") || key.endsWith("]"))) {
-			JsonParser parser = null;
+		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
+		else if (key.isEmpty()) key = "null";
+		JsonParser parser = this;
+		Object value = this;
+		while (key.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
 			String newKey = key.substring(key.indexOf(']') + 1);
 			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
 			String subKey = key.substring(0, key.indexOf('['));
-			if (subKey.endsWith(".")) {
-				subKey = subKey.substring(0, subKey.length() - 1);
+			if (subKey.endsWith(".")) subKey = subKey.substring(0, subKey.length() - 1);
+			if (newKey.startsWith(".")) newKey = newKey.substring(1);
+			if (index.matches("^\\d+$") && parser.elements.get(subKey) != null) {
+				value = ((List<?>) parser.elements.get(subKey)).get(Integer.parseInt(index));
+				key = newKey;
+				if (value instanceof JsonParser) parser = (JsonParser) value; else break;
 			}
-			if (newKey.startsWith(".")) {
-				newKey = newKey.substring(1);
-			}
-			if (index.matches("[0-9]+") && getJsonObjectList(subKey) != null) {
-				parser = getJsonObjectList(subKey).get(Integer.parseInt(index));
-				return parser.getObject(newKey);
-			} else if (getJsonObjectList(subKey) == null && getObject(subKey) instanceof List<?>) {
-				return getObjectList(subKey).get(Integer.parseInt(index));
-			}
-			return null;
-		} else {
-			if (key.isEmpty()) return this;
-			Object value = elements.get(key);
-			if (value instanceof String) value = addEscapeCodes((String) value);
-			return value;
 		}
+		if (!key.isEmpty()) value = parser.elements.get(key);
+		if (value instanceof String) value = addEscapeCodes((String) value);
+		return value;
 	}
 
 	private String getOutput(boolean oneliner) {
