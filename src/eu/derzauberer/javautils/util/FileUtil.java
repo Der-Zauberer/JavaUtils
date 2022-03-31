@@ -94,8 +94,7 @@ public class FileUtil {
 	public static void writeString(File file, String string) {
 		createFile(file);
 		try {
-			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE,
-					StandardOpenOption.TRUNCATE_EXISTING);
+			Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException exception) {
 			throw new UncheckedIOException(exception);
 		}
@@ -153,9 +152,7 @@ public class FileUtil {
 	}
 
 	public static void setOnFileUpdated(File file, FileUpdatedAction action) {
-		if (timer == null) {
-			timer = new Timer();
-		}
+		if (timer == null) timer = new Timer();
 		fileObserver.add(new FileUtil().new FileObserver(file, action));
 	}
 

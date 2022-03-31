@@ -115,9 +115,7 @@ public class TickHandler {
 			}
 		};
 		asyncTasks.put(task, tickspeed);
-		if (isRunning) {
-			timer.schedule(timerTask, 0, tickspeed);
-		}
+		if (isRunning) timer.schedule(timerTask, 0, tickspeed);
 	}
 	
 	protected static Timer getTimer() {

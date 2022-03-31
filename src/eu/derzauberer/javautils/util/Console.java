@@ -171,12 +171,8 @@ public class Console implements Runnable {
 			if (event.getMessageType() != MessageType.DEFAULT) {
 				event.setOutput("[" + type.toString() + "] " + event.getOutput());
 			}
-			if (!ansiEscapeCodesSupportedBySystem()) {
-				event.setOutput(removeEscapeCodes(event.getOutput()));
-			}
-			if (logTimestampEnabled) {
-				event.setOutput(getTimeStamp() + event.getOutput());
-			}
+			if (!ansiEscapeCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
+			if (logTimestampEnabled) event.setOutput(getTimeStamp() + event.getOutput());
 			if (!event.isCancelled()) {
 				outputAction.onAction(event);
 				log(removeEscapeCodes(event.getOutput()));
@@ -189,9 +185,7 @@ public class Console implements Runnable {
 			for (Field field : Console.class.getFields()) {
 				string = string.replace(field.get(Console.class).toString(), "");
 			}
-		} catch (IllegalArgumentException exception) {
-		} catch (IllegalAccessException exception) {
-		}
+		} catch (IllegalArgumentException | IllegalAccessException exception) {}
 		while (string.contains("\033[38;5;")) {
 			int index = 0;
 			for (int i = string.indexOf("\033[38;5;"); i < string.length(); i++) {
@@ -245,16 +239,12 @@ public class Console implements Runnable {
 	
 	private void log(String string) {
 		if (isLogEnabled() && logDirectory != null) {
-			if (logTimestampEnabled) {
-				string = getTimeStamp() + string;
-			}
+			if (logTimestampEnabled) string = getTimeStamp() + string;
 			String name = "log-" + getDate() + ".txt";
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}
-			if (!string.endsWith("\n")) {
-				string += "\n";
-			}
+			if (!string.endsWith("\n")) string += "\n";
 			FileUtil.appendString(latestLogFile, string);
 		}
 	}

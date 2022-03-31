@@ -56,9 +56,7 @@ public class CommandHandler {
 	}
 
 	public static Command getCommand(String string) {
-		if (commands.containsKey(string)) {
-			return commands.get(string);
-		}
+		if (commands.containsKey(string)) return commands.get(string);
 		return null;
 	}
 
@@ -68,8 +66,7 @@ public class CommandHandler {
 
 	public static boolean hasCondition(String args[], String condition) {
 		for (int i = 0; i < args.length; i++) {
-			if (args[i].equalsIgnoreCase(condition))
-				return true;
+			if (args[i].equalsIgnoreCase(condition)) return true;
 		}
 		return false;
 	}

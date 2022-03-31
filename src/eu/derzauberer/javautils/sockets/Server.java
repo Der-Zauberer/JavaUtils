@@ -86,9 +86,7 @@ public class Server implements Runnable {
 	public void setClientTimeout(int timeout) {
 		clientTimeout = timeout;
 		for (Client client : getClients()) {
-			if (!client.isClosed()) {
-				client.setTimeout(timeout);
-			}
+			if (!client.isClosed()) client.setTimeout(timeout);
 		}
 	}
 	

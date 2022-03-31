@@ -63,28 +63,21 @@ public class Client implements Runnable {
 			}
 		} catch (SocketTimeoutException exception) {
 			cause = DisconnectCause.TIMEOUT;
-		} catch (SocketException | NullPointerException exception) {
-			
+		} catch (SocketException | NullPointerException exception) {	
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-		if (cause == null) {
-			cause = DisconnectCause.DISCONNECTED;
-		}
+		if (cause == null) cause = DisconnectCause.DISCONNECTED;
 		close();
 	}
 
 	public void sendMessage(String message) {
 		ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
-		if (!event.isCancelled()) {
-			output.println(message);
-		}
+		if (!event.isCancelled()) output.println(message);
 	}
 	
 	protected void onMessageReceive(ClientMessageReceiveEvent event) {
-		if (isPartOfServer()) {
-			server.onMessageReceive(event);
-		}
+		if (isPartOfServer()) server.onMessageReceive(event);
 		action.onAction(event);
 	}
 
@@ -130,13 +123,9 @@ public class Client implements Runnable {
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
-			if (cause == null) {
-				cause = DisconnectCause.CLOSED;
-			}
+			if (cause == null) cause = DisconnectCause.CLOSED;
 			new ClientDisconnectEvent(this, cause);
-			if (isPartOfServer()) {
-				server.getClients().remove(this);
-			}
+			if (isPartOfServer()) server.getClients().remove(this);
 		}
 	}
 	
