@@ -35,7 +35,7 @@ public class Client implements Runnable {
 		this(socket, null);
 	}
 	
-	public Client(Socket socket, Server server) throws IOException {
+	protected Client(Socket socket, Server server) throws IOException {
 		this.server = server;
 		this.socket = socket;
 		output = new PrintStream(socket.getOutputStream(), true);
