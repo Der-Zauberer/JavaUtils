@@ -604,7 +604,7 @@ public class JsonParser {
 										string.append(newLine);
 									}
 								}
-								if (hasParent) {
+								if (hasParent && i == list.size() - 1) {
 									string.append(newLine);
 								}
 							}
@@ -665,9 +665,7 @@ public class JsonParser {
 	}
 
 	private String getSeperator(int lenght1, int lenght2, boolean nextPosition) {
-		if (lenght1 >= lenght2 && !nextPosition) {
-			return ",";
-		}
+		if (lenght1 >= lenght2 && !nextPosition) return ",";
 		return "";
 	}
 
