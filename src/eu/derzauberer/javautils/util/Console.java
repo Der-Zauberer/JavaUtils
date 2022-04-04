@@ -2,7 +2,6 @@ package eu.derzauberer.javautils.util;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Calendar;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -168,12 +167,16 @@ public class Console implements Runnable {
 	private void sendOutput(String output, MessageType type) {
 		if (type != MessageType.DEBUG || debugEnabled) {
 			ConsoleOutputEvent event = new ConsoleOutputEvent(this, output, type);
-			if (event.getMessageType() != MessageType.DEFAULT) {
-				event.setOutput("[" + type.toString() + "] " + event.getOutput());
-			}
-			if (!ansiEscapeCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
-			if (logTimestampEnabled) event.setOutput(getTimeStamp() + event.getOutput());
 			if (!event.isCancelled()) {
+				if (event.getMessageType() != MessageType.DEFAULT) {
+					event.setOutput("[" + type.toString() + "] " + event.getOutput());
+					event.setOutput(event.getOutput().replace("\n", "\n" + "[" + type.toString() + "] "));
+				}
+				if (!ansiEscapeCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
+				if (logTimestampEnabled) {
+					event.setOutput(Time.now().toString("[hh:mm:ss] ") + event.getOutput());
+					event.setOutput(event.getOutput().replace("\n", "\n" + Time.now().toString("[hh:mm:ss] ")));
+				}
 				outputAction.onAction(event);
 				log(removeEscapeCodes(event.getOutput()));
 			}
@@ -239,42 +242,13 @@ public class Console implements Runnable {
 	
 	private void log(String string) {
 		if (isLogEnabled() && logDirectory != null) {
-			if (logTimestampEnabled) string = getTimeStamp() + string;
-			String name = "log-" + getDate() + ".txt";
+			String name = "log-" + Date.now() + ".txt";
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}
 			if (!string.endsWith("\n")) string += "\n";
 			FileUtil.appendString(latestLogFile, string);
 		}
-	}
-	
-	private String getTimeStamp() {
-		Calendar calendar = Calendar.getInstance();
-		String string[] = new String[3];
-		string[0] = Integer.toString(calendar.get(Calendar.HOUR_OF_DAY));
-		string[1] = Integer.toString(calendar.get(Calendar.MINUTE));
-		string[2] = Integer.toString(calendar.get(Calendar.SECOND));
-		for (int i = 0; i < string.length; i++) {
-			if (string[i].length() == 1) {
-				string[i] = "0" + string[i];
-			}
-		}
-		return "[" + string[0] + ":" + string[1] + ":" + string[2] + "] ";
-	}
-	
-	private String getDate() {
-		Calendar calendar = Calendar.getInstance();
-		String string[] = new String[3];
-		string[0] = Integer.toString(calendar.get(Calendar.YEAR));
-		string[1] = Integer.toString(calendar.get(Calendar.MONTH) + 1);
-		string[2] = Integer.toString(calendar.get(Calendar.DAY_OF_MONTH));
-		for (int i = 1; i < string.length; i++) {
-			if (string[i].length() == 1) {
-				string[i] = "0" + string[i];
-			}
-		}
-		return string[0] + "-" + string[1] + "-" + string[2];
 	}
 	
 	public boolean isAnsiEscapeCodesEnabled() {
