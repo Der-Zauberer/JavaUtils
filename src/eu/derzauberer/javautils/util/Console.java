@@ -45,6 +45,7 @@ public class Console implements Runnable {
 	public enum MessageType {DEFAULT, INFO, SUCCESS, WARNING, ERROR, DEBUG}
 
 	private Thread thread;
+	private Scanner scanner;
 	private String inputPrefix;
 	private File directory;
 	private MessageType defaultType;
@@ -72,6 +73,7 @@ public class Console implements Runnable {
 	
 	public Console(String inputPrefix, boolean start) {
 		if (start) start();
+		scanner = new Scanner(System.in);
 		directory = FileUtil.getJarDirectory();
 		this.inputPrefix = inputPrefix;
 		defaultType = MessageType.DEFAULT;
@@ -93,11 +95,10 @@ public class Console implements Runnable {
 		thread.interrupt();
 	}
 	
-	@SuppressWarnings("resource")
 	@Override
 	public void run() {
 		try {
-			Scanner scanner = new Scanner(System.in);
+			scanner = new Scanner(System.in);
 			String input;
 			while (!thread.isInterrupted()) {
 				System.out.print(inputPrefix);
@@ -208,14 +209,6 @@ public class Console implements Runnable {
 	
 	public static String get256BitBackgroundColor(int number) {
 		return "\033[48;5;" + number + "m";
-	}
-	
-	public String nextInput() {
-		String input = "";
-		Scanner scanner = new Scanner(System.in);
-		input = scanner.next();
-		scanner.close();
-		return input;
 	}
 	
 	public void sendMessage(Object object) {
