@@ -18,9 +18,11 @@ public class Date implements Comparable<Date> {
 	}
 	
 	public Date(int year, int month, int day, Time time) {
-		if (1 > month  || month > 12) {
+		if (0 > year) {
+			throw new IllegalArgumentException("The value of year can only be positive (it is " + month + ")");
+		} else if (1 > month  || month > 12) {
 			throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
-		} else if (month != 2 && (1 > day || day > 31 || (month < 8 && month % 2 == 0 && day > 30) || (month > 7 && month % 2 == 1 && day > 30))) {
+		} else if (1 > day || month != 2 && (1 > day || day > 31 || (month < 8 && month % 2 == 0 && day > 30) || (month > 7 && month % 2 == 1 && day > 30))) {
 			throw new IllegalArgumentException("The value of day can only be between 1 and 30 or 31 depending on the month (it is " + day + ")");
 		} else if (month == 2 && (year % 4 == 0 && day > 29 || year % 4 != 0 && day > 28)) {
 			throw new IllegalArgumentException("The value of day in february can only be between 1 and 28 or 29 depending on the year (it is " + day + ")");
@@ -47,9 +49,11 @@ public class Date implements Comparable<Date> {
 				day = Integer.parseInt(string.substring(i, i + 2));
 			}
 		}
-		if (1 > month  || month > 12) {
+		if (0 > year) {
+			throw new IllegalArgumentException("The value of year can only be positive (it is " + month + ")");
+		} else if (1 > month  || month > 12) {
 			throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
-		} else if (month != 2 && (1 > day || day > 31 || (month < 8 && month % 2 == 0 && day > 30) || (month > 7 && month % 2 == 1 && day > 30))) {
+		} else if (1 > day || month != 2 && (1 > day || day > 31 || (month < 8 && month % 2 == 0 && day > 30) || (month > 7 && month % 2 == 1 && day > 30))) {
 			throw new IllegalArgumentException("The value of day can only be between 1 and 30 or 31 depending on the month (it is " + day + ")");
 		} else if (month == 2 && (year % 4 == 0 && day > 29 || year % 4 != 0 && day > 28)) {
 			throw new IllegalArgumentException("The value of day in february can only be between 1 and 28 or 29 depending on the year (it is " + day + ")");

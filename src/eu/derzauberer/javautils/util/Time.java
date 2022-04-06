@@ -48,10 +48,10 @@ public class Time implements Comparable<Time> {
 				millisecond = Integer.parseInt(string.substring(i, i + 2));
 			}
 		}
-		if (hour > 23) throw new IllegalArgumentException("The value of hour can not be over 23 (it is " + hour + ")");
-		else if (minute > 59) throw new IllegalArgumentException("The value of minute can not be over 59 (it is " + minute + ")");
-		else if (second > 59) throw new IllegalArgumentException("The value of second can not be over 59 (it is " + second + ")");
-		else if (millisecond > 999) throw new IllegalArgumentException("The value of millisecond can not be over 999 (it is " + second + ")");
+		if (0 > hour || hour > 23) throw new IllegalArgumentException("The value of hour can only be between 0 and 23 (it is " + hour + ")");
+		else if (0 > minute || minute > 59) throw  new IllegalArgumentException("The value of minute can only be between 0 and 59 (it is " + minute + ")");
+		else if (0 > second || second > 59) throw  new IllegalArgumentException("The value of second can only be between 0 and 59 (it is " + second + ")");
+		else if (0 > millisecond || millisecond > 999) throw new IllegalArgumentException("The value of millisecond can only be between 0 and 999 (it is " + second + ")");
 	}
 		
 	public int getHour() {
@@ -68,6 +68,39 @@ public class Time implements Comparable<Time> {
 	
 	public int getMillisecond() {
 		return millisecond;
+	}
+	
+	public Time addTime(int hour, int minute) {
+		return addTime(hour, minute, 0, 0);
+	}
+	
+	public Time addTime(int hour, int minute, int second) {
+		return addTime(hour, minute, second, 0);
+	}
+	
+	public Time addTime(int hour, int minute, int second, int millisecond) {
+		int carryMillisecond = calculateTimeCarry(this.millisecond, millisecond, 0, 1000);
+		int carrySecond = calculateTimeCarry(this.second, second, carryMillisecond, 60);
+		int carryMinute = calculateTimeCarry(this.minute, minute, carrySecond, 60);
+		int newMillisecond = calculateTime(this.millisecond, millisecond, 0, 1000);
+		int newSecond = calculateTime(this.second, second, carryMillisecond, 60);
+		int newMinute = calculateTime(this.minute, minute, carrySecond, 60);
+		int newHour = calculateTime(this.hour, hour, carryMinute, 24);
+		return new Time(newHour, newMinute, newSecond, newMillisecond);
+	}
+	
+	public Time addTime(Time time) {
+		return addTime(time.getHour(), time.getMinute(), time.getSecond(), time.getMillisecond());
+	}
+	
+	private int calculateTime(int oldValue, int newValue, int carry, int maxValue) {
+		int tempValue = oldValue + newValue + carry;
+		return (tempValue >= 0) ? tempValue % maxValue : maxValue + (tempValue % maxValue);
+	}
+	
+	private int calculateTimeCarry(int oldValue, int newValue, int carry, int maxValue) {
+		int tempValue = oldValue + newValue + carry;
+		return (tempValue >= 0) ? tempValue / maxValue : (tempValue / maxValue) - 1;
 	}
 	
 	@Override
