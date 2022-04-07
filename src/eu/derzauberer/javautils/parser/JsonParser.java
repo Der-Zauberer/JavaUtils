@@ -33,23 +33,19 @@ public class JsonParser {
 	}
 	
 	public JsonParser setNull(String key) {
-		setObject(key, null);
-		return this;
+		return setObject(key, null);
 	}
 	
 	public JsonParser set(String key, String string) {
-		setObject(key, string);
-		return this;
+		return setObject(key, string);
 	}
 	
 	public JsonParser set(String key, boolean value) {
-		setObject(key, value);
-		return this;
+		return setObject(key, value);
 	}
 	
 	public JsonParser set(String key, byte value) {
-		setObject(key, value);
-		return this;
+		return setObject(key, value);
 	}
 	
 	public JsonParser set(String key, short value) {
@@ -58,39 +54,30 @@ public class JsonParser {
 	}
 	
 	public JsonParser set(String key, int value) {
-		setObject(key, value);
-		return this;
+		return setObject(key, value);
 	}
 	
 	public JsonParser set(String key, long value) {
-		setObject(key, value);
-		return this;
+		return setObject(key, value);
 	}
 	
 	public JsonParser set(String key, float value) {
-		setObject(key, value);
-		return this;
+		return setObject(key, value);
 	}
 	
 	public JsonParser set(String key, double value) {
-		setObject(key, value);
-		return this;
+		return setObject(key, value);
 	}
 	
 	public JsonParser set(String key, JsonParser object) {
-		if (!isNull(key, object)) {
-			if (!key.endsWith(".")) {
-				key += ".";
-			}
-			for (String string : object.getKeys()) {
-				setObject(key + string, object.get(string));
-			}
-		}
-		return this;
+		return setObject(key, object);
 	}
 	
 	public JsonParser set(String key, List<?> list) {
-		if (!isNull(key, list)) {
+		if (list == null) {
+			setNull(key);
+			return this;
+		} else {
 			List<Object> objects = new ArrayList<>();
 			for (Object object : list) {
 				if (object instanceof String) {
@@ -203,31 +190,16 @@ public class JsonParser {
 	}
 	
 	public JsonParser getJsonObject(String key) {
+		Object object = getObject(key);
 		if (key.isEmpty()) return this;
-		if (getObject(key) instanceof JsonParser) {
-			return (JsonParser) getObject(key);
-		} else if (getObject(key) instanceof List) {
-			JsonParser jsonParser = new JsonParser();
-			jsonParser.setObject("null", get(key));
-			return jsonParser;
+		else if (object instanceof JsonParser) {
+			return (JsonParser) object;
+		} else if (object instanceof List) {
+			return new JsonParser().setObject("null", object);
 		} else {
-			JsonParser jsonParser = new JsonParser();
-			if ((key.contains(".[") || key.startsWith("[")) && key.contains("].")) {
-				String subKey = key.substring(0, key.lastIndexOf("]") + 1);
-				String newKey = key.substring(key.lastIndexOf("]") + 2);
-				for (String string : getJsonObject(subKey).getKeys(newKey, false)) {
-					jsonParser.setObject(string, getObject(key + "." + string));
-				}
-			} else {
-				try {
-					for (String string : getKeys(key, false)) {
-						jsonParser.setObject(string, getObject(key + "." + string));
-					}
-				} catch (StringIndexOutOfBoundsException exception) {
-					return null;
-				}
-			}
-			return jsonParser;
+			String newKey = key;
+			if (key.contains(".") && !key.endsWith(".")) newKey = key.substring(key.lastIndexOf('.') + 1, key.length());
+			return new JsonParser().setObject(newKey, object);
 		}
 	}
 	
@@ -302,7 +274,7 @@ public class JsonParser {
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
 				if (getObject(name) != null || (getJsonObject(name) != null && !getJsonObject(name).isEmpty())) {
 					if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && getObject(name) != null && DataUtil.isPrimitiveType(getObject(name).getClass()))) {
-						field.setValue(getData(name, field.getClassType()));
+						if (getObject(key) != null) field.setValue(getData(name, field.getClassType()));
 					} else if ((field.getClassType() == List.class || field.getClassType() == ArrayList.class || field.getClassType() == LinkedList.class) && field.getGenericType() != null) {
 						List list = null;
 						if (field.getClassType() == List.class || field.getClassType() == ArrayList.class) {
@@ -442,7 +414,7 @@ public class JsonParser {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void setObject(String key, Object value) {
+	private JsonParser setObject(String key, Object value) {
 		if (value instanceof String) value = removeEscapeCodes((String) value);
 		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
 		else if (key.isEmpty()) key = "null";
@@ -460,20 +432,28 @@ public class JsonParser {
 				if (key.isEmpty()) {
 					if (!list.isEmpty()) {
 						list.set(i, value);
-						return;
+						return this;
 					}
 				} else {
 					parser = (JsonParser) list.get(i);
 				}
 			}
 		}
-		elements.put(key, value);
-		if (!structure.contains(key)) {
+		if (value instanceof JsonParser) {
+			JsonParser jsonObject = (JsonParser) value;
+			for (String objectKey : jsonObject.getKeys()) {
+				setObject((!key.isEmpty()) ?  key + "." + objectKey : objectKey, jsonObject.get(objectKey));
+			}
+			return this;
+		} else {
+			parser.elements.put(key, value);
+		}
+		if (!parser.structure.contains(key)) {
 			if (key.contains(".")) {
 				String keys[] = key.split("\\.");
 				int layer = -1;
 				int position = 0;
-				for (String struct : structure) {
+				for (String struct : parser.structure) {
 					String structKeys[] = struct.split("\\.");
 					for (int i = 0; i < structKeys.length; i++) {
 						if (!structKeys[i].equals(keys[i])) {
@@ -481,27 +461,28 @@ public class JsonParser {
 								layer = i - 1;
 								break;
 							} else {
-								structure.add(position, key);
+								parser.structure.add(position, key);
 								removeWrongKeys(key, keys);
-								return;
+								return this;
 							}
 						} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
-							structure.add(position + 1, key);
+							parser.structure.add(position + 1, key);
 							removeWrongKeys(key, keys);
-							return;
+							return this;
 						} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
-							structure.add(position + 1, key);
+							parser.structure.add(position + 1, key);
 							removeWrongKeys(key, keys);
-							return;
+							return  this;
 						}
 					}
 					position++;
 				}
-				structure.add(position, key);
+				parser.structure.add(position, key);
 			} else {
-				structure.add(key);
+				parser.structure.add(key);
 			}
 		}
+		return this;
 	}
 	
 	private Object getObject(String key) {
@@ -520,6 +501,14 @@ public class JsonParser {
 				key = newKey;
 				if (value instanceof JsonParser) parser = (JsonParser) value; else break;
 			}
+		}
+		if (parser.elements.get(key) == null && parser.getKeys(key).size() > 0) {
+			JsonParser jsonObject = new JsonParser();
+			for (String objectKey : parser.getKeys(key, false)) {
+				jsonObject.structure.add(objectKey);
+				jsonObject.elements.put(objectKey, parser.elements.get((!key.isEmpty()) ? key + "." + objectKey : objectKey));
+			}
+			return jsonObject;
 		}
 		if (!key.isEmpty()) value = parser.elements.get(key);
 		if (value instanceof String) value = addEscapeCodes((String) value);
@@ -725,14 +714,6 @@ public class JsonParser {
 			
 		}
 		return string;
-	}
-	
-	private boolean isNull(String key, Object object) {
-		if (object == null) {
-			setNull(key);
-			return true;
-		}
-		return false;
 	}
 	
 	private String getStringFromObject(Object object, boolean stringWithQotationMark) {
