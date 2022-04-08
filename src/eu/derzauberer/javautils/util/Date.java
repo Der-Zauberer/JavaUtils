@@ -85,26 +85,16 @@ public class Date implements Comparable<Date> {
 			if (1 > newDay) {
 				newMonth--;
 				newDay += getMaxDaysOfMonth(newMonth, newYear);
-				while (1 > newMonth || newMonth > 12) { 
-					if (1 > newMonth) {
-						newYear--;
-						newMonth += 12;
-					} else {
-						newYear++;
-						newMonth -= 12;
-					}
+				if (1 > newMonth) {
+					newYear--;
+					newMonth += 12;
 				}
 			} else {
 				newMonth++;
 				newDay -= getMaxDaysOfMonth(newMonth - 1, newYear);
-				while (1 > newMonth || newMonth > 12) {
-					if (1 > newMonth) {
-						newYear--;
-						newMonth += 12;
-					} else {
-						newYear++;
-						newMonth -= 12;
-					}
+				if (newMonth > 12) {
+					newYear++;
+					newMonth -= 12;
 				}
 			}
 		}
