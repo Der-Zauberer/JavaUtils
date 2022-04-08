@@ -12,12 +12,12 @@ public class DataUtil {
 		if (object != null) {
 			if (object instanceof Boolean) return (Boolean) object; 
 			if (object instanceof Number) {
-				if (((Number) object).intValue() > 0) return true; else return false;
+				return (((Number) object).intValue() > 0);
 			} else if (object instanceof String) {
 				if (object.toString().equalsIgnoreCase("true")) return true;
 				else if (object.toString().equalsIgnoreCase("false")) return false;
 				else if (isNumericString(object.toString())) {
-					if (Double.parseDouble(object.toString().replace("\"", "")) == 0) return false; else return true;
+					return (Double.parseDouble(object.toString().replace("\"", "")) == 0);
 				}
 			}
 		}
