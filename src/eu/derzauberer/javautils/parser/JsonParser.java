@@ -95,25 +95,27 @@ public class JsonParser {
 	}
 	
 	public JsonParser remove(String key) {
-		structure.remove(key);
-		elements.remove(key);
-		return this;
-	}
-	
-	public JsonParser removeSection(String key) {
-		ArrayList<Object> removed = new ArrayList<>();
-		for (String string : structure) {
-			if (string.startsWith(key)) {
-				removed.add(string);
-				elements.remove(key);
+		JsonPath path = getJsonPath(key);
+		JsonParser parser = path.getParent();
+		key = path.getKey();
+		if (path.isListItem()) {
+			path.getList().remove(path.getIndex());
+			return this;
+		} else if (parser.elements.get(key) == null && parser.getKeys(key).size() > 0) {
+			for (String objectKey : parser.getKeys(key)) {
+				parser.structure.remove(objectKey);
+				parser.elements.remove(objectKey);
 			}
+		} else {
+			parser.structure.remove(key);
+			parser.elements.remove(key);
 		}
-		structure.removeAll(removed);
 		return this;
 	}
 	
 	public boolean exists(String key) {
-		return structure.contains(key);
+		JsonPath path = getJsonPath(key);
+		return path.getParent().structure.contains(path.getKey());
 	}
 	
 	public boolean isEmpty() {
@@ -413,33 +415,15 @@ public class JsonParser {
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("unchecked")
 	private JsonParser setObject(String key, Object value) {
-		if (value instanceof String) value = removeEscapeCodes((String) value);
-		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
-		else if (key.isEmpty()) key = "null";
-		JsonParser parser = this;
-		while (key.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
-			String newKey = key.substring(key.indexOf(']') + 1);
-			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
-			String subKey = key.substring(0, key.indexOf('['));
-			if (subKey.endsWith(".")) subKey = subKey.substring(0, subKey.length() - 1);
-			if (newKey.startsWith(".")) newKey = newKey.substring(1);
-			if (index.matches("^\\d+$") && parser.elements.get(subKey) != null) {
-				int i = Integer.parseInt(index);
-				List list = (List) parser.elements.get(subKey);
-				key = newKey;
-				if (key.isEmpty()) {
-					if (!list.isEmpty()) {
-						list.set(i, value);
-						return this;
-					}
-				} else {
-					parser = (JsonParser) list.get(i);
-				}
-			}
-		}
-		if (value instanceof JsonParser) {
+		JsonPath path = getJsonPath(key);
+		JsonParser parser = path.getParent();
+		key = path.getKey();
+		if (path.isListItem()) {
+			path.getList().set(path.getIndex(), value);
+			return this;
+		} else if (value instanceof JsonParser) {
 			JsonParser jsonObject = (JsonParser) value;
 			for (String objectKey : jsonObject.getKeys()) {
 				setObject((!key.isEmpty()) ?  key + "." + objectKey : objectKey, jsonObject.get(objectKey));
@@ -486,22 +470,11 @@ public class JsonParser {
 	}
 	
 	private Object getObject(String key) {
-		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
-		else if (key.isEmpty()) key = "null";
-		JsonParser parser = this;
-		Object value = this;
-		while (key.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
-			String newKey = key.substring(key.indexOf(']') + 1);
-			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
-			String subKey = key.substring(0, key.indexOf('['));
-			if (subKey.endsWith(".")) subKey = subKey.substring(0, subKey.length() - 1);
-			if (newKey.startsWith(".")) newKey = newKey.substring(1);
-			if (index.matches("^\\d+$") && parser.elements.get(subKey) != null) {
-				value = ((List<?>) parser.elements.get(subKey)).get(Integer.parseInt(index));
-				key = newKey;
-				if (value instanceof JsonParser) parser = (JsonParser) value; else break;
-			}
-		}
+		JsonPath path = getJsonPath(key);
+		JsonParser parser = path.getParent();
+		key = path.getKey();
+		if (path.isListItem()) return path.getList().get(path.getIndex());
+		Object value = parser.elements.get(key);
 		if (parser.elements.get(key) == null && parser.getKeys(key).size() > 0) {
 			JsonParser jsonObject = new JsonParser();
 			for (String objectKey : parser.getKeys(key, false)) {
@@ -734,6 +707,35 @@ public class JsonParser {
 		}
 	}
 	
+	private JsonPath getJsonPath(String key) {
+		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
+		else if (key.isEmpty()) key = "null";
+		JsonParser parser = this;
+		List<?> list = null;
+		int i = 0;
+		while (key.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
+			String newKey = key.substring(key.indexOf(']') + 1);
+			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
+			String subKey = key.substring(0, key.indexOf('['));
+			if (subKey.endsWith(".")) subKey = subKey.substring(0, subKey.length() - 1);
+			if (newKey.startsWith(".")) newKey = newKey.substring(1);
+			if (index.matches("^\\d+$") && parser.elements.get(subKey) != null) {
+				i = Integer.parseInt(index);
+				list = (List<?>) parser.elements.get(subKey);
+				key = newKey;
+				if (key.isEmpty()) {
+					if (!list.isEmpty()) {
+						if (list.get(0) instanceof JsonParser) parser = (JsonParser) list.get(i);
+						return new JsonPath(true, parser, key, list, i);
+					}
+				} else {
+					parser = (JsonParser) list.get(i);
+				}
+			}
+		}
+		return new JsonPath(false, parser, key, list, i);
+	}
+	
 	private String removeEscapeCodes(String string) {
 		string = string.replace("\"", "\\\"");
 		string = string.replace("\b", "\\b");
@@ -752,6 +754,45 @@ public class JsonParser {
 		string = string.replace("\\t", "\t");
 		string = string.replace("\\/", "/");
 		return string;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private class JsonPath {
+		
+		private boolean isListItem;
+		private JsonParser parent;
+		private String key;
+		private List list;
+		private int index;
+		
+		public JsonPath(boolean isListItem, JsonParser parent, String key, List list, int index) {
+			this.isListItem = isListItem;
+			this.parent = parent;
+			this.key = key;
+			this.list = list;
+			this.index = index;
+		}
+		
+		public boolean isListItem() {
+			return isListItem;
+		}
+		
+		public JsonParser getParent() {
+			return parent;
+		}
+		
+		public String getKey() {
+			return key;
+		}
+		
+		public List getList() {
+			return list;
+		}
+		
+		public int getIndex() {
+			return index;
+		}
+		
 	}
 	
 }
