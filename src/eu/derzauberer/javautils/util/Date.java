@@ -22,10 +22,8 @@ public class Date implements Comparable<Date> {
 			throw new IllegalArgumentException("The value of year can only be positive (it is " + month + ")");
 		} else if (1 > month  || month > 12) {
 			throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
-		} else if (1 > day || month != 2 && (1 > day || day > 31 || (month < 8 && month % 2 == 0 && day > 30) || (month > 7 && month % 2 == 1 && day > 30))) {
-			throw new IllegalArgumentException("The value of day can only be between 1 and 30 or 31 depending on the month (it is " + day + ")");
-		} else if (month == 2 && (year % 4 == 0 && day > 29 || year % 4 != 0 && day > 28)) {
-			throw new IllegalArgumentException("The value of day in february can only be between 1 and 28 or 29 depending on the year (it is " + day + ")");
+		} else if (day > getMaxDaysOfMonth(month, year)) {
+			throw new IllegalArgumentException("The value of day can only be between 1 and " + getMaxDaysOfMonth(month, year) + " in the month " + month + " (it is " + day + ")");
 		}
 		this.year = year;
 		this.month = month;
@@ -53,10 +51,8 @@ public class Date implements Comparable<Date> {
 			throw new IllegalArgumentException("The value of year can only be positive (it is " + month + ")");
 		} else if (1 > month  || month > 12) {
 			throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
-		} else if (1 > day || month != 2 && (1 > day || day > 31 || (month < 8 && month % 2 == 0 && day > 30) || (month > 7 && month % 2 == 1 && day > 30))) {
-			throw new IllegalArgumentException("The value of day can only be between 1 and 30 or 31 depending on the month (it is " + day + ")");
-		} else if (month == 2 && (year % 4 == 0 && day > 29 || year % 4 != 0 && day > 28)) {
-			throw new IllegalArgumentException("The value of day in february can only be between 1 and 28 or 29 depending on the year (it is " + day + ")");
+		} else if (day > getMaxDaysOfMonth(month, year)) {
+			throw new IllegalArgumentException("The value of day can only be between 1 and " + getMaxDaysOfMonth(month, year) + " in the month " + month + " (it is " + day + ")");
 		}
 	}
 	
@@ -74,6 +70,54 @@ public class Date implements Comparable<Date> {
 	
 	public Time getTime() {
 		return time;
+	}
+	
+	public Date addDate(int year, int month, int day) {
+		return addDate(year, month, day, new Time());
+	}
+	
+	public Date addDate(int year, int month, int day, Time time) {
+		int newYear = this.year + year;
+		int newMonth = this.month + month;
+		int newDay = this.day + day + (((this.time.getHour() + time.getHour()) >= 0) ? (this.time.getHour() + time.getHour()) / 24 : ((this.time.getHour() + time.getHour()) / 24) - 1);
+		Time newTime = this.time.addTime(time);
+		while (1 > newDay || newDay > getMaxDaysOfMonth(newMonth, newYear)) { 
+			if (1 > newDay) {
+				newMonth--;
+				newDay += getMaxDaysOfMonth(newMonth, newYear);
+				while (1 > newMonth || newMonth > 12) { 
+					if (1 > newMonth) {
+						newYear--;
+						newMonth += 12;
+					} else {
+						newYear++;
+						newMonth -= 12;
+					}
+				}
+			} else {
+				newMonth++;
+				newDay -= getMaxDaysOfMonth(newMonth - 1, newYear);
+				while (1 > newMonth || newMonth > 12) {
+					if (1 > newMonth) {
+						newYear--;
+						newMonth += 12;
+					} else {
+						newYear++;
+						newMonth -= 12;
+					}
+				}
+			}
+		}
+		while (1 > newMonth || newMonth > 12) { 
+			if (1 > newMonth) {
+				newYear--;
+				newMonth += 12;
+			} else {
+				newYear++;
+				newMonth -= 12;
+			}
+		}
+		return new Date(newYear, newMonth, newDay, newTime);
 	}
 	
 	@Override
@@ -108,6 +152,15 @@ public class Date implements Comparable<Date> {
 		String string = Integer.toString(number);
 		while (string.length() < lenght) string = "0" + string;
 		return string;
+	}
+	
+	public static int getMaxDaysOfMonth(int month, int year) {
+		if (month == 2) {
+			return (year % 4 == 0) ? 29 : 28;
+		} else if (month <= 12) {
+			return ((month < 8 && month % 2 == 0) || (month > 7 && month % 2 == 1)) ? 30 : 31;
+		}
+		throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
 	}
 
 }
