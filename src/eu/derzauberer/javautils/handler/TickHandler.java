@@ -8,14 +8,25 @@ import eu.derzauberer.javautils.util.TickTask;
 
 public class TickHandler {
 	
-	private boolean isRunning = false;
-	private long tickspeed = 1000;
-	private Timer timer = new Timer();
+	private boolean isRunning;
+	private boolean restart;
+	private long tickspeed;
+	private Timer timer;
 	private TimerTask timertask;
-	private boolean restart = false;
 	
 	private ArrayList<TickTask> tasks = new ArrayList<>();
 	private HashMap<TickTask, Integer> asyncTasks = new HashMap<>();
+	
+	public TickHandler() {
+		this(1000);
+	}
+	
+	public TickHandler(int tickspeed) {
+		isRunning = false;
+		restart = false;
+		this.tickspeed = tickspeed;
+		timer = new Timer();
+	}
 	
 	public void start() {
 		if (!isRunning) {

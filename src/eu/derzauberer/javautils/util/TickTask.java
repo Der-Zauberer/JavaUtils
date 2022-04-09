@@ -14,7 +14,7 @@ public class TickTask {
 	private long repeatCounter;
 	
 	public TickTask(TickTaskAction action, int ticks) {
-		this(action, ticks, 0);
+		this(action, ticks, 0, false);
 	}
 	
 	public TickTask(TickTaskAction action, int ticks, int repeats) {
@@ -25,7 +25,7 @@ public class TickTask {
 		this(action, ticks, 0, endless);
 	}
 	
-	public TickTask(TickTaskAction action, int ticks, int repeats, boolean endless) {
+	private TickTask(TickTaskAction action, int ticks, int repeats, boolean endless) {
 		this.action = action;
 		this.ticks = ticks;
 		this.repeats = repeats;
