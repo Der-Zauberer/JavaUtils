@@ -1,9 +1,9 @@
 package eu.derzauberer.javautils.action;
 
-import eu.derzauberer.javautils.handler.LoopHandler;
+import eu.derzauberer.javautils.events.LoopTickEvent;
 
 public interface LoopTickAction {
 	
-	public abstract void onAction(LoopHandler handler, int nanoDeltaTime, int ticksPerSecond);
+	public abstract void onAction(LoopTickEvent event);
 
 }

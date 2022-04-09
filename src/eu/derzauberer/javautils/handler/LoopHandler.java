@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.handler;
 
 import eu.derzauberer.javautils.action.LoopTickAction;
+import eu.derzauberer.javautils.events.LoopTickEvent;
 
 public class LoopHandler {
 	
@@ -20,7 +21,7 @@ public class LoopHandler {
 			long time = System.nanoTime();
 			deltaTime = (int) (time - lastTimestamp);
 			lastTimestamp = time;
-			if (action != null) action.onAction(this, deltaTime, getTicksPerSecond());
+			if (action != null) action.onAction(new LoopTickEvent(this, deltaTime, getTicksPerSecond()));
 		}
 		thread = null;
 	}
@@ -33,8 +34,8 @@ public class LoopHandler {
 					loop();
 				}
 			};
+			thread.start();
 		}
-		thread.start();
 	}
 	
 	public void stop() {
