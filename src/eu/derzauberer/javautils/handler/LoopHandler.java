@@ -13,12 +13,6 @@ public class LoopHandler {
 		this.action = action;
 		deltaTime = 0;
 		lastTimestamp = 0;
-		thread = new Thread() {
-			@Override
-			public void run() {
-				loop();
-			}
-		};
 	}
 	
 	private void loop() {
@@ -28,14 +22,25 @@ public class LoopHandler {
 			lastTimestamp = time;
 			if (action != null) action.onAction(this, deltaTime, getTicksPerSecond());
 		}
+		thread = null;
 	}
 	
 	public void start() {
+		if (thread == null) {
+			thread = new Thread() {
+				@Override
+				public void run() {
+					loop();
+				}
+			};
+		}
 		thread.start();
 	}
 	
 	public void stop() {
-		thread.interrupt();
+		if (thread != null) {
+			thread.interrupt();
+		}
 	}
 	
 	public int getTicksPerSecond() {

@@ -52,6 +52,7 @@ public class Console implements Runnable {
 	private boolean debugEnabled;
 	private ConsoleInputAction inputAction;
 	private ConsoleOutputAction outputAction;
+	private CommandHandler commandHandler;
 	private Object sender;
 	private boolean ansiEscapeCodesEnabled;
 	private boolean logEnabled;
@@ -148,6 +149,14 @@ public class Console implements Runnable {
 		this.outputAction = outputAction;
 	}
 	
+	public void setCommandHandler(CommandHandler commandHandler) {
+		this.commandHandler = commandHandler;
+	}
+	
+	public CommandHandler getCommandHandler() {
+		return commandHandler;
+	}
+	
 	public void setSender(Object sender) {
 		this.sender = sender;
 	}
@@ -160,7 +169,7 @@ public class Console implements Runnable {
 		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
 		if (!event.isCancelled()) {
 			inputAction.onAction(event);
-			CommandHandler.executeCommand(event.getConsole(), event.getInput());
+			commandHandler.executeCommand(event.getConsole(), event.getInput());
 			log(event.getInput());
 		}
 	}

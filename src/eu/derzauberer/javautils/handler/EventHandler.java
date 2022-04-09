@@ -32,12 +32,12 @@ public class EventHandler {
 			for (Class<?> type : method.getParameterTypes()) {
 				if (type == event.getClass()) {
 					switch (method.getAnnotation(EventListener.class).priority()) {
-					case HIGHEST: highestPriority.add(method); break;
-					case HIGHT: hightPriority.add(method); break;
-					case NORMAL: normalPriority.add(method); break;
-					case LOW: lowPriority.add(method); break;
-					case LOWEST: lowestPriority.add(method); break;
-					default: break;
+						case HIGHEST: highestPriority.add(method); break;
+						case HIGHT: hightPriority.add(method); break;
+						case NORMAL: normalPriority.add(method); break;
+						case LOW: lowPriority.add(method); break;
+						case LOWEST: lowestPriority.add(method); break;
+						default: break;
 					}
 					break;
 				}

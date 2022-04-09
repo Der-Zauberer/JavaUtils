@@ -12,14 +12,14 @@ import eu.derzauberer.javautils.util.Console;
 
 public class CommandHandler {
 
-	private static HashMap<String, Command> commands = new HashMap<>();
-	private static ArrayList<String> history = new ArrayList<>();
+	private HashMap<String, Command> commands = new HashMap<>();
+	private ArrayList<String> history = new ArrayList<>();
 
-	public static void registerCommand(String label, Command command) {
+	public void registerCommand(String label, Command command) {
 		commands.put(label, command);
 	}
 
-	public static boolean executeCommand(Console console, String string) {
+	public boolean executeCommand(Console console, String string) {
 		history.add(string);
 		String command[] = getSplitedCommand(string);
 		String label = command[0];
@@ -27,7 +27,7 @@ public class CommandHandler {
 		return executeCommand(console, string, label, args);
 	}
 
-	private static boolean executeCommand(Console console, String command, String label, String args[]) {
+	private boolean executeCommand(Console console, String command, String label, String args[]) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
@@ -51,15 +51,23 @@ public class CommandHandler {
 		return false;
 	}
 
-	public static HashMap<String, Command> getCommands() {
+	public HashMap<String, Command> getCommands() {
 		return commands;
 	}
 
-	public static Command getCommand(String string) {
+	public Command getCommand(String string) {
 		if (commands.containsKey(string)) return commands.get(string);
 		return null;
 	}
 
+	public String[] getHistory() {
+		String string[] = new String[history.size()];
+		for (int i = 0; i < history.size(); i++) {
+			string[i] = history.get(i);
+		}
+		return string;
+	}
+	
 	public static boolean getCondition(String args[], String condition, int position) {
 		return args.length - 1 >= position && args[position] != null && args[position].equalsIgnoreCase(condition);
 	}
@@ -69,14 +77,6 @@ public class CommandHandler {
 			if (args[i].equalsIgnoreCase(condition)) return true;
 		}
 		return false;
-	}
-
-	public static String[] getHistory() {
-		String string[] = new String[history.size()];
-		for (int i = 0; i < history.size(); i++) {
-			string[i] = history.get(i);
-		}
-		return string;
 	}
 
 	private static String[] getSplitedCommand(String string) {
