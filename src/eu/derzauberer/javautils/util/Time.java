@@ -8,6 +8,7 @@ public class Time implements Comparable<Time> {
 	private int minute;
 	private int second;
 	private int millisecond;
+	private Date date;
 	
 	public Time() {
 		this(0, 0, 0, 0);
@@ -22,14 +23,11 @@ public class Time implements Comparable<Time> {
 	}
 	
 	public Time(int hour, int minute, int second, int millisecond) {
-		if (0 > hour || hour > 23) throw new IllegalArgumentException("The value of hour can only be between 0 and 23 (it is " + hour + ")");
-		else if (0 > minute || minute > 59) throw  new IllegalArgumentException("The value of minute can only be between 0 and 59 (it is " + minute + ")");
-		else if (0 > second || second > 59) throw  new IllegalArgumentException("The value of second can only be between 0 and 59 (it is " + second + ")");
-		else if (0 > millisecond || millisecond > 999) throw new IllegalArgumentException("The value of millisecond can only be between 0 and 999 (it is " + second + ")");
 		this.hour = hour;
 		this.minute = minute;
 		this.second = second;
 		this.millisecond = millisecond;
+		checkVales();
 	}
 	
 	public Time(String string, String pattern) {
@@ -48,26 +46,54 @@ public class Time implements Comparable<Time> {
 				millisecond = Integer.parseInt(string.substring(i, i + 2));
 			}
 		}
+		checkVales();
+	}
+	
+	public void checkVales() {
 		if (0 > hour || hour > 23) throw new IllegalArgumentException("The value of hour can only be between 0 and 23 (it is " + hour + ")");
 		else if (0 > minute || minute > 59) throw  new IllegalArgumentException("The value of minute can only be between 0 and 59 (it is " + minute + ")");
 		else if (0 > second || second > 59) throw  new IllegalArgumentException("The value of second can only be between 0 and 59 (it is " + second + ")");
-		else if (0 > millisecond || millisecond > 999) throw new IllegalArgumentException("The value of millisecond can only be between 0 and 999 (it is " + second + ")");
+		else if (0 > millisecond || millisecond > 999) throw new IllegalArgumentException("The value of millisecond can only be between 0 and 999 (it is " + millisecond + ")");
 	}
 		
 	public int getHour() {
 		return hour;
 	}
 	
+	public long getTotalHours() {
+		return hour + ((date != null) ? (date.getTotoalDays() * 24) : 0);
+	}
+	
 	public int getMinute() {
 		return minute;
+	}
+	
+	public long getTotalMinutes() {
+		return minute + (hour * 60) + ((date != null) ? (date.getTotoalDays() * 1440) : 0);
 	}
 	
 	public int getSecond() {
 		return second;
 	}
 	
+	public long getTotalSeconds() {
+		return second + (minute * 60) + (hour * 360) + ((date != null) ? (date.getTotoalDays() * 8640) : 0);
+	}
+	
 	public int getMillisecond() {
 		return millisecond;
+	}
+	
+	public long getTotalMilliseconds() {
+		return millisecond + (second * 1000) + (minute * 60000) + (hour * 3600000) + ((date != null) ? (date.getTotoalDays() * 86400000) : 0);
+	}
+	
+	protected void setDate(Date date) {
+		this.date = date;
+	}
+	
+	protected Date getDate() {
+		return date;
 	}
 	
 	public Time addTime(int hour, int minute) {

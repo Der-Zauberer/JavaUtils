@@ -10,7 +10,7 @@ public class Date implements Comparable<Date> {
 	private Time time;
 	
 	public Date() {
-		this(2000, 1, 1, new Time());
+		this(0, 1, 1, new Time());
 	}
 	
 	public Date(int year, int month, int day) {
@@ -18,17 +18,12 @@ public class Date implements Comparable<Date> {
 	}
 	
 	public Date(int year, int month, int day, Time time) {
-		if (0 > year) {
-			throw new IllegalArgumentException("The value of year can only be positive (it is " + month + ")");
-		} else if (1 > month  || month > 12) {
-			throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
-		} else if (day > getMaxDaysOfMonth(month, year)) {
-			throw new IllegalArgumentException("The value of day can only be between 1 and " + getMaxDaysOfMonth(month, year) + " in the month " + month + " (it is " + day + ")");
-		}
 		this.year = year;
 		this.month = month;
 		this.day = day;
 		this.time = time;
+		this.time.setDate(this);
+		checkValues();
 	}
 	
 	public Date(String string, String pattern) {
@@ -47,8 +42,13 @@ public class Date implements Comparable<Date> {
 				day = Integer.parseInt(string.substring(i, i + 2));
 			}
 		}
+		time.setDate(this);
+		checkValues();
+	}
+	
+	private void checkValues() {
 		if (0 > year) {
-			throw new IllegalArgumentException("The value of year can only be positive (it is " + month + ")");
+			throw new IllegalArgumentException("The value of year can only be positive (it is " + year + ")");
 		} else if (1 > month  || month > 12) {
 			throw new IllegalArgumentException("The value of month can only be between 1 and 12 (it is " + month + ")");
 		} else if (day > getMaxDaysOfMonth(month, year)) {
@@ -64,12 +64,58 @@ public class Date implements Comparable<Date> {
 		return month;
 	}
 	
+	public long getTotoalMonths() {
+		return month - 1 + (year * 12);
+	}
+	
 	public int getDay() {
 		return day;
 	}
 	
+	public long getTotoalDays() {
+		int yearLenght = 365;
+		if (year % 4 == 0) yearLenght += 1;
+		int monthdays = 0;
+		for (int i = 0; i < month - 1; i++) monthdays += getMaxDaysOfMonth(i + 1, year);
+		return day - 1 + monthdays + (year * yearLenght);
+	}
+	
 	public Time getTime() {
 		return time;
+	}
+	
+	public Date addTime(int hour, int minute) {
+		return addTime(hour, minute, 0, 0);
+	}
+	
+	public Date addTime(int hour, int minute, int second) {
+		return addTime(hour, minute, second, 0);
+	}
+	
+	public Date addTime(int hour, int minute, int second, int millisecond) {
+		int carryMillisecond = calculateTimeCarry(this.getTime().getMillisecond(), millisecond, 0, 1000);
+		int carrySecond = calculateTimeCarry(this.getTime().getSecond(), second, carryMillisecond, 60);
+		int carryMinute = calculateTimeCarry(this.getTime().getMinute(), minute, carrySecond, 60);
+		int carryHour = calculateTimeCarry(this.getTime().getHour(), hour, carryMinute, 24);
+		int newMillisecond = calculateTime(this.getTime().getMillisecond(), millisecond, 0, 1000);
+		int newSecond = calculateTime(this.getTime().getSecond(), second, carryMillisecond, 60);
+		int newMinute = calculateTime(this.getTime().getMinute(), minute, carrySecond, 60);
+		int newHour = calculateTime(this.getTime().getHour(), hour, carryMinute, 24);
+		return addDate(0, 0, carryHour % 24, new Time(newHour, newMinute, newSecond, newMillisecond));
+	}
+	
+	public Date addTime(Time time) {
+		return addTime(time.getHour(), time.getMinute(), time.getSecond(), time.getMillisecond());
+	}
+	
+	private int calculateTime(int oldValue, int newValue, int carry, int maxValue) {
+		int tempValue = oldValue + newValue + carry;
+		return (tempValue >= 0) ? tempValue % maxValue : maxValue + (tempValue % maxValue);
+	}
+	
+	private int calculateTimeCarry(int oldValue, int newValue, int carry, int maxValue) {
+		int tempValue = oldValue + newValue + carry;
+		return (tempValue >= 0) ? tempValue / maxValue : (tempValue / maxValue) - 1;
 	}
 	
 	public Date addDate(int year, int month, int day) {
@@ -80,7 +126,17 @@ public class Date implements Comparable<Date> {
 		int newYear = this.year + year;
 		int newMonth = this.month + month;
 		int newDay = this.day + day + (((this.time.getHour() + time.getHour()) >= 0) ? (this.time.getHour() + time.getHour()) / 24 : ((this.time.getHour() + time.getHour()) / 24) - 1);
+		this.time.setDate(null);
 		Time newTime = this.time.addTime(time);
+		while (1 > newMonth || newMonth > 12) { 
+			if (1 > newMonth) {
+				newYear--;
+				newMonth += 12;
+			} else {
+				newYear++;
+				newMonth -= 12;
+			}
+		}
 		while (1 > newDay || newDay > getMaxDaysOfMonth(newMonth, newYear)) { 
 			if (1 > newDay) {
 				newMonth--;
@@ -98,16 +154,13 @@ public class Date implements Comparable<Date> {
 				}
 			}
 		}
-		while (1 > newMonth || newMonth > 12) { 
-			if (1 > newMonth) {
-				newYear--;
-				newMonth += 12;
-			} else {
-				newYear++;
-				newMonth -= 12;
-			}
-		}
-		return new Date(newYear, newMonth, newDay, newTime);
+		Date date = new Date(newYear, newMonth, newDay, newTime);
+		date.getTime().setDate(date);
+		return date;
+	}
+	
+	public Date addDate(Date date) {
+		return addDate(date.getYear(), date.getMonth(), date.getDay(), date.getTime());
 	}
 	
 	@Override
