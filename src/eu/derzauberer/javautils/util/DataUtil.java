@@ -26,36 +26,36 @@ public class DataUtil {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends Number> T getNumber(Object object, Class<T> clazz) {
-		clazz = (Class<T>) getWrapperFromPrimitive(clazz);
+		Class<T> numberClass = (Class<T>) getWrapperFromPrimitive(clazz);
 		if (object != null) {
 			if (object instanceof Number) {
-				if (clazz == Number.class) return clazz.cast(object);
-				else if (clazz == Byte.class) return clazz.cast(new Byte(((Number)object).byteValue()));
-				else if (clazz == Short.class) return clazz.cast(new Short(((Number)object).shortValue()));
-				else if (clazz == Integer.class) return clazz.cast(new Integer(((Number)object).intValue()));
-				else if (clazz == Long.class) return clazz.cast(new Long(((Number)object).longValue()));
-				else if (clazz == Float.class) return clazz.cast(new Float(((Number)object).floatValue()));
-				else if (clazz == Double.class) return clazz.cast(new Double(((Number)object).doubleValue()));
+				if (numberClass == Number.class) return numberClass.cast(object);
+				else if (numberClass == Byte.class) return numberClass.cast(new Byte(((Number)object).byteValue()));
+				else if (numberClass == Short.class) return numberClass.cast(new Short(((Number)object).shortValue()));
+				else if (numberClass == Integer.class) return numberClass.cast(new Integer(((Number)object).intValue()));
+				else if (numberClass == Long.class) return numberClass.cast(new Long(((Number)object).longValue()));
+				else if (numberClass == Float.class) return numberClass.cast(new Float(((Number)object).floatValue()));
+				else if (numberClass == Double.class) return numberClass.cast(new Double(((Number)object).doubleValue()));
 			} else if (object instanceof Boolean) {
-				if ((boolean) object) return getNumber(1, clazz);
-				else return getNumber(0, clazz);
+				if ((boolean) object) return getNumber(1, numberClass);
+				else return getNumber(0, numberClass);
 			} else if (object instanceof Character) {
-				return getNumber(new Integer((Character) object).intValue(), clazz);
+				return getNumber(new Integer((Character) object).intValue(), numberClass);
 			} else if (object instanceof String) {
 				if (object.toString().equalsIgnoreCase("true")) {
-					return getNumber(1, clazz);
+					return getNumber(1, numberClass);
 				} else if (object.toString().equalsIgnoreCase("false")) {
-					return getNumber(0, clazz);
+					return getNumber(0, numberClass);
 				} else if (isNumericString(object.toString())) {
 					try {
-						return getNumber(Double.parseDouble(object.toString()), clazz);
+						return getNumber(Double.parseDouble(object.toString()), numberClass);
 					} catch (NumberFormatException exception) {
-						return getNumber(0, clazz);
+						return getNumber(0, numberClass);
 					}
 				}
 			}
 		}
-		return getNumber(0, clazz);
+		return getNumber(0, numberClass);
 	}
 	
 	public static char getCharacter(Object object) {

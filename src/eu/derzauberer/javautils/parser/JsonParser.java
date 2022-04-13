@@ -97,18 +97,18 @@ public class JsonParser {
 	public JsonParser remove(String key) {
 		JsonPath path = getJsonPath(key);
 		JsonParser parser = path.getParent();
-		key = path.getKey();
+		String subKey = path.getKey();
 		if (path.isListItem()) {
 			path.getList().remove(path.getIndex());
 			return this;
-		} else if (parser.elements.get(key) == null && parser.getKeys(key).size() > 0) {
-			for (String objectKey : parser.getKeys(key)) {
+		} else if (parser.elements.get(subKey) == null && parser.getKeys(subKey).size() > 0) {
+			for (String objectKey : parser.getKeys(subKey)) {
 				parser.structure.remove(objectKey);
 				parser.elements.remove(objectKey);
 			}
 		} else {
-			parser.structure.remove(key);
-			parser.elements.remove(key);
+			parser.structure.remove(subKey);
+			parser.elements.remove(subKey);
 		}
 		return this;
 	}
@@ -632,15 +632,17 @@ public class JsonParser {
 	}
 
 	private boolean isNextPosition(String key1, String key2) {
-		if (key1.contains(".") && key2.contains(".")) {
-			key1 = key1.substring(0, key1.lastIndexOf("."));
-			key2 = key2.substring(0, key2.lastIndexOf("."));
-		} else if (!key1.contains(".") && key2.contains(".")) {
-			key2 = key2.substring(0, key2.lastIndexOf("."));
+		String key3 = key1;
+		String key4 = key2;
+		if (key3.contains(".") && key4.contains(".")) {
+			key3 = key3.substring(0, key3.lastIndexOf("."));
+			key4 = key4.substring(0, key4.lastIndexOf("."));
+		} else if (!key3.contains(".") && key4.contains(".")) {
+			key4 = key4.substring(0, key4.lastIndexOf("."));
 		} else {
 			return false;
 		}
-		return !key1.equals(key2) && key1.split("\\.").length == key2.split("\\.").length;
+		return !key3.equals(key4) && key3.split("\\.").length == key4.split("\\.").length;
 	}
 	
 	private void removeWrongKeys(String key, String[] keys) {
@@ -708,32 +710,33 @@ public class JsonParser {
 	}
 	
 	private JsonPath getJsonPath(String key) {
-		if (key.matches("^\\[\\d+\\].*")) key = "null." + key;
-		else if (key.isEmpty()) key = "null";
+		String generatedkey = key;
+		if (generatedkey.matches("^\\[\\d+\\].*")) generatedkey = "null." + generatedkey;
+		else if (generatedkey.isEmpty()) generatedkey = "null";
 		JsonParser parser = this;
 		List<?> list = null;
 		int i = 0;
-		while (key.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
-			String newKey = key.substring(key.indexOf(']') + 1);
-			String index = key.substring(key.indexOf('[') + 1, key.indexOf(']'));
-			String subKey = key.substring(0, key.indexOf('['));
+		while (generatedkey.matches("(.+\\.\\[\\d+\\]\\..+)|(^\\[\\d+\\]\\..+)|(.+\\.\\[\\d+\\]$)|(^\\[\\d+\\]$)")) {
+			String newKey = generatedkey.substring(generatedkey.indexOf(']') + 1);
+			String index = generatedkey.substring(generatedkey.indexOf('[') + 1, generatedkey.indexOf(']'));
+			String subKey = generatedkey.substring(0, generatedkey.indexOf('['));
 			if (subKey.endsWith(".")) subKey = subKey.substring(0, subKey.length() - 1);
 			if (newKey.startsWith(".")) newKey = newKey.substring(1);
 			if (index.matches("^\\d+$") && parser.elements.get(subKey) != null) {
 				i = Integer.parseInt(index);
 				list = (List<?>) parser.elements.get(subKey);
-				key = newKey;
-				if (key.isEmpty()) {
+				generatedkey = newKey;
+				if (generatedkey.isEmpty()) {
 					if (!list.isEmpty()) {
 						if (list.get(0) instanceof JsonParser) parser = (JsonParser) list.get(i);
-						return new JsonPath(true, parser, key, list, i);
+						return new JsonPath(true, parser, generatedkey, list, i);
 					}
 				} else {
 					parser = (JsonParser) list.get(i);
 				}
 			}
 		}
-		return new JsonPath(false, parser, key, list, i);
+		return new JsonPath(false, parser, generatedkey, list, i);
 	}
 	
 	@SuppressWarnings("rawtypes")

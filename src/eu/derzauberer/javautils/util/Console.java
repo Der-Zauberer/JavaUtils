@@ -54,7 +54,7 @@ public class Console implements Runnable {
 	private ConsoleOutputAction outputAction;
 	private CommandHandler commandHandler;
 	private Object sender;
-	private boolean ansiEscapeCodesEnabled;
+	private boolean colorCodesEnabled;
 	private boolean logEnabled;
 	private boolean logTimestampEnabled;
 	private File logDirectory;
@@ -95,7 +95,7 @@ public class Console implements Runnable {
 		inputAction = event -> {};
 		outputAction = event -> System.out.println(event.getOutput());
 		sender = System.in;
-		ansiEscapeCodesEnabled = false;
+		colorCodesEnabled = colorCodesSupportedBySystem();
 		logEnabled = false;
 		logDirectory = new File(FileUtil.getJarDirectory(), "logs");
 	}
@@ -195,7 +195,7 @@ public class Console implements Runnable {
 					event.setOutput("[" + type.toString() + "] " + event.getOutput());
 					event.setOutput(event.getOutput().replace("\n", "\n" + "[" + type.toString() + "] "));
 				}
-				if (!ansiEscapeCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
+				if (!colorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
 				if (logTimestampEnabled) {
 					event.setOutput(Time.now().toString("[hh:mm:ss] ") + event.getOutput());
 					event.setOutput(event.getOutput().replace("\n", "\n" + Time.now().toString("[hh:mm:ss] ")));
@@ -207,22 +207,23 @@ public class Console implements Runnable {
 	}
 	
 	public static String removeEscapeCodes(String string) {
+		String output = string;
 		try {
 			for (Field field : Console.class.getFields()) {
-				string = string.replace(field.get(Console.class).toString(), "");
+				output = output.replace(field.get(Console.class).toString(), "");
 			}
 		} catch (IllegalArgumentException | IllegalAccessException exception) {}
-		while (string.contains("\033[38;5;")) {
+		while (output.contains("\033[38;5;")) {
 			int index = 0;
-			for (int i = string.indexOf("\033[38;5;"); i < string.length(); i++) {
-				if (string.charAt(i) == 'm') {
+			for (int i = output.indexOf("\033[38;5;"); i < output.length(); i++) {
+				if (output.charAt(i) == 'm') {
 					index = i;
 					break;
 				}
 			}
-			string = string.substring(0, string.indexOf("\\") + 5) + string.substring(index + 1);
+			output = output.substring(0, output.indexOf("\\") + 5) + output.substring(index + 1);
 		}
-		return string;
+		return output;
 	}
 	
 	public static String get256BitColor(int number) {
@@ -242,10 +243,11 @@ public class Console implements Runnable {
 	}
 
 	public void sendMessage(String string, String... args) {
-		for (int i = 0; i < args.length && string.contains("{}"); i++) {
-			string = string.replaceFirst(Pattern.quote("{}"), args[i]);
+		String output = string;
+		for (int i = 0; i < args.length && output.contains("{}"); i++) {
+			output = output.replaceFirst(Pattern.quote("{}"), args[i]);
 		}
-		sendOutput(string, defaultType);
+		sendOutput(output, defaultType);
 	}
 
 	public void sendMessage(String string, MessageType type, String... args) {
@@ -261,21 +263,20 @@ public class Console implements Runnable {
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}
-			if (!string.endsWith("\n")) string += "\n";
-			FileUtil.appendString(latestLogFile, string);
+			FileUtil.appendString(latestLogFile, (string.endsWith("\n")) ? string : string + "\n");
 		}
 	}
 	
-	public boolean isAnsiEscapeCodesEnabled() {
-		return ansiEscapeCodesEnabled;
+	public boolean areColorCodesEnabled() {
+		return colorCodesEnabled;
 	}
 	
-	public boolean ansiEscapeCodesSupportedBySystem() {
-		return ansiEscapeCodesEnabled || (System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null);
+	public boolean colorCodesSupportedBySystem() {
+		return colorCodesEnabled || (System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null);
 	}
 	
-	public void setAnsiEscapeCodesEnabled(boolean ansiEscapeCodesEnabled) {
-		this.ansiEscapeCodesEnabled = ansiEscapeCodesEnabled;
+	public void setColorCodesEnabled(boolean colorCodesEnabled) {
+		this.colorCodesEnabled = colorCodesEnabled;
 	}
 	
 	public void setLogEnabled(boolean logEnabled) {
