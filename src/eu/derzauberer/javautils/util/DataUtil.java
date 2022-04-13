@@ -174,7 +174,29 @@ public class DataUtil {
 	}
 	
 	public static boolean isValidName(String string) {
-		return string.matches("^([a-zA-Z0-9]|[ÄÖÜäöüß]|-|_)+$");
+		return string.matches("^(\\d|\\w|[ -_+^°!§$%&\\/\\\\()=?#'*~|\\x{00DC}\\x{00C4}\\x{00D6}\\x{00E4}\\x{00F6}\\x{00FC}])+$");
+	}
+	
+	public static String addEscapeCodes(String string) {
+		String result = string;
+		result = result.replace("\\\"", "\"");
+		result = result.replace("\\b", "\b");
+		result = result.replace("\\n", "\n");
+		result = result.replace("\\r", "\r");
+		result = result.replace("\\t", "\t");
+		result = result.replace("\\/", "/");
+		return result;
+	}
+	
+	public static String removeEscapeCodes(String string) {
+		String result = string;
+		result = result.replace("\"", "\\\"");
+		result = result.replace("\b", "\\b");
+		result = result.replace("\n", "\\n");
+		result = result.replace("\r", "\\r");
+		result = result.replace("\t", "\\t");
+		result = result.replace("/", "\\/");
+		return result;
 	}
 	
 }

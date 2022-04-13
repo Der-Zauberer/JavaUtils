@@ -81,7 +81,7 @@ public class JsonParser {
 			List<Object> objects = new ArrayList<>();
 			for (Object object : list) {
 				if (object instanceof String) {
-					objects.add(removeEscapeCodes(object.toString()));
+					objects.add(DataUtil.removeEscapeCodes(object.toString()));
 				} else {
 					if (object instanceof JsonParser) {
 						((JsonParser) object).hasParent = true;
@@ -213,7 +213,7 @@ public class JsonParser {
 			list = DataUtil.getList(getObject(key), clazz);
 		}
 		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i) instanceof String) list.set(i, clazz.cast(addEscapeCodes((String) list.get(i)))); 
+			if (list.get(i) instanceof String) list.set(i, clazz.cast(DataUtil.addEscapeCodes((String) list.get(i)))); 
 		}
 		return list;
 	}
@@ -484,7 +484,7 @@ public class JsonParser {
 			return jsonObject;
 		}
 		if (!key.isEmpty()) value = parser.elements.get(key);
-		if (value instanceof String) value = addEscapeCodes((String) value);
+		if (value instanceof String) value = DataUtil.addEscapeCodes((String) value);
 		return value;
 	}
 
@@ -734,26 +734,6 @@ public class JsonParser {
 			}
 		}
 		return new JsonPath(false, parser, key, list, i);
-	}
-	
-	private String removeEscapeCodes(String string) {
-		string = string.replace("\"", "\\\"");
-		string = string.replace("\b", "\\b");
-		string = string.replace("\n", "\\n");
-		string = string.replace("\r", "\\r");
-		string = string.replace("\t", "\\t");
-		string = string.replace("/", "\\/");
-		return string;
-	}
-	
-	private String addEscapeCodes(String string) {
-		string = string.replace("\\\"", "\"");
-		string = string.replace("\\b", "\b");
-		string = string.replace("\\n", "\n");
-		string = string.replace("\\r", "\r");
-		string = string.replace("\\t", "\t");
-		string = string.replace("\\/", "/");
-		return string;
 	}
 	
 	@SuppressWarnings("rawtypes")

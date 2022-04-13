@@ -68,15 +68,28 @@ public class Console implements Runnable {
 		this("", start);
 	}
 	
+	public Console(CommandHandler handler) {
+		this("", handler);
+	}
+	
 	public Console(String inputPrefix) {
 		this(inputPrefix, true);
 	}
 	
+	public Console(String inputPrefix, CommandHandler commandHandler) {
+		this(inputPrefix, true, commandHandler);
+	}
+	
 	public Console(String inputPrefix, boolean start) {
+		this(inputPrefix, start, null);
+	}
+	
+	public Console(String inputPrefix, boolean start, CommandHandler commandHandler) {
+		this.inputPrefix = inputPrefix;
+		this.commandHandler = commandHandler;
 		if (start) start();
 		scanner = new Scanner(System.in);
 		directory = FileUtil.getJarDirectory();
-		this.inputPrefix = inputPrefix;
 		defaultType = MessageType.DEFAULT;
 		debugEnabled = false;
 		inputAction = event -> {};
@@ -169,7 +182,7 @@ public class Console implements Runnable {
 		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
 		if (!event.isCancelled()) {
 			inputAction.onAction(event);
-			commandHandler.executeCommand(event.getConsole(), event.getInput());
+			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
 			log(event.getInput());
 		}
 	}

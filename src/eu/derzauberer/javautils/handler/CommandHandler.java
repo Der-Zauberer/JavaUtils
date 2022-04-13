@@ -9,6 +9,7 @@ import eu.derzauberer.javautils.events.CommandNotFoundEvent;
 import eu.derzauberer.javautils.events.CommandPreProcessingEvent;
 import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.Console;
+import eu.derzauberer.javautils.util.DataUtil;
 
 public class CommandHandler {
 
@@ -80,33 +81,30 @@ public class CommandHandler {
 	}
 
 	private static String[] getSplitedCommand(String string) {
-		if (string == null || string.isEmpty()) {
-			String list[] = { "" };
-			return list;
-		}
 		ArrayList<String> strings = new ArrayList<>();
-		string += " ";
-		int lastSpace = -1;
-		char lastChar = ' ';
-		char character = ' ';
+		StringBuilder builder = new StringBuilder();
+		char lastCharacter = ' ';
 		boolean enclosed = false;
-		for (int i = 0; i < string.length(); i++) {
-			character = string.charAt(i);
+		for (char character : string.toCharArray()) {
 			if (character == ' ' && !enclosed) {
-				if (lastChar != ' ' && lastChar != '"') {
-					strings.add(string.substring(lastSpace + 1, i));
+				if (builder.length() != 0) {
+					strings.add(DataUtil.addEscapeCodes(builder.toString()));
+					builder.setLength(0);
 				}
-				lastSpace = i;
-			} else if (character == '"' && !enclosed) {
-				lastSpace = i;
-				enclosed = true;
-			} else if (character == '"' && enclosed) {
-				strings.add(string.substring(lastSpace + 1, i));
-				lastSpace = i;
-				enclosed = false;
+			} else if (character == '"' && lastCharacter != '\\') {
+				if (!enclosed) {
+					enclosed = true;
+				} else {
+					strings.add(DataUtil.addEscapeCodes(builder.toString()));
+					builder.setLength(0);
+					enclosed = false;
+				}
+			} else {
+				builder.append(character);
 			}
-			lastChar = character;
+			lastCharacter = character;
 		}
+		if (builder.length() != 0) strings.add(DataUtil.addEscapeCodes(builder.toString()));
 		String command[] = new String[strings.size()];
 		for (int i = 0; i < command.length; i++) {
 			command[i] = strings.get(i);
