@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.handler;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -9,9 +9,11 @@ import eu.derzauberer.javautils.action.ConsoleInputAction;
 import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
-import eu.derzauberer.javautils.handler.CommandHandler;
+import eu.derzauberer.javautils.util.Date;
+import eu.derzauberer.javautils.util.FileUtil;
+import eu.derzauberer.javautils.util.Time;
 
-public class Console implements Runnable {
+public class ConsoleHandler implements Runnable {
 	
 	public static final String BLACK = "\u001b[30m";
 	public static final String GRAY = "\u001b[30;1m";
@@ -60,31 +62,31 @@ public class Console implements Runnable {
 	private File logDirectory;
 	private File latestLogFile;
 	
-	public Console() {
+	public ConsoleHandler() {
 		this(true); 
 	}
 	
-	public Console(boolean start) {
+	public ConsoleHandler(boolean start) {
 		this("", start);
 	}
 	
-	public Console(CommandHandler handler) {
+	public ConsoleHandler(CommandHandler handler) {
 		this("", handler);
 	}
 	
-	public Console(String inputPrefix) {
+	public ConsoleHandler(String inputPrefix) {
 		this(inputPrefix, true);
 	}
 	
-	public Console(String inputPrefix, CommandHandler commandHandler) {
+	public ConsoleHandler(String inputPrefix, CommandHandler commandHandler) {
 		this(inputPrefix, true, commandHandler);
 	}
 	
-	public Console(String inputPrefix, boolean start) {
+	public ConsoleHandler(String inputPrefix, boolean start) {
 		this(inputPrefix, start, null);
 	}
 	
-	public Console(String inputPrefix, boolean start, CommandHandler commandHandler) {
+	public ConsoleHandler(String inputPrefix, boolean start, CommandHandler commandHandler) {
 		this.inputPrefix = inputPrefix;
 		this.commandHandler = commandHandler;
 		if (start) start();
@@ -209,8 +211,8 @@ public class Console implements Runnable {
 	public static String removeEscapeCodes(String string) {
 		String output = string;
 		try {
-			for (Field field : Console.class.getFields()) {
-				output = output.replace(field.get(Console.class).toString(), "");
+			for (Field field : ConsoleHandler.class.getFields()) {
+				output = output.replace(field.get(ConsoleHandler.class).toString(), "");
 			}
 		} catch (IllegalArgumentException | IllegalAccessException exception) {}
 		while (output.contains("\033[38;5;")) {
@@ -251,10 +253,11 @@ public class Console implements Runnable {
 	}
 
 	public void sendMessage(String string, MessageType type, String... args) {
-		for (int i = 0; i < args.length && string.contains("{}"); i++) {
-			string = string.replaceFirst(Pattern.quote("{}"), args[i]);
+		String output = string;
+		for (int i = 0; i < args.length && output.contains("{}"); i++) {
+			output = output.replaceFirst(Pattern.quote("{}"), args[i]);
 		}
-		sendOutput(string, type);
+		sendOutput(output, type);
 	}
 	
 	private void log(String string) {

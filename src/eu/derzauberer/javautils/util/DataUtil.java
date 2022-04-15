@@ -75,19 +75,19 @@ public class DataUtil {
 	@SuppressWarnings("unchecked")
 	public static <T> T getObject(Object object, Class<T> clazz) {
 		if (clazz == Object.class) return clazz.cast(object);
-		clazz = (Class<T>) getWrapperFromPrimitive(clazz);
-		if (object.getClass() == clazz) return clazz.cast(object);
+		Class<T> objectClass = (Class<T>) getWrapperFromPrimitive(clazz);
+		if (object.getClass() == objectClass) return objectClass.cast(object);
 		T value = null;
-		if (clazz == Boolean.class) {
-			value = clazz.cast(getBoolean(object));
-		} else if (clazz == Number.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class) {
-			value = clazz.cast(getNumber(object, (Class<? extends Number>) clazz));
-		} else if (clazz == Character.class) {
-			value = clazz.cast(getCharacter(object));
-		} else if (clazz == String.class) {
-			value = clazz.cast(object.toString());
+		if (objectClass == Boolean.class) {
+			value = objectClass.cast(getBoolean(object));
+		} else if (objectClass == Number.class || objectClass == Byte.class || objectClass == Short.class || objectClass == Integer.class || objectClass == Long.class || objectClass == Float.class || objectClass == Double.class) {
+			value = objectClass.cast(getNumber(object, (Class<? extends Number>) objectClass));
+		} else if (objectClass == Character.class) {
+			value = objectClass.cast(getCharacter(object));
+		} else if (objectClass == String.class) {
+			value = objectClass.cast(object.toString());
 		} else {
-			throw new IllegalArgumentException("Type " + clazz.toGenericString() + " is not an allowed type!");
+			throw new IllegalArgumentException("Type " + objectClass.toGenericString() + " is not an allowed type!");
 		}
 		return value;
 	}

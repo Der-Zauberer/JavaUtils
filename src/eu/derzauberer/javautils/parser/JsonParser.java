@@ -419,22 +419,22 @@ public class JsonParser {
 	private JsonParser setObject(String key, Object value) {
 		JsonPath path = getJsonPath(key);
 		JsonParser parser = path.getParent();
-		key = path.getKey();
+		String subKey = path.getKey();
 		if (path.isListItem()) {
 			path.getList().set(path.getIndex(), value);
 			return this;
 		} else if (value instanceof JsonParser) {
 			JsonParser jsonObject = (JsonParser) value;
 			for (String objectKey : jsonObject.getKeys()) {
-				setObject((!key.isEmpty()) ?  key + "." + objectKey : objectKey, jsonObject.get(objectKey));
+				setObject((!subKey.isEmpty()) ?  subKey + "." + objectKey : objectKey, jsonObject.get(objectKey));
 			}
 			return this;
 		} else {
-			parser.elements.put(key, value);
+			parser.elements.put(subKey, value);
 		}
-		if (!parser.structure.contains(key)) {
-			if (key.contains(".")) {
-				String keys[] = key.split("\\.");
+		if (!parser.structure.contains(subKey)) {
+			if (subKey.contains(".")) {
+				String keys[] = subKey.split("\\.");
 				int layer = -1;
 				int position = 0;
 				for (String struct : parser.structure) {
@@ -445,25 +445,25 @@ public class JsonParser {
 								layer = i - 1;
 								break;
 							} else {
-								parser.structure.add(position, key);
-								removeWrongKeys(key, keys);
+								parser.structure.add(position, subKey);
+								removeWrongKeys(subKey, keys);
 								return this;
 							}
-						} else if (keys.length - 1 < i + 1 && struct.startsWith(key)) {
-							parser.structure.add(position + 1, key);
-							removeWrongKeys(key, keys);
+						} else if (keys.length - 1 < i + 1 && struct.startsWith(subKey)) {
+							parser.structure.add(position + 1, subKey);
+							removeWrongKeys(subKey, keys);
 							return this;
 						} else if (i == structKeys.length - 1 && structKeys.length <= keys.length) {
-							parser.structure.add(position + 1, key);
-							removeWrongKeys(key, keys);
+							parser.structure.add(position + 1, subKey);
+							removeWrongKeys(subKey, keys);
 							return  this;
 						}
 					}
 					position++;
 				}
-				parser.structure.add(position, key);
+				parser.structure.add(position, subKey);
 			} else {
-				parser.structure.add(key);
+				parser.structure.add(subKey);
 			}
 		}
 		return this;
@@ -472,18 +472,18 @@ public class JsonParser {
 	private Object getObject(String key) {
 		JsonPath path = getJsonPath(key);
 		JsonParser parser = path.getParent();
-		key = path.getKey();
+		String subKey = path.getKey();
 		if (path.isListItem()) return path.getList().get(path.getIndex());
-		Object value = parser.elements.get(key);
-		if (parser.elements.get(key) == null && parser.getKeys(key).size() > 0) {
+		Object value = parser.elements.get(subKey);
+		if (parser.elements.get(subKey) == null && parser.getKeys(subKey).size() > 0) {
 			JsonParser jsonObject = new JsonParser();
-			for (String objectKey : parser.getKeys(key, false)) {
+			for (String objectKey : parser.getKeys(subKey, false)) {
 				jsonObject.structure.add(objectKey);
-				jsonObject.elements.put(objectKey, parser.elements.get((!key.isEmpty()) ? key + "." + objectKey : objectKey));
+				jsonObject.elements.put(objectKey, parser.elements.get((!subKey.isEmpty()) ? subKey + "." + objectKey : objectKey));
 			}
 			return jsonObject;
 		}
-		if (!key.isEmpty()) value = parser.elements.get(key);
+		if (!subKey.isEmpty()) value = parser.elements.get(subKey);
 		if (value instanceof String) value = DataUtil.addEscapeCodes((String) value);
 		return value;
 	}

@@ -1,15 +1,15 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.util.Console;
+import eu.derzauberer.javautils.handler.ConsoleHandler;
 
 public class CommandNotFoundEvent extends Event {
 	
-	private Console console;
+	private ConsoleHandler console;
 	private String string;
 	private String label;
 	private String args[];
 	
-	public CommandNotFoundEvent(Console console, String string, String label, String args[]) {
+	public CommandNotFoundEvent(ConsoleHandler console, String string, String label, String args[]) {
 		this.console = console;
 		this.string = string;
 		this.label = label;
@@ -17,7 +17,7 @@ public class CommandNotFoundEvent extends Event {
 		execute();
 	}
 	
-	public Console getConsole() {
+	public ConsoleHandler getConsole() {
 		return console;
 	}
 	

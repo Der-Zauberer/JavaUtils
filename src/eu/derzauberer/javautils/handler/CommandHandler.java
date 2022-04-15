@@ -8,7 +8,6 @@ import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
 import eu.derzauberer.javautils.events.CommandNotFoundEvent;
 import eu.derzauberer.javautils.events.CommandPreProcessingEvent;
 import eu.derzauberer.javautils.util.Command;
-import eu.derzauberer.javautils.util.Console;
 import eu.derzauberer.javautils.util.DataUtil;
 
 public class CommandHandler {
@@ -20,7 +19,7 @@ public class CommandHandler {
 		commands.put(label, command);
 	}
 
-	public boolean executeCommand(Console console, String string) {
+	public boolean executeCommand(ConsoleHandler console, String string) {
 		history.add(string);
 		String command[] = getSplitedCommand(string);
 		String label = command[0];
@@ -28,7 +27,7 @@ public class CommandHandler {
 		return executeCommand(console, string, label, args);
 	}
 
-	private boolean executeCommand(Console console, String command, String label, String args[]) {
+	private boolean executeCommand(ConsoleHandler console, String command, String label, String args[]) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
