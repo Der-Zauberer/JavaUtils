@@ -10,7 +10,6 @@ import eu.derzauberer.javautils.util.DataUtil;
 
 public class JsonParser {
 
-	private String string;
 	private boolean hasParent;
 	private ArrayList<String> structure;
 	private HashMap<String, Object> elements;
@@ -20,11 +19,10 @@ public class JsonParser {
 	}
 	
 	public JsonParser(String string) {
-		this.string = string;
 		hasParent = false;
 		structure = new ArrayList<>();
 		elements = new HashMap<>();
-		parse();
+		parse(string);
 	}
 	
 	public JsonParser(Object object) {
@@ -80,14 +78,10 @@ public class JsonParser {
 		} else {
 			List<Object> objects = new ArrayList<>();
 			for (Object object : list) {
-				if (object instanceof String) {
-					objects.add(DataUtil.removeEscapeCodes(object.toString()));
-				} else {
-					if (object instanceof JsonParser) {
-						((JsonParser) object).hasParent = true;
-					}
-					objects.add(object);
+				if (object instanceof JsonParser) {
+					((JsonParser) object).hasParent = true;
 				}
+				objects.add(object);
 			}
 			setObject(key, objects);
 		}
@@ -212,9 +206,6 @@ public class JsonParser {
 		} else {
 			list = DataUtil.getList(getObject(key), clazz);
 		}
-		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i) instanceof String) list.set(i, clazz.cast(DataUtil.addEscapeCodes((String) list.get(i)))); 
-		}
 		return list;
 	}
 	
@@ -316,102 +307,75 @@ public class JsonParser {
 		return getOutput(true);
 	}
 
-	private void parse() {
-		removeSpaces();
-		String key = "";
-		String name = null;
-		String value = null;
+	private void parse(String string) {
+		StringBuilder key = new StringBuilder();
+		StringBuilder name = new StringBuilder();
+		StringBuilder value = new StringBuilder();
 		ArrayList<Object> array = new ArrayList<>();
-		int lastBreakPoint = 0;
+		int arrayLayer = 0;
 		boolean isString = false;
-		boolean isArray = false;
 		boolean isValue = false;
-		for (int i = 0; i < string.length(); i++) {
-			if (!isString || string.charAt(i) == '"') {
-				if (string.charAt(i) == '{') {
-					if (isArray) {
-						lastBreakPoint = i;
-						int counter = 1;
-						while (counter > 0) {
-							i++;
-							if (string.charAt(i) == '{') {
-								counter++;
-							} else if (string.charAt(i) == '}') {
-								counter--;
-							}
-						}
-						JsonParser parser = new JsonParser(string.substring(lastBreakPoint, i + 1));
-						parser.hasParent = true;
-						array.add(parser);
+		boolean isArray = false;
+		char lastCharacter = ' ';
+		for (char character : string.toCharArray()) {
+			if (character == '"' && lastCharacter != '\\' && arrayLayer == 0) {
+				isString = !isString;
+			} else if (isArray) {
+				if ((character == ',' || character == ']') && arrayLayer == 0) {
+					if (value.charAt(0) == '{' && value.charAt(value.length() - 1) == '}') {
+						array.add(new JsonParser(value.toString()));
 					} else {
+						array.add(getObjectFromString(value.toString()));
+					}
+					value.setLength(0);
+					if (character == ']') {
+						isArray = false;
 						isValue = false;
-						if (name != null) {
-							key += name + ".";
-							name = null;
-						}
+						if (name.length() == 0) name.append("null");
+						structure.add(key.toString() + name.toString());
+						elements.put(key.toString() + name.toString(), array.clone());
+						name.setLength(0);
+						value.setLength(0);
+						array.clear();
 					}
-				} else if (string.charAt(i) == '}' || string.charAt(i) == ',') {
-					if (isValue && string.charAt(i - 1) != '"') {
-						value = string.substring(lastBreakPoint + 1, i);
-						if (isArray) {
-							if (string.charAt(i - 1) != '}') {
-								array.add(getObjectFromString(value));
-								lastBreakPoint = i;
-							}
-						} else {
-							structure.add(key + name);
-							elements.put(key + name, getObjectFromString(value));
-							isValue = false;
-						}
-					}
-					if (string.charAt(i) == '}' && !isArray) {
-						name = null;
-						if (!key.isEmpty() && key.substring(0, key.length() - 1).contains(".")) {
-							key = key.substring(0, key.length() - 1);
-							key = key.substring(0, key.lastIndexOf('.'));
-							key += ".";
-						} else {
-							key = "";
-						}
-					}
-				} else if (string.charAt(i) == '"') {
-					if (isString) {
-						String substring = string.substring(lastBreakPoint + 1, i);
-						if (!isValue) {
-							name = substring;
-						} else if (isArray) {
-							value = substring;
-							array.add(value);
-						} else {
-							value = substring;
-							isValue = false;
-							structure.add(key + name);
-							elements.put(key + name, value);
-							value = null;
-							name = null;
-						}
-					}
-					isString = !isString;
-					lastBreakPoint = i;
-				} else if (string.charAt(i) == ':') {
-					isValue = true;
-					lastBreakPoint = i;
-				} else if (string.charAt(i) == '[') {
-					isArray = true;
-					isValue = true;
-					lastBreakPoint = i;
-					array.clear();
-				} else if (string.charAt(i) == ']') {
-					if (string.charAt(i - 1) != '"' && string.charAt(i - 1) != '}' && string.charAt(i - 1) != '[') {
-						array.add(getObjectFromString(string.substring(lastBreakPoint + 1, i)));
-					}
-					isValue = false;
-					isArray = false;
-					structure.add(key + name);
-					elements.put(key + name, array.clone());
-					array.clear();
+				} else if (isString || (character != ' ' && character != '\t' && character != '\n' && character != '\r')) {
+					value.append(character);
 				}
+				if (!isString && isArray) {
+					if (character == '{' || character == '[') arrayLayer++;
+					else if (character == '}' || character == ']') arrayLayer--;
+				}
+			} else if (isString) {
+				if (!isValue) name.append(character); else value.append(character);
+			} else if (isValue && character != ',' && character != '{' && character != '}' && character != '[' && character != ']') {
+				if (character != ' ' && character != '\t' && character != '\n' && character != '\r') value.append(character);
+			} else if (character == ':') {
+				isValue = true;
+			} else if (character == '{') {
+				isValue = false;
+				if (name.length() > 0) key.append(name.toString() + ".");
+				name.setLength(0);
+				value.setLength(0);
+			} else if (character == '}' || character == ',') {
+				if (isValue) {
+					isValue = false;
+					structure.add(key.toString() + name.toString());
+					elements.put(key.toString() + name.toString(), getObjectFromString(value.toString()));
+					name.setLength(0);
+					value.setLength(0);
+				}
+				if (character == '}') {
+					if (key.length() > 0 && key.toString().contains(".") && key.indexOf(".") != key.lastIndexOf(".")) {
+						key.deleteCharAt(key.length() - 1);
+						key.delete(key.lastIndexOf("."), key.length());
+					} else {
+						key.setLength(0);
+					}
+				}
+			} else if (character == '[') {
+				isArray = true;
 			}
+			lastCharacter = character;
 		}
 	}
 
@@ -605,20 +569,6 @@ public class JsonParser {
 		return string.toString();
 	}
 
-	private void removeSpaces() {
-		StringBuilder string = new StringBuilder(this.string);
-		boolean isString = false;
-		for (int i = 0; i < string.length(); i++) {
-			if (string.charAt(i) == '"') {
-				isString = !isString;
-			} else if (!isString && (string.charAt(i) == ' ' || string.charAt(i) == '\n' || string.charAt(i) == '\r' || string.charAt(i) == '\t')) {
-				string.deleteCharAt(i);
-				i--;
-			}
-		}
-		this.string = string.toString();
-	}
-
 	private void addLine(StringBuilder stringbuilder, int layer, String tab, String line) {
 		for (int i = 0; i < layer; i++) {
 			stringbuilder.append(tab);
@@ -688,16 +638,16 @@ public class JsonParser {
 			}
 			
 		}
-		return string;
+		return DataUtil.addEscapeCodes(string);
 	}
 	
 	private String getStringFromObject(Object object, boolean stringWithQotationMark) {
 		if (object == null) {
 			return null;
 		} else if (!(object instanceof Boolean || object instanceof Number) && stringWithQotationMark){
-			return "\"" + object.toString() + "\"";
+			return "\"" + DataUtil.removeEscapeCodes(object.toString()) + "\"";
 		} else {
-			return object.toString();
+			return DataUtil.removeEscapeCodes(object.toString());
 		}
 	}
 	

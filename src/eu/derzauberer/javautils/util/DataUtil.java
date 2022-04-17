@@ -184,7 +184,6 @@ public class DataUtil {
 		result = result.replace("\\n", "\n");
 		result = result.replace("\\r", "\r");
 		result = result.replace("\\t", "\t");
-		result = result.replace("\\/", "/");
 		return result;
 	}
 	
@@ -195,7 +194,6 @@ public class DataUtil {
 		result = result.replace("\n", "\\n");
 		result = result.replace("\r", "\\r");
 		result = result.replace("\t", "\\t");
-		result = result.replace("/", "\\/");
 		return result;
 	}
 	
