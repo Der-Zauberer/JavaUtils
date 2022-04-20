@@ -313,13 +313,14 @@ public class JsonParser {
 		boolean isArray = false;
 		char lastCharacter = ' ';
 		for (char character : string.toCharArray()) {
-			if (character == '"' && lastCharacter != '\\' && arrayLayer == 0) {
+			if (character == '"' && lastCharacter != '\\') {
 				isString = !isString;
+				if (isArray) value.append(character);
 			} else if (isArray) {
 				if ((character == ',' || character == ']') && arrayLayer == 0) {
-					if (value.charAt(0) == '{' && value.charAt(value.length() - 1) == '}') {
+					if (value.length() > 0 && value.charAt(0) == '{' && value.charAt(value.length() - 1) == '}') {
 						array.add(new JsonParser(value.toString()));
-					} else {
+					} else if (value.length() > 0) {
 						array.add(getObjectFromString(value.toString()));
 					}
 					value.setLength(0);
@@ -333,7 +334,8 @@ public class JsonParser {
 						value.setLength(0);
 						array.clear();
 					}
-				} else if (isString || (character != ' ' && character != '\t' && character != '\n' && character != '\r')) {
+				} 
+				if (isString || (character != ' ' && character != '\t' && character != '\n' && character != '\r') && !(arrayLayer == 0 && (character == ',' || character == ']'))) {
 					value.append(character);
 				}
 				if (!isString && isArray) {
@@ -464,7 +466,15 @@ public class JsonParser {
 			if (!elements.containsKey("null")) tabs = tab;
 			for (int i = 0; i < offset; i++) tabs += tab; 
 		}
-		if (elements.containsKey("null")) string.append("["); else string.append("{");
+		if (elements.containsKey("null")) {
+			string.append("[");
+			if (elements.get("null") instanceof List<?> && ((List<?>) elements.get("null")).isEmpty()) {
+				string.append("]");
+				return string.toString();
+			}
+		} else {
+			string.append("{");
+		}
 		for (String key : structure) {
 			keys = key.split("\\.");
 			String name = keys[keys.length - 1];
@@ -490,22 +500,27 @@ public class JsonParser {
 				string.append(tabs + "\"" + name + "\":" + space + getStringFromObject(elements.get(key), true));
 			} else {
 				List<Object> list = DataUtil.getList(getObject(key), Object.class);
-				if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
-				if (!oneliner) tabs += tab;
-				for (Object object : list) {
-					if (object instanceof JsonParser) {
-						if (oneliner) {
-							string.append(((JsonParser) object).getOutput(true, 0) + ",");
+				if (list.isEmpty()) {
+					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[]");
+				} else {
+					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
+					if (!oneliner) tabs += tab;
+					for (Object object : list) {
+						if (object instanceof JsonParser) {
+							if (oneliner) {
+								string.append(((JsonParser) object).getOutput(true, 0) + ",");
+							} else {
+								string.append(tabs + ((JsonParser) object).getOutput(false, tabs.length()) + "," + newLine);
+							}
 						} else {
-							string.append(tabs + ((JsonParser) object).getOutput(false, tabs.length()) + "," + newLine);
+							string.append(tabs + getStringFromObject(object, true) + "," + newLine);
 						}
-					} else {
-						string.append(tabs + getStringFromObject(object, true) + "," + newLine);
 					}
+					if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
+					if (oneliner) string.deleteCharAt(string.length() - 1); else string.deleteCharAt(string.length() - 2);
+					if (!key.equals("null")) string.append(tabs + "]");
 				}
-				if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
-				if (oneliner) string.deleteCharAt(string.length() - 1); else string.deleteCharAt(string.length() - 2);
-				if (!key.equals("null")) string.append(tabs + "]");
+				
 			}
 			lastLayer = layer;
 			lastKeys = keys;
