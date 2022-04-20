@@ -10,7 +10,6 @@ import eu.derzauberer.javautils.util.DataUtil;
 
 public class JsonParser {
 
-	private boolean hasParent;
 	private ArrayList<String> structure;
 	private HashMap<String, Object> elements;
 
@@ -19,7 +18,6 @@ public class JsonParser {
 	}
 	
 	public JsonParser(String string) {
-		hasParent = false;
 		structure = new ArrayList<>();
 		elements = new HashMap<>();
 		parse(string);
@@ -78,9 +76,6 @@ public class JsonParser {
 		} else {
 			List<Object> objects = new ArrayList<>();
 			for (Object object : list) {
-				if (object instanceof JsonParser) {
-					((JsonParser) object).hasParent = true;
-				}
 				objects.add(object);
 			}
 			setObject(key, objects);
@@ -300,11 +295,11 @@ public class JsonParser {
 
 	@Override
 	public String toString() {
-		return getOutput(false);
+		return getOutput(false, 0);
 	}
 
 	public String toOneLineString() {
-		return getOutput(true);
+		return getOutput(true, 0);
 	}
 
 	private void parse(String string) {
@@ -452,147 +447,77 @@ public class JsonParser {
 		return value;
 	}
 
-	private String getOutput(boolean oneliner) {
+	private String getOutput(boolean oneliner, int offset) {
 		StringBuilder string = new StringBuilder();
 		String tab = "";
 		String space = "";
 		String newLine = "";
-		String qm = "\"";
+		String tabs = "";
+		String keys[] = {};
+		String lastKeys[] = {};
+		int layer = 1;
+		int lastLayer = 1;
 		if (!oneliner) {
 			tab = "\t";
 			space = " ";
 			newLine = "\n";
+			tabs = tab;
+			for (int i = 0; i < offset; i++) tabs += tab; 
 		}
-		int layer = 0;
-		int position = 0;
-		boolean isValue = false;
-		boolean nextPosition = false;
-		String lastKey = "";
-		if (!elements.containsKey("null")) {
-			string.append("{" + newLine);
-		}
+		string.append((!elements.containsKey("null")) ? "{" : "[" + newLine);
 		for (String key : structure) {
-			String keys[] = key.split("\\.");
-			position = keys.length - 1;
-			nextPosition = isNextPosition(key, lastKey);
-			if (isValue) {
-				string.append(getSeperator(position, layer, nextPosition) + newLine);
-				isValue = false;
+			keys = key.split("\\.");
+			String name = keys[keys.length - 1];
+			layer = keys.length;
+			int sameLayer = 0;
+			for (String subKey : keys) {
+				if (lastKeys.length >= sameLayer + 1 && subKey.equals(lastKeys[sameLayer])) sameLayer++; else break;
 			}
-			if (nextPosition) {
-				addLine(string, layer, tab, "}," + newLine);
-				layer--;
+			if (lastKeys.length > 0 && !(layer < lastLayer || sameLayer + 1 < lastLayer)) string.append("," + newLine); else string.append(newLine);
+			while (layer < lastLayer || sameLayer + 1 < lastLayer) {
+				lastLayer--;
+				if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
+				string.append(tabs + "}");
+				if (!(layer < lastLayer || sameLayer + 1 < lastLayer)) string.append("," + newLine); else string.append(newLine);
 			}
-			while (layer != position) {
-				if (layer < position) {
-					addLine(string, layer + 1, tab, qm + keys[layer] + qm + ":" + space + "{" + newLine);
-					layer++;
-				} else if (layer > position) {
-					addLine(string, layer, tab, "}" + getSeperator(position, layer - 1, !nextPosition) + newLine);
-					layer--;
-					lastKey = lastKey.substring(0, lastKey.lastIndexOf("."));
-					if (isNextPosition(key, lastKey)) {
-						addLine(string, layer, tab, "}," + newLine);
-						layer--;
-					}
-				}
+			while (layer > lastLayer) {
+				string.append(tabs + "\"" + keys[lastLayer - 1] + "\":" + space + "{");
+				string.append(newLine);
+				if (!oneliner) tabs += tab;
+				lastLayer++;
 			}
-			if (elements.get(key) instanceof List<?>) {
-				if (key.equals("null")) {
-					addLine(string, position, tab, "[" + newLine);
-					layer--;
-					position--;
-				} else {
-					addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + "[" + newLine);
-				}
-				List<Object> list = DataUtil.getList(getObject(key), Object.class);
-				if (list.isEmpty()) {
-					string.deleteCharAt(string.length() - 1);
-					string.append("]");
-				} else {
-					for (int i = 0; i < list.size(); i++) {
-						if (getJsonObjectFromObject(list.get(i)) != null) {
-							String object;
-							if (oneliner) {
-								object = getJsonObjectFromObject(list.get(i)).toOneLineString();
-								string.append(object);
-							} else {
-								object = getJsonObjectFromObject(list.get(i)).toString();
-								for (String line : object.split("\n")) {
-									if (line.endsWith("}")) {
-										string.append(newLine);
-									}
-									if (string.charAt(string.length() - 1) == '\n' && string.charAt(string.length() - 2) == '\n') {
-										string.deleteCharAt(string.length() - 1);
-									}
-									addLine(string, position + 2, tab, line);
-									if (string.charAt(string.length() - 1) != '}') {
-										string.append(newLine);
-									}
-								}
-								if (hasParent && i == list.size() - 1) {
-									string.append(newLine);
-								}
-							}
-						} else {
-							addLine(string, position + 2, tab, getStringFromObject(list.get(i), true));
-						}
-						if (i == list.size() - 1) {
-							string.append(newLine);
-						} else {
-							string.append("," + newLine);
-						}
-					}
-					addLine(string, position + 1, tab, "]");
-				}
+			if (!(elements.get(key) instanceof List<?>)) {
+				string.append(tabs + "\"" + name + "\":" + space + getStringFromObject(elements.get(key), true));
 			} else {
-				addLine(string, position + 1, tab, qm + keys[keys.length - 1] + qm + ":" + space + getStringFromObject(elements.get(key), true));
+				List<Object> list = DataUtil.getList(getObject(key), Object.class);
+				string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
+				for (Object object : list) {
+					if (object instanceof JsonParser) {
+						if (oneliner) {
+							string.append(((JsonParser) object).getOutput(true, 0) + ",");
+						} else {
+							string.append(tabs + tab + ((JsonParser) object).getOutput(false, layer + 1) + "," + newLine);
+						}
+					} else {
+						string.append(tabs + tab + getStringFromObject(object, true) + "," + newLine);
+					}
+				}
+				if (oneliner) string.deleteCharAt(string.length() - 1); else string.deleteCharAt(string.length() - 2);
+				string.append(tabs + "]");
 			}
-			isValue = true;
-			lastKey = key;
+			lastLayer = layer;
+			lastKeys = keys;
 		}
-		if (isValue) {
+		while (1 < lastLayer) {
 			string.append(newLine);
-			isValue = false;
+			lastLayer--;
+			if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
+			string.append(tabs + "}");
 		}
-		for (int i = layer; i > 0; i--) {
-			addLine(string, i, tab, "}" + newLine);
-		}
-		if (string.charAt(string.length() - 1) != '\n') {
-			string.append(newLine);
-		}
-		if (!elements.containsKey("null")) {
-			string.append("}");
-		} else if (string.charAt(string.length() - 1) == '\n') {
-			string.deleteCharAt(string.length() - 1);
-		}
+		if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
+		string.append(newLine);
+		string.append(tabs + ((!elements.containsKey("null")) ? "}" : "]"));
 		return string.toString();
-	}
-
-	private void addLine(StringBuilder stringbuilder, int layer, String tab, String line) {
-		for (int i = 0; i < layer; i++) {
-			stringbuilder.append(tab);
-		}
-		stringbuilder.append(line);
-	}
-
-	private String getSeperator(int lenght1, int lenght2, boolean nextPosition) {
-		if (lenght1 >= lenght2 && !nextPosition) return ",";
-		return "";
-	}
-
-	private boolean isNextPosition(String key1, String key2) {
-		String key3 = key1;
-		String key4 = key2;
-		if (key3.contains(".") && key4.contains(".")) {
-			key3 = key3.substring(0, key3.lastIndexOf("."));
-			key4 = key4.substring(0, key4.lastIndexOf("."));
-		} else if (!key3.contains(".") && key4.contains(".")) {
-			key4 = key4.substring(0, key4.lastIndexOf("."));
-		} else {
-			return false;
-		}
-		return !key3.equals(key4) && key3.split("\\.").length == key4.split("\\.").length;
 	}
 	
 	private void removeWrongKeys(String key, String[] keys) {
@@ -647,14 +572,6 @@ public class JsonParser {
 			return "\"" + DataUtil.removeEscapeCodes(object.toString()) + "\"";
 		} else {
 			return DataUtil.removeEscapeCodes(object.toString());
-		}
-	}
-	
-	private JsonParser getJsonObjectFromObject(Object object) {
-		if (object instanceof JsonParser) {
-			return (JsonParser) object;
-		} else {
-			return null;
 		}
 	}
 	
