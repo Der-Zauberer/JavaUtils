@@ -461,10 +461,10 @@ public class JsonParser {
 			tab = "\t";
 			space = " ";
 			newLine = "\n";
-			tabs = tab;
+			if (!elements.containsKey("null")) tabs = tab;
 			for (int i = 0; i < offset; i++) tabs += tab; 
 		}
-		string.append((!elements.containsKey("null")) ? "{" : "[" + newLine);
+		if (elements.containsKey("null")) string.append("["); else string.append("{");
 		for (String key : structure) {
 			keys = key.split("\\.");
 			String name = keys[keys.length - 1];
@@ -490,20 +490,22 @@ public class JsonParser {
 				string.append(tabs + "\"" + name + "\":" + space + getStringFromObject(elements.get(key), true));
 			} else {
 				List<Object> list = DataUtil.getList(getObject(key), Object.class);
-				string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
+				if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
+				if (!oneliner) tabs += tab;
 				for (Object object : list) {
 					if (object instanceof JsonParser) {
 						if (oneliner) {
 							string.append(((JsonParser) object).getOutput(true, 0) + ",");
 						} else {
-							string.append(tabs + tab + ((JsonParser) object).getOutput(false, layer + 1) + "," + newLine);
+							string.append(tabs + ((JsonParser) object).getOutput(false, tabs.length()) + "," + newLine);
 						}
 					} else {
-						string.append(tabs + tab + getStringFromObject(object, true) + "," + newLine);
+						string.append(tabs + getStringFromObject(object, true) + "," + newLine);
 					}
 				}
+				if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
 				if (oneliner) string.deleteCharAt(string.length() - 1); else string.deleteCharAt(string.length() - 2);
-				string.append(tabs + "]");
+				if (!key.equals("null")) string.append(tabs + "]");
 			}
 			lastLayer = layer;
 			lastKeys = keys;
@@ -514,9 +516,8 @@ public class JsonParser {
 			if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
 			string.append(tabs + "}");
 		}
-		if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
-		string.append(newLine);
-		string.append(tabs + ((!elements.containsKey("null")) ? "}" : "]"));
+		if (!oneliner && !elements.containsKey("null")) tabs = tabs.substring(0, tabs.length() - 1);
+		if (elements.containsKey("null")) string.append(tabs + "]"); else string.append(newLine + tabs + "}");
 		return string.toString();
 	}
 	
