@@ -133,10 +133,11 @@ public class JsonParser {
 			if (!(keys.get(i).equals(key) || (keys.get(i).length() > key.length() && keys.get(i).startsWith(key + ".")))) {
 				keys.remove(i);
 				i--;
-			} else if (!fullkeys) {
+			} else if (!fullkeys && keys.get(i).length() > key.length()) {
 				keys.set(i, keys.get(i).substring(key.length() + 1));
 			}
 		}
+		
 		return keys;
 	}
 	
@@ -250,19 +251,31 @@ public class JsonParser {
 		return this;
 	}
 	
+	public <T> T deserializeJson(Object object) {
+		return deserializeJson("", new Accessible(object));
+	}
+	
+	public <T> T deserializeJson(String key, Object object) {
+		return deserializeJson(key, new Accessible(object));
+	}
+	
 	public <T> T deserializeJson(Class<T> clazz) {
-		return deserializeJson("", clazz);
+		return deserializeJson("", new Accessible(clazz));
+	}
+	
+	public <T> T deserializeJson(String key, Class<T> clazz) {
+		return deserializeJson(key, new Accessible(clazz));
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> T deserializeJson(String key, Class<T> clazz) {
-		Accessible accessible = new Accessible(clazz);
+	private <T> T deserializeJson(String key, Accessible accessible) {
 		for (AccessibleField field : accessible.getAccessibleFields()) {
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
-				if (getObject(name) != null || (getJsonObject(name) != null && !getJsonObject(name).isEmpty())) {
-					if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClassType() == Object.class && getObject(name) != null && DataUtil.isPrimitiveType(getObject(name).getClass()))) {
-						if (getObject(key) != null) field.setValue(getData(name, field.getClassType()));
+			Object object = get(name);
+				if (object != null) {
+					if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClass() == object && DataUtil.isPrimitiveType(object.getClass()))) {
+						if (DataUtil.isPrimitiveType(object.getClass())) field.setValue(DataUtil.getObject(object, field.getClassType()));
 					} else if ((field.getClassType() == List.class || field.getClassType() == ArrayList.class || field.getClassType() == LinkedList.class) && field.getGenericType() != null) {
 						List list = null;
 						if (field.getClassType() == List.class || field.getClassType() == ArrayList.class) {
@@ -273,8 +286,8 @@ public class JsonParser {
 						if (list != null) {
 							Class<?> listType = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
 							if (DataUtil.isPrimitiveType(listType) || listType == Object.class) {
-								for (Object object : getList(name, listType)) {
-									list.add(object);
+								for (Object listObject : getList(name, listType)) {
+									list.add(listObject);
 								}
 							} else {
 								for (JsonParser parserObject : getJsonObjectList(name)) {
@@ -290,7 +303,7 @@ public class JsonParser {
 					}
 				}
 			}
-		return clazz.cast(accessible.getObject());
+		return (T) accessible.getObject();
 	}
 
 	@Override
@@ -320,6 +333,8 @@ public class JsonParser {
 				if ((character == ',' || character == ']') && arrayLayer == 0) {
 					if (value.length() > 0 && value.charAt(0) == '{' && value.charAt(value.length() - 1) == '}') {
 						array.add(new JsonParser(value.toString()));
+					} else if (value.length() > 0 && value.charAt(0) == '[' && value.charAt(value.length() - 1) == ']') {
+						array.add(new JsonParser(value.toString()).get("null"));
 					} else if (value.length() > 0) {
 						array.add(getObjectFromString(value.toString()));
 					}
@@ -507,11 +522,9 @@ public class JsonParser {
 					if (!oneliner) tabs += tab;
 					for (Object object : list) {
 						if (object instanceof JsonParser) {
-							if (oneliner) {
-								string.append(((JsonParser) object).getOutput(true, 0) + ",");
-							} else {
-								string.append(tabs + ((JsonParser) object).getOutput(false, tabs.length()) + "," + newLine);
-							}
+							string.append(tabs + ((JsonParser) object).getOutput(oneliner, tabs.length()) + "," + newLine);
+						} else if (object instanceof List<?>) {
+							string.append(tabs + new JsonParser().setObject("null", object).getOutput(oneliner, tabs.length()) + "," + newLine);
 						} else {
 							string.append(tabs + getStringFromObject(object, true) + "," + newLine);
 						}
@@ -614,7 +627,14 @@ public class JsonParser {
 						return new JsonPath(true, parser, generatedkey, list, i);
 					}
 				} else {
-					parser = (JsonParser) list.get(i);
+					Object object = list.get(i);
+					if (object instanceof JsonParser) {
+						parser = (JsonParser) object;
+					} else if (object instanceof List<?>) {
+						System.out.println(newKey);
+						parser = new JsonParser().setObject("null", object);
+						generatedkey = "null." + newKey;
+					}
 				}
 			}
 		}
