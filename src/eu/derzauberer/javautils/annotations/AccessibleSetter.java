@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface AccessibleField {
-	public int position() default -1;
+@Target(ElementType.METHOD)
+public @interface AccessibleSetter {
 	public String name() default "";
 }
