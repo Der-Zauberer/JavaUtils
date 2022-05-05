@@ -3,12 +3,15 @@ package eu.derzauberer.javautils.handler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-
+import eu.derzauberer.javautils.accessible.Accessible;
+import eu.derzauberer.javautils.accessible.AccessibleField;
+import eu.derzauberer.javautils.accessible.AccessibleMethod;
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
 import eu.derzauberer.javautils.events.CommandNotFoundEvent;
 import eu.derzauberer.javautils.events.CommandPreProcessingEvent;
 import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.DataUtil;
+import eu.derzauberer.javautils.util.Sender;
 
 public class CommandHandler {
 
@@ -19,35 +22,35 @@ public class CommandHandler {
 		commands.put(label, command);
 	}
 
-	public boolean executeCommand(ConsoleHandler console, String string) {
+	public boolean executeCommand(Sender sender, String string) {
 		history.add(string);
 		String command[] = getSplitedCommand(string);
 		String label = command[0];
 		String args[] = Arrays.copyOfRange(command, 1, command.length);
-		return executeCommand(console, string, label, args);
+		return executeCommand(sender, string, label, args);
 	}
 
-	private boolean executeCommand(ConsoleHandler console, String command, String label, String args[]) {
+	private boolean executeCommand(Sender sender, String command, String label, String args[]) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
-					console.sendMessage(commands.get(string).getCommandHelp());
+					sender.sendMessage(commands.get(string).getCommandHelp());
 					return true;
 				}
-				CommandPreProcessingEvent event = new CommandPreProcessingEvent(console, commands.get(string), string, label, args);
+				CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
 				if (!event.isCancelled()) {
-					boolean success = commands.get(label).onCommand(event.getConsole(), event.getLabel(), event.getArgs());
+					boolean success = commands.get(label).onCommand(event.getSender(), event.getLabel(), event.getArgs());
 					if (!success) {
-						new CommandExecutionFailedEvent(event.getConsole(), event.getCommand(), event.getString(), event.getLabel(), event.getArgs());
+						new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), event.getString(), event.getLabel(), event.getArgs());
 					}
 					return success;
 				} else {
-					new CommandNotFoundEvent(console, command, label, args);
+					new CommandNotFoundEvent(sender, command, label, args);
 					return false;
 				}
 			}
 		}
-		new CommandNotFoundEvent(console, command, label, args);
+		new CommandNotFoundEvent(sender, command, label, args);
 		return false;
 	}
 

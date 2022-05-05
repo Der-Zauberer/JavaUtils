@@ -1,18 +1,18 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.handler.ConsoleHandler;
 import eu.derzauberer.javautils.util.Command;
+import eu.derzauberer.javautils.util.Sender;
 
 public class CommandPreProcessingEvent extends Event {
 
-	private ConsoleHandler console;
+	private Sender sender;
 	private Command command;
 	private String string;
 	private String label;
 	private String args[];
 	
-	public CommandPreProcessingEvent(ConsoleHandler console, Command command, String string, String label, String args[]) {
-		this.console = console;
+	public CommandPreProcessingEvent(Sender sender, Command command, String string, String label, String args[]) {
+		this.sender = sender;
 		this.command = command;
 		this.string = string;
 		this.label = label;
@@ -24,8 +24,8 @@ public class CommandPreProcessingEvent extends Event {
 		super.setCancelled(cancelled);
 	}
 	
-	public ConsoleHandler getConsole() {
-		return console;
+	public Sender getSender() {
+		return sender;
 	}
 	
 	public Command getCommand() {

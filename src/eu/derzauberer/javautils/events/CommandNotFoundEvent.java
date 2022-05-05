@@ -1,24 +1,24 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.handler.ConsoleHandler;
+import eu.derzauberer.javautils.util.Sender;
 
 public class CommandNotFoundEvent extends Event {
 	
-	private ConsoleHandler console;
+	private Sender sender;
 	private String string;
 	private String label;
 	private String args[];
 	
-	public CommandNotFoundEvent(ConsoleHandler console, String string, String label, String args[]) {
-		this.console = console;
+	public CommandNotFoundEvent(Sender sender, String string, String label, String args[]) {
+		this.sender = sender;
 		this.string = string;
 		this.label = label;
 		this.args = args;
 		execute();
 	}
 	
-	public ConsoleHandler getConsole() {
-		return console;
+	public Sender getSender() {
+		return sender;
 	}
 	
 	public String getString() {

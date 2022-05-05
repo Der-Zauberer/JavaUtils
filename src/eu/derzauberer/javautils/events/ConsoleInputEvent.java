@@ -1,14 +1,14 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.handler.ConsoleHandler;
+import eu.derzauberer.javautils.util.Sender;
 
 public class ConsoleInputEvent extends Event {
 	
-	private ConsoleHandler console;
+	private Sender sender;
 	private String input;
 	
-	public ConsoleInputEvent(ConsoleHandler console, String input) {
-		this.console = console;
+	public ConsoleInputEvent(Sender sender, String input) {
+		this.sender = sender;
 		this.input = input;
 		execute();
 	}
@@ -17,8 +17,8 @@ public class ConsoleInputEvent extends Event {
 		super.setCancelled(cancelled);
 	}
 	
-	public ConsoleHandler getConsole() {
-		return console;
+	public Sender getSender() {
+		return sender;
 	}
 	
 	public void setInput(String input) {
