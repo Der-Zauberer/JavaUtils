@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.sockets;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -9,22 +10,31 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import eu.derzauberer.javautils.accessible.ClientDisconnectAction;
+import eu.derzauberer.javautils.action.ClientConnectAction;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
+import eu.derzauberer.javautils.action.ClientMessageSendAction;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent.DisconnectCause;
+import eu.derzauberer.javautils.util.Sender;
 import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
 import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 
-public class Client implements Runnable {
+public class Client implements Sender, Closeable {
 
 	private Socket socket;
 	private Server server;
 	private Thread thread;
 	private PrintStream output;
 	private BufferedReader input;
-	private ClientMessageReceiveAction action;
-	private boolean disconnected;
+	private ClientMessageReceiveAction clientMessageReceiveAction;
+	private ClientMessageSendAction clientMessageSendAction;
+	private ClientConnectAction clientConnectAction;
+	private ClientDisconnectAction clientDisconnectAction;
+	private boolean isDisconnected;
+	private boolean isDebugEnabled;
+	private MessageType defaultMessageType;
 	private DisconnectCause cause;
 
 	public Client(String host, int port) throws UnknownHostException, IOException {
@@ -40,26 +50,25 @@ public class Client implements Runnable {
 		this.socket = socket;
 		output = new PrintStream(socket.getOutputStream(), true);
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		action = (event) -> {};
-		disconnected = false;
-		new ClientConnectEvent(this);
+		isDisconnected = false;
+		isDebugEnabled = false;
+		defaultMessageType = MessageType.DEFAULT;
+		ClientConnectEvent event = new ClientConnectEvent(this);
+		if (clientConnectAction != null) clientConnectAction.onAction(event);
+		if (isPartOfServer() && server.getOnClientConnect() != null) server.getOnClientConnect().onAction(event);
 		if (!isPartOfServer()) {
-			thread = new Thread(this);
+			thread = new Thread(this::inputLoop);
 			thread.start();
 		}
 	}
 
-	@Override
-	public void run() {
+	protected void inputLoop() {
 		String message;
 		try {
 			while (!isClosed()) {
 				message = input.readLine();
 				if (message.equals("null")) break;
-				ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, message);
-				if (!event.isCancelled()) {
-					onMessageReceive(event);
-				}
+				sendInput(message);
 			}
 		} catch (SocketTimeoutException exception) {
 			cause = DisconnectCause.TIMEOUT;
@@ -68,35 +77,34 @@ public class Client implements Runnable {
 			exception.printStackTrace();
 		}
 		if (cause == null) cause = DisconnectCause.DISCONNECTED;
-		close();
-	}
-
-	public void sendMessage(String message) {
-		ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
-		if (!event.isCancelled()) output.println(message);
-	}
-	
-	protected void onMessageReceive(ClientMessageReceiveEvent event) {
-		if (isPartOfServer()) server.onMessageReceive(event);
-		action.onAction(event);
-	}
-
-	public void setOnMessageReceive(ClientMessageReceiveAction action) {
-		this.action = action;
-	}
-	
-	public void setTimeout(int timeout) {
 		try {
-			socket.setSoTimeout(timeout);
-		} catch (SocketException exception) {}
-	}
-	
-	public int getTimeout() {
-		try {
-			return socket.getSoTimeout();
-		} catch (SocketException exception) {
-			return 0;
+			close();
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
+	}
+	
+	@Override
+	public void sendInput(String string) {
+		ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, string);
+		if (clientMessageReceiveAction != null && !event.isCancelled()) clientMessageReceiveAction.onAction(event);
+		if (!event.isCancelled() && isPartOfServer() && server.getOnMessageReceive() != null) server.getOnMessageReceive().onAction(event);
+	}
+	
+	@Override
+	public void sendOutput(String string, MessageType type) {
+		ClientMessageSendEvent event = new ClientMessageSendEvent(this, string);
+		if (clientMessageSendAction != null && !event.isCancelled()) clientMessageSendAction.onAction(event);
+		if (!event.isCancelled() && isPartOfServer() && server.getOnMessageSend() != null) server.getOnMessageSend().onAction(event);
+		if (!event.isCancelled()) output.println(event.getMessage());
+	}
+	
+	public Server getServer() {
+		return server;
+	}
+	
+	public boolean isPartOfServer() {
+		return server != null;
 	}
 	
 	public InetAddress getAdress() {
@@ -114,17 +122,30 @@ public class Client implements Runnable {
 	public int getLocalPort() {
 		return socket.getLocalPort();
 	}
-
-	public void close() {
-		if (!disconnected) {
-			disconnected = true;
-			try {
-				socket.close();
-			} catch (IOException exception) {
-				exception.printStackTrace();
-			}
+	
+	public void setTimeout(int timeout) {
+		try {
+			socket.setSoTimeout(timeout);
+		} catch (SocketException exception) {}
+	}
+	
+	public int getTimeout() {
+		try {
+			return socket.getSoTimeout();
+		} catch (SocketException exception) {
+			return 0;
+		}
+	}
+	
+	@Override
+	public void close() throws IOException {
+		if (!isDisconnected) {
+			isDisconnected = true;
+			socket.close();
 			if (cause == null) cause = DisconnectCause.CLOSED;
-			new ClientDisconnectEvent(this, cause);
+		 	ClientDisconnectEvent event = new ClientDisconnectEvent(this, cause);
+		 	if (clientDisconnectAction != null) clientDisconnectAction.onAction(event);
+		 	if (isPartOfServer() && server.getOnClientDisconnect() != null) server.getOnClientDisconnect().onAction(event);
 			if (isPartOfServer()) server.getClients().remove(this);
 		}
 	}
@@ -133,12 +154,54 @@ public class Client implements Runnable {
 		return socket.isClosed();
 	}
 	
-	public boolean isPartOfServer() {
-		return server != null;
+	public void setOnMessageReceive(ClientMessageReceiveAction action) {
+		clientMessageReceiveAction = action;
 	}
 	
-	public Server getServer() {
-		return server;
+	public ClientMessageReceiveAction getOnMessageReceive() {
+		return clientMessageReceiveAction;
+	}
+	
+	public void setOnMessageSend(ClientMessageSendAction action) {
+		clientMessageSendAction = action;
+	}
+	
+	public ClientMessageSendAction getOnMessageSend() {
+		return clientMessageSendAction;
+	}
+	
+	public void setOnClientConnect(ClientConnectAction action) {
+		clientConnectAction = action;
+	}
+	
+	public ClientConnectAction getOnClientConnect() {
+		return clientConnectAction;
+	}
+	
+	public void setOnClientDisconnect(ClientDisconnectAction action) {
+		clientDisconnectAction = action;
+	}
+	
+	public ClientDisconnectAction getOnClientDisconnect() {
+		return clientDisconnectAction;
+	}
+	
+	public void setDebugEnabled(boolean isDebugEnabled) {
+		this.isDebugEnabled = isDebugEnabled;
+	}
+	
+	@Override
+	public boolean isDebugEnabled() {
+		return isDebugEnabled;
+	}
+	
+	public void setDefaultMessageType(MessageType defaultMessageType) {
+		this.defaultMessageType = defaultMessageType;
+	}
+	
+	@Override
+	public MessageType getDefaultMessageType() {
+		return defaultMessageType;
 	}
 
 }

@@ -1,55 +1,62 @@
 package eu.derzauberer.javautils.handler;
 
-import eu.derzauberer.javautils.action.LoopTickAction;
-import eu.derzauberer.javautils.events.LoopTickEvent;
-
 public class LoopHandler {
 	
 	private Thread thread;
-	private LoopTickAction action;
-	private int deltaTime;
+	private Runnable runnable;
+	private boolean isRunning;
+	private long deltaTimeNanos;
 	private long lastTimestamp;
 	
-	public LoopHandler(LoopTickAction action) {
-		this.action = action;
-		deltaTime = 0;
+	public LoopHandler(Runnable runnable) {
+		this.runnable = runnable;
+		isRunning = false;
+		deltaTimeNanos = 0;
 		lastTimestamp = 0;
 	}
 	
 	private void loop() {
 		while (!thread.isInterrupted()) {
 			long time = System.nanoTime();
-			deltaTime = (int) (time - lastTimestamp);
+			deltaTimeNanos = time - lastTimestamp;
 			lastTimestamp = time;
-			if (action != null) action.onAction(new LoopTickEvent(this, deltaTime, getTicksPerSecond()));
+			runnable.run();
 		}
-		thread = null;
 	}
 	
 	public void start() {
-		if (thread == null) {
-			thread = new Thread() {
-				@Override
-				public void run() {
-					loop();
-				}
-			};
+		if (!isRunning) {
+			isRunning = true;
+			thread = new Thread(this::loop);
 			thread.start();
 		}
 	}
 	
 	public void stop() {
-		if (thread != null) {
+		if (isRunning) {
+			isRunning = false;
 			thread.interrupt();
 		}
 	}
 	
-	public int getTicksPerSecond() {
-		return (int) (1000000000 / (double) deltaTime);
+	public boolean isRunning() {
+		return isRunning;
 	}
 	
-	public double getDeltaTime() {
-		return deltaTime;
+	public int getTicksPerSecond() {
+		return (int) (1000000000 / (double) deltaTimeNanos);
+	}
+	
+	public long getDeltaTimeNanos() {
+		return deltaTimeNanos;
+	}
+	
+	public long getDeltaTimeMycros() {
+		return deltaTimeNanos / 1000;
+	}
+	
+	public long getDeltaTimeMillis() {
+		return deltaTimeNanos / 1000000;
 	}
 	
 }

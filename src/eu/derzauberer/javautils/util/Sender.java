@@ -13,11 +13,8 @@ public interface Sender {
 		ERROR,
 	}
 	
-	public default void sendInput(String string) {
-		onInput(string);
-	}
-	
-	public abstract void onInput(String string);
+	public abstract void sendInput(String string);
+	public abstract void sendOutput(String string, MessageType type);
 	
 	public default void sendMessage(String string) {
 		sendMessage(getDefaultMessageType(), string);
@@ -32,7 +29,7 @@ public interface Sender {
 			String output;
 			if (type == MessageType.DEFAULT) output = string;
 			else output = "[" + type.toString() + "] " + string;
-			onOutput(output);
+			sendOutput(output, type);
 		}
 	}
 	
@@ -43,8 +40,6 @@ public interface Sender {
 		}
 		sendMessage(type, output);
 	}
-	
-	public abstract void onOutput(String string);
 	
 	public abstract MessageType getDefaultMessageType();
 	public abstract boolean isDebugEnabled();

@@ -25,12 +25,12 @@ public class TickHandler {
 		isRunning = false;
 		restart = false;
 		this.tickspeed = tickspeed;
-		timer = new Timer();
 	}
 	
 	public void start() {
 		if (!isRunning) {
 			isRunning = true;
+			timer = new Timer();
 			timertask = new TimerTask() {
 				@Override
 				public void run() {
@@ -53,7 +53,6 @@ public class TickHandler {
 		if (isRunning) {
 			isRunning = false;
 			timer.cancel();
-			timer = new Timer();
 		}
 	}
 	

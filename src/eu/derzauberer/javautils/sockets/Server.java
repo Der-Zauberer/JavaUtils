@@ -1,5 +1,6 @@
 package eu.derzauberer.javautils.sockets;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -10,17 +11,21 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import eu.derzauberer.javautils.accessible.ClientDisconnectAction;
+import eu.derzauberer.javautils.action.ClientConnectAction;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
-import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
-import eu.derzauberer.javautils.events.ServerCloseEvent;
+import eu.derzauberer.javautils.action.ClientMessageSendAction;
 
-public class Server implements Runnable {
+public class Server implements Closeable {
 	
 	private ServerSocket server;
-	private ArrayList<Client> clients;
 	private ExecutorService service;
-	private ClientMessageReceiveAction action;
 	private int clientTimeout;
+	private ClientMessageReceiveAction clientMessageReceiveAction;
+	private ClientMessageSendAction clientMessageSendAction;
+	private ClientConnectAction clientConnectAction;
+	private ClientDisconnectAction clientDisconnectAction;
+	private ArrayList<Client> clients;
 	
 	public Server(int port) throws IOException {
 		this(new ServerSocket(port));
@@ -29,22 +34,20 @@ public class Server implements Runnable {
 	public Server(ServerSocket server) throws IOException {
 		this.server = server;
 		clients = new ArrayList<>();
-		action = (event) -> {};
 		service = Executors.newCachedThreadPool();
-		Thread thread = new Thread(this);
+		Thread thread = new Thread(this::inputLoop);
 		clientTimeout = 0;
 		thread.start();
 	}
 	
-	@Override
-	public void run() {
+	private void inputLoop() {
 		try {
 			while (!server.isClosed()) {
 				try {
 					Socket socket = server.accept();
 					Client client = new Client(socket, this);
 					client.setTimeout(clientTimeout);
-					service.submit(client);
+					service.submit(client::inputLoop);
 					clients.add(client);
 				} catch (RejectedExecutionException exception) {}
 			}
@@ -52,7 +55,13 @@ public class Server implements Runnable {
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-		if (!server.isClosed()) close();
+		if (!server.isClosed()) {
+			try {
+				close();
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
+		}
 	}
 	
 	public void sendBroadcastMessage(String message) {
@@ -61,12 +70,36 @@ public class Server implements Runnable {
 		}
 	}
 	
-	protected void onMessageReceive(ClientMessageReceiveEvent event) {
-		action.onAction(event);
+	public void setOnMessageReceive(ClientMessageReceiveAction action) {
+		clientMessageReceiveAction = action;
 	}
 	
-	public void setOnMessageReceive(ClientMessageReceiveAction action) {
-		this.action = action;
+	public ClientMessageReceiveAction getOnMessageReceive() {
+		return clientMessageReceiveAction;
+	}
+	
+	public void setOnMessageSend(ClientMessageSendAction action) {
+		clientMessageSendAction = action;
+	}
+	
+	public ClientMessageSendAction getOnMessageSend() {
+		return clientMessageSendAction;
+	}
+	
+	public void setOnClientConnect(ClientConnectAction action) {
+		clientConnectAction = action;
+	}
+	
+	public ClientConnectAction getOnClientConnect() {
+		return clientConnectAction;
+	}
+	
+	public void setOnClientDisconnect(ClientDisconnectAction action) {
+		clientDisconnectAction = action;
+	}
+	
+	public ClientDisconnectAction getOnClientDisconnect() {
+		return clientDisconnectAction;
 	}
 	
 	public void setServerTimeout(int timeout) {
@@ -102,27 +135,19 @@ public class Server implements Runnable {
 		return server.getLocalPort();
 	}
 	
-	public void close() {
+	@Override
+	public void close() throws IOException {
 		if (!server.isClosed()) {
-			try {
-				server.close();
-			} catch (IOException exception) {
-				exception.printStackTrace();
-			}
+			server.close();
 			for (int i = 0; i < clients.size(); i++) {
 				clients.get(i).close();
 			}
-			new ServerCloseEvent(this);
 			service.shutdown();
 		}
 	}
 	
 	public boolean isClosed() {
 		return server.isClosed();
-	}
-	
-	public ServerSocket getServerSocket() {
-		return server;
 	}
 	
 	public ArrayList<Client> getClients() {

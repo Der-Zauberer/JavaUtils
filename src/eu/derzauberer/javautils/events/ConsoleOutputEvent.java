@@ -1,15 +1,18 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.util.Sender;
+import eu.derzauberer.javautils.util.Console;
+import eu.derzauberer.javautils.util.Sender.MessageType;
 
 public class ConsoleOutputEvent extends Event {
 	
-	private Sender sender;
+	private Console console;
 	private String output;
+	private MessageType type;
 	
-	public ConsoleOutputEvent(Sender sender, String output) {
-		this.sender = sender;
+	public ConsoleOutputEvent(Console console, String output, MessageType type) {
+		this.console = console;
 		this.output = output;
+		this.type = type;
 		execute();
 	}
 	
@@ -17,8 +20,8 @@ public class ConsoleOutputEvent extends Event {
 		super.setCancelled(cancelled);
 	}
 	
-	public Sender getSender() {
-		return sender;
+	public Console getConsole() {
+		return console;
 	}
 	
 	public void setOutput(String output) {
@@ -27,6 +30,10 @@ public class ConsoleOutputEvent extends Event {
 	
 	public String getOutput() {
 		return output;
+	}
+	
+	public MessageType getType() {
+		return type;
 	}
 
 }

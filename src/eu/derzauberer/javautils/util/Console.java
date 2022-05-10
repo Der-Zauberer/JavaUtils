@@ -4,11 +4,14 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import eu.derzauberer.javautils.action.ConsoleInputAction;
+import eu.derzauberer.javautils.action.ConsoleOutputAction;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.handler.CommandHandler;
 
-public class Console implements Runnable, Sender{
+public class Console implements Sender {
 	
 	public static final String BLACK = "\u001b[30m";
 	public static final String GRAY = "\u001b[30;1m";
@@ -41,10 +44,13 @@ public class Console implements Runnable, Sender{
 
 	private MessageType defaultMessageType;
 	private CommandHandler commandHandler;
+	private boolean isRunning;
 	private boolean isDebugEnabled;
 	private boolean areColorCodesEnabled;
 	private boolean isTimestampEnabled;
 	private boolean isLogEnabled;
+	private ConsoleInputAction inputAction;
+	private ConsoleOutputAction outputAction;
 	private String inputPrefix;
 	private Thread thread;
 	private Scanner scanner;
@@ -79,6 +85,7 @@ public class Console implements Runnable, Sender{
 	public Console(String inputPrefix, boolean start, CommandHandler commandHandler) {
 		defaultMessageType = MessageType.DEFAULT;
 		this.commandHandler = commandHandler;
+		isRunning = false;
 		isDebugEnabled = false;
 		areColorCodesEnabled = areColorCodesSupportedBySystem();
 		isTimestampEnabled = false;
@@ -91,16 +98,22 @@ public class Console implements Runnable, Sender{
 	}
 	
 	public void start() {
-		thread = new Thread(this);
-		thread.start();
+		if (!isRunning) {
+			isRunning = true;
+			thread = new Thread(this::inputLoop);
+			thread.start();
+		}
+		
 	}
 
 	public void stop() {
-		thread.interrupt();
+		if (isRunning) {
+			isRunning = false;
+			thread.interrupt();
+		}
 	}
 	
-	@Override
-	public void run() {
+	private void inputLoop() {
 		try {
 			scanner = new Scanner(System.in);
 			String input;
@@ -113,19 +126,21 @@ public class Console implements Runnable, Sender{
 	}
 	
 	@Override
-	public void onInput(String string) {
+	public void sendInput(String string) {
 		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
+		if (inputAction != null && !event.isCancelled()) inputAction.onAction(event);
 		if (!event.isCancelled()) {
-			if (commandHandler != null) commandHandler.executeCommand(event.getSender(), event.getInput());
+			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
 			if (isLogEnabled) log(inputPrefix + " " + string);
 		}
 	}
-
+	
 	@Override
-	public void onOutput(String string) {
-		ConsoleOutputEvent event = new ConsoleOutputEvent(this, string);
+	public void sendOutput(String string, MessageType type) {
+		ConsoleOutputEvent event = new ConsoleOutputEvent(this, string, type);
+		if (outputAction != null && !event.isCancelled()) outputAction.onAction(event);
 		if (!event.isCancelled()) {
-			if (!areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
+			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
 			if (isTimestampEnabled) event.setOutput(Time.now().toString("[hh:mm:ss] ") + event.getOutput());
 			System.out.println(event.getOutput());
 			if (isLogEnabled) {
@@ -189,6 +204,10 @@ public class Console implements Runnable, Sender{
 		return commandHandler;
 	}
 	
+	public boolean isRunning() {
+		return isRunning;
+	}
+	
 	public void setDebugEnabled(boolean debugEnabled) {
 		this.isDebugEnabled = debugEnabled;
 	}
@@ -223,6 +242,22 @@ public class Console implements Runnable, Sender{
 	
 	public boolean isLogEnabled() {
 		return isLogEnabled;
+	}
+	
+	public void setOnInput(ConsoleInputAction inputAction) {
+		this.inputAction = inputAction;
+	}
+	
+	public ConsoleInputAction getOnInput() {
+		return inputAction;
+	}
+	
+	public void setOnOutput(ConsoleOutputAction outputAction) {
+		this.outputAction = outputAction;
+	}
+	
+	public ConsoleOutputAction getOnOutput() {
+		return outputAction;
 	}
 
 	public  void setInputPrefix(String inputPrefix) {
