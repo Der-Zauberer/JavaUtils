@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.accessible;
+package eu.derzauberer.javautils.action;
 
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
 

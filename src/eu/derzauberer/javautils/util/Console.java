@@ -45,7 +45,6 @@ public class Console implements Sender {
 	private MessageType defaultMessageType;
 	private CommandHandler commandHandler;
 	private boolean isRunning;
-	private boolean isDebugEnabled;
 	private boolean areColorCodesEnabled;
 	private boolean isTimestampEnabled;
 	private boolean isLogEnabled;
@@ -86,7 +85,6 @@ public class Console implements Sender {
 		defaultMessageType = MessageType.DEFAULT;
 		this.commandHandler = commandHandler;
 		isRunning = false;
-		isDebugEnabled = false;
 		areColorCodesEnabled = areColorCodesSupportedBySystem();
 		isTimestampEnabled = false;
 		isLogEnabled = false;
@@ -206,14 +204,6 @@ public class Console implements Sender {
 	
 	public boolean isRunning() {
 		return isRunning;
-	}
-	
-	public void setDebugEnabled(boolean debugEnabled) {
-		this.isDebugEnabled = debugEnabled;
-	}
-	
-	public boolean isDebugEnabled() {
-		return isDebugEnabled;
 	}
 	
 	public void setColorCodesEnabled(boolean colorCodesEnabled) {

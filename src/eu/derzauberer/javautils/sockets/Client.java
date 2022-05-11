@@ -10,8 +10,9 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import eu.derzauberer.javautils.accessible.ClientDisconnectAction;
+
 import eu.derzauberer.javautils.action.ClientConnectAction;
+import eu.derzauberer.javautils.action.ClientDisconnectAction;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 import eu.derzauberer.javautils.action.ClientMessageSendAction;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
@@ -33,7 +34,6 @@ public class Client implements Sender, Closeable {
 	private ClientConnectAction clientConnectAction;
 	private ClientDisconnectAction clientDisconnectAction;
 	private boolean isDisconnected;
-	private boolean isDebugEnabled;
 	private MessageType defaultMessageType;
 	private DisconnectCause cause;
 
@@ -51,7 +51,6 @@ public class Client implements Sender, Closeable {
 		output = new PrintStream(socket.getOutputStream(), true);
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		isDisconnected = false;
-		isDebugEnabled = false;
 		defaultMessageType = MessageType.DEFAULT;
 		ClientConnectEvent event = new ClientConnectEvent(this);
 		if (clientConnectAction != null) clientConnectAction.onAction(event);
@@ -184,15 +183,6 @@ public class Client implements Sender, Closeable {
 	
 	public ClientDisconnectAction getOnClientDisconnect() {
 		return clientDisconnectAction;
-	}
-	
-	public void setDebugEnabled(boolean isDebugEnabled) {
-		this.isDebugEnabled = isDebugEnabled;
-	}
-	
-	@Override
-	public boolean isDebugEnabled() {
-		return isDebugEnabled;
 	}
 	
 	public void setDefaultMessageType(MessageType defaultMessageType) {

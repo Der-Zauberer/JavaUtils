@@ -11,8 +11,9 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import eu.derzauberer.javautils.accessible.ClientDisconnectAction;
+
 import eu.derzauberer.javautils.action.ClientConnectAction;
+import eu.derzauberer.javautils.action.ClientDisconnectAction;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 import eu.derzauberer.javautils.action.ClientMessageSendAction;
 

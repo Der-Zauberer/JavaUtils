@@ -1,5 +1,6 @@
 package eu.derzauberer.javautils.util;
 
+import java.lang.management.ManagementFactory;
 import java.util.regex.Pattern;
 
 public interface Sender {
@@ -41,7 +42,10 @@ public interface Sender {
 		sendMessage(type, output);
 	}
 	
+	public default boolean isDebugEnabled() {
+		return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+	}
+	
 	public abstract MessageType getDefaultMessageType();
-	public abstract boolean isDebugEnabled();
 
 }
