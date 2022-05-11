@@ -84,15 +84,15 @@ public class Client implements Sender, Closeable {
 	}
 	
 	@Override
-	public void sendInput(String string) {
-		ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, string);
+	public void sendInput(String input) {
+		ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, input);
 		if (clientMessageReceiveAction != null && !event.isCancelled()) clientMessageReceiveAction.onAction(event);
 		if (!event.isCancelled() && isPartOfServer() && server.getOnMessageReceive() != null) server.getOnMessageReceive().onAction(event);
 	}
 	
 	@Override
-	public void sendOutput(String string, MessageType type) {
-		ClientMessageSendEvent event = new ClientMessageSendEvent(this, string);
+	public void sendOutput(String message, MessageType type) {
+		ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
 		if (clientMessageSendAction != null && !event.isCancelled()) clientMessageSendAction.onAction(event);
 		if (!event.isCancelled() && isPartOfServer() && server.getOnMessageSend() != null) server.getOnMessageSend().onAction(event);
 		if (!event.isCancelled()) output.println(event.getMessage());
@@ -185,6 +185,7 @@ public class Client implements Sender, Closeable {
 		return clientDisconnectAction;
 	}
 	
+	@Override
 	public void setDefaultMessageType(MessageType defaultMessageType) {
 		this.defaultMessageType = defaultMessageType;
 	}

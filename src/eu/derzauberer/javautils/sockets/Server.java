@@ -16,12 +16,14 @@ import eu.derzauberer.javautils.action.ClientConnectAction;
 import eu.derzauberer.javautils.action.ClientDisconnectAction;
 import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
 import eu.derzauberer.javautils.action.ClientMessageSendAction;
+import eu.derzauberer.javautils.util.Sender;
 
-public class Server implements Closeable {
+public class Server implements Sender, Closeable {
 	
 	private ServerSocket server;
 	private ExecutorService service;
 	private int clientTimeout;
+	private MessageType defaultMessageType;
 	private ClientMessageReceiveAction clientMessageReceiveAction;
 	private ClientMessageSendAction clientMessageSendAction;
 	private ClientConnectAction clientConnectAction;
@@ -38,6 +40,7 @@ public class Server implements Closeable {
 		service = Executors.newCachedThreadPool();
 		Thread thread = new Thread(this::inputLoop);
 		clientTimeout = 0;
+		defaultMessageType = MessageType.DEFAULT;
 		thread.start();
 	}
 	
@@ -65,9 +68,13 @@ public class Server implements Closeable {
 		}
 	}
 	
-	public void sendBroadcastMessage(String message) {
+	@Override
+	public void sendInput(String input) {}
+	
+	@Override
+	public void sendOutput(String message, MessageType type) {
 		for (Client client : clients) {
-			client.sendMessage(message);
+			client.sendOutput(message, type);
 		}
 	}
 	
@@ -153,6 +160,17 @@ public class Server implements Closeable {
 	
 	public ArrayList<Client> getClients() {
 		return clients;
+	}
+	
+	@Override
+	public void setDefaultMessageType(MessageType type) {
+		defaultMessageType = type;
+		
+	}
+
+	@Override
+	public MessageType getDefaultMessageType() {
+		return defaultMessageType;
 	}
 
 }

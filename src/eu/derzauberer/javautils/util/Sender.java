@@ -14,28 +14,28 @@ public interface Sender {
 		ERROR,
 	}
 	
-	public abstract void sendInput(String string);
-	public abstract void sendOutput(String string, MessageType type);
+	public abstract void sendInput(String input);
+	public abstract void sendOutput(String message, MessageType type);
 	
-	public default void sendMessage(String string) {
-		sendMessage(getDefaultMessageType(), string);
+	public default void sendMessage(String message) {
+		sendMessage(getDefaultMessageType(), message);
 	}
 	
-	public default void sendMessage(String string, String... args) {
-		sendMessage(getDefaultMessageType(), string, args);
+	public default void sendMessage(String message, String... args) {
+		sendMessage(getDefaultMessageType(), message, args);
 	}
 	
-	public default void sendMessage(MessageType type, String string) {
+	public default void sendMessage(MessageType type, String message) {
 		if (type != MessageType.DEBUG || isDebugEnabled()) {
 			String output;
-			if (type == MessageType.DEFAULT) output = string;
-			else output = "[" + type.toString() + "] " + string;
+			if (type == MessageType.DEFAULT) output = message;
+			else output = "[" + type.toString() + "] " + message;
 			sendOutput(output, type);
 		}
 	}
 	
-	public default void sendMessage(MessageType type, String string, String... args) {
-		String output = string;
+	public default void sendMessage(MessageType type, String message, String... args) {
+		String output = message;
 		for (int i = 0; i < args.length && output.contains("{}"); i++) {
 			output = output.replaceFirst(Pattern.quote("{}"), args[i]);
 		}
@@ -46,6 +46,7 @@ public interface Sender {
 		return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 	}
 	
+	public abstract void setDefaultMessageType(MessageType type);
 	public abstract MessageType getDefaultMessageType();
 
 }

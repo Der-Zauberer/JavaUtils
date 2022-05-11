@@ -124,18 +124,18 @@ public class Console implements Sender {
 	}
 	
 	@Override
-	public void sendInput(String string) {
-		ConsoleInputEvent event = new ConsoleInputEvent(this, string);
+	public void sendInput(String input) {
+		ConsoleInputEvent event = new ConsoleInputEvent(this, input);
 		if (inputAction != null && !event.isCancelled()) inputAction.onAction(event);
 		if (!event.isCancelled()) {
 			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
-			if (isLogEnabled) log(inputPrefix + " " + string);
+			if (isLogEnabled) log(inputPrefix + " " + input);
 		}
 	}
 	
 	@Override
-	public void sendOutput(String string, MessageType type) {
-		ConsoleOutputEvent event = new ConsoleOutputEvent(this, string, type);
+	public void sendOutput(String message, MessageType type) {
+		ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
 		if (outputAction != null && !event.isCancelled()) outputAction.onAction(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
@@ -185,6 +185,7 @@ public class Console implements Sender {
 		}
 	}
 	
+	@Override
 	public void setDefaultMessageType(MessageType defaultType) {
 		this.defaultMessageType = defaultType;
 	}
