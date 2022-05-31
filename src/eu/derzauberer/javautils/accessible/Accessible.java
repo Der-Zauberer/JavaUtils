@@ -5,9 +5,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
 import eu.derzauberer.javautils.annotations.AccessibleGetter;
 import eu.derzauberer.javautils.annotations.AccessibleSetter;
 
@@ -48,54 +48,64 @@ public class Accessible {
 		fields = new ArrayList<>();
 		methods = new ArrayList<>();
 		ArrayList<String> names = new ArrayList<>();
-		for (Field field : object.getClass().getDeclaredFields()) {
-			if (getAnnotation(field) != null) {
-				AccessibleField accessibleField = new AccessibleField(object, field);
-				if (names.contains(accessibleField.getName())) {
-					throw new AccessibleException("The name " + accessibleField.getName() + "is used two times! Names have to be individual!");
-				} else {
-					fields.add(accessibleField);
-					names.add(accessibleField.getName());
-				}
-			}
-			
+		ArrayList<Class<?>> classes = new ArrayList<>();
+		classes.add(object.getClass());
+		Class<?> superclass;
+		while ((superclass = classes.get(classes.size() - 1).getSuperclass()) != null) {
+			for (Class<?> interfaze : superclass.getInterfaces()) classes.add(interfaze);
+			classes.add(superclass);
 		}
-		HashMap<String, Method> getterAndSetters = new HashMap<>();
-		for (Method method : object.getClass().getDeclaredMethods()) {
-			String name = null;
-			boolean isSetter = true;
-			if (method.isAnnotationPresent(AccessibleSetter.class)) {
-				name = method.getAnnotation(AccessibleSetter.class).name();
-			} else if (method.isAnnotationPresent(AccessibleGetter.class)) {
-				name = method.getAnnotation(AccessibleGetter.class).name();
-				isSetter = false;
-			} else if (getAnnotation(method) != null) {
-				AccessibleMethod accessibleMethod = new AccessibleMethod(object, method);
-				if (names.contains(accessibleMethod.getName())) {
-					throw new AccessibleException("The name " + accessibleMethod.getName() + "is used two times! Names have to be individual!");
-				} else {
-					methods.add(accessibleMethod);
-					names.add(accessibleMethod.getName());
-				}
-			}
-			if (name != null) {
-				if (name.isEmpty()) throw new AccessibleException(((isSetter) ? "Setter " : "Getter ") + method.getName() + " does not have a name!");
-				if (names.contains(name)) {
-					if (getterAndSetters.get(name) != null) {
-						AccessibleField field = null;
-						if (isSetter) {
-							field = new AccessibleField(object, method, getterAndSetters.get(name));
-						} else {
-							field = new AccessibleField(object, getterAndSetters.get(name), method);
-						}
-						fields.add(field);
-						getterAndSetters.remove(name);
+		Collections.reverse(classes);
+		for (Class<?> clazz : classes) {
+			for (Field field :clazz.getDeclaredFields()) {
+				if (getAnnotation(field) != null) {
+					AccessibleField accessibleField = new AccessibleField(object, field);
+					if (names.contains(accessibleField.getName())) {
+						throw new AccessibleException("The name " + accessibleField.getName() + "is used two times! Names have to be individual!");
 					} else {
-						throw new AccessibleException("A field with the name " + name + " does already exits!");
+						fields.add(accessibleField);
+						names.add(accessibleField.getName());
 					}
-				} else {
-					names.add(name);
-					getterAndSetters.put(name, method);
+				}
+				
+			}
+			HashMap<String, Method> getterAndSetters = new HashMap<>();
+			for (Method method : clazz.getDeclaredMethods()) {
+				String name = null;
+				boolean isSetter = true;
+				if (method.isAnnotationPresent(AccessibleSetter.class)) {
+					name = method.getAnnotation(AccessibleSetter.class).name();
+				} else if (method.isAnnotationPresent(AccessibleGetter.class)) {
+					name = method.getAnnotation(AccessibleGetter.class).name();
+					isSetter = false;
+				} else if (getAnnotation(method) != null) {
+					AccessibleMethod accessibleMethod = new AccessibleMethod(object, method);
+					if (names.contains(accessibleMethod.getName())) {
+						throw new AccessibleException("The name " + accessibleMethod.getName() + "is used two times! Names have to be individual!");
+					} else {
+						methods.add(accessibleMethod);
+						names.add(accessibleMethod.getName());
+					}
+				}
+				if (name != null) {
+					if (name.isEmpty()) throw new AccessibleException(((isSetter) ? "Setter " : "Getter ") + method.getName() + " does not have a name!");
+					if (names.contains(name)) {
+						if (getterAndSetters.get(name) != null) {
+							AccessibleField field = null;
+							if (isSetter) {
+								field = new AccessibleField(object, method, getterAndSetters.get(name));
+							} else {
+								field = new AccessibleField(object, getterAndSetters.get(name), method);
+							}
+							fields.add(field);
+							getterAndSetters.remove(name);
+						} else {
+							throw new AccessibleException("A field with the name " + name + " does already exits!");
+						}
+					} else {
+						names.add(name);
+						getterAndSetters.put(name, method);
+					}
 				}
 			}
 		}
