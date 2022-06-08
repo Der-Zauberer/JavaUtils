@@ -93,14 +93,14 @@ public class Date implements Comparable<Date> {
 	}
 	
 	public Date addTime(int hour, int minute, int second, int millisecond) {
-		int carryMillisecond = calculateTimeCarry(this.getTime().getMillisecond(), millisecond, 0, 1000);
-		int carrySecond = calculateTimeCarry(this.getTime().getSecond(), second, carryMillisecond, 60);
-		int carryMinute = calculateTimeCarry(this.getTime().getMinute(), minute, carrySecond, 60);
-		int carryHour = calculateTimeCarry(this.getTime().getHour(), hour, carryMinute, 24);
-		int newMillisecond = calculateTime(this.getTime().getMillisecond(), millisecond, 0, 1000);
-		int newSecond = calculateTime(this.getTime().getSecond(), second, carryMillisecond, 60);
-		int newMinute = calculateTime(this.getTime().getMinute(), minute, carrySecond, 60);
-		int newHour = calculateTime(this.getTime().getHour(), hour, carryMinute, 24);
+		final int carryMillisecond = calculateTimeCarry(this.getTime().getMillisecond(), millisecond, 0, 1000);
+		final int carrySecond = calculateTimeCarry(this.getTime().getSecond(), second, carryMillisecond, 60);
+		final int carryMinute = calculateTimeCarry(this.getTime().getMinute(), minute, carrySecond, 60);
+		final int carryHour = calculateTimeCarry(this.getTime().getHour(), hour, carryMinute, 24);
+		final int newMillisecond = calculateTime(this.getTime().getMillisecond(), millisecond, 0, 1000);
+		final int newSecond = calculateTime(this.getTime().getSecond(), second, carryMillisecond, 60);
+		final int newMinute = calculateTime(this.getTime().getMinute(), minute, carrySecond, 60);
+		final int newHour = calculateTime(this.getTime().getHour(), hour, carryMinute, 24);
 		return addDate(0, 0, carryHour % 24, new Time(newHour, newMinute, newSecond, newMillisecond));
 	}
 	
@@ -109,12 +109,12 @@ public class Date implements Comparable<Date> {
 	}
 	
 	private int calculateTime(int oldValue, int newValue, int carry, int maxValue) {
-		int tempValue = oldValue + newValue + carry;
+		final int tempValue = oldValue + newValue + carry;
 		return (tempValue >= 0) ? tempValue % maxValue : maxValue + (tempValue % maxValue);
 	}
 	
 	private int calculateTimeCarry(int oldValue, int newValue, int carry, int maxValue) {
-		int tempValue = oldValue + newValue + carry;
+		final int tempValue = oldValue + newValue + carry;
 		return (tempValue >= 0) ? tempValue / maxValue : (tempValue / maxValue) - 1;
 	}
 	
@@ -127,7 +127,7 @@ public class Date implements Comparable<Date> {
 		int newMonth = this.month + month;
 		int newDay = this.day + day + (((this.time.getHour() + time.getHour()) >= 0) ? (this.time.getHour() + time.getHour()) / 24 : ((this.time.getHour() + time.getHour()) / 24) - 1);
 		this.time.setDate(null);
-		Time newTime = this.time.addTime(time);
+		final Time newTime = this.time.addTime(time);
 		while (1 > newMonth || newMonth > 12) { 
 			if (1 > newMonth) {
 				newYear--;
@@ -154,7 +154,7 @@ public class Date implements Comparable<Date> {
 				}
 			}
 		}
-		Date date = new Date(newYear, newMonth, newDay, newTime);
+		final Date date = new Date(newYear, newMonth, newDay, newTime);
 		date.getTime().setDate(date);
 		return date;
 	}
@@ -187,7 +187,7 @@ public class Date implements Comparable<Date> {
 	}
 	
 	public static Date now() {
-		LocalDateTime date = LocalDateTime.now();
+		final LocalDateTime date = LocalDateTime.now();
 		return new Date(date.getYear(), date.getMonth().getValue(), date.getDayOfMonth(), Time.now());
 	}
 	

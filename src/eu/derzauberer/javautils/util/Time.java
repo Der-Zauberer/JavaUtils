@@ -105,13 +105,13 @@ public class Time implements Comparable<Time> {
 	}
 	
 	public Time addTime(int hour, int minute, int second, int millisecond) {
-		int carryMillisecond = calculateTimeCarry(this.millisecond, millisecond, 0, 1000);
-		int carrySecond = calculateTimeCarry(this.second, second, carryMillisecond, 60);
-		int carryMinute = calculateTimeCarry(this.minute, minute, carrySecond, 60);
-		int newMillisecond = calculateTime(this.millisecond, millisecond, 0, 1000);
-		int newSecond = calculateTime(this.second, second, carryMillisecond, 60);
-		int newMinute = calculateTime(this.minute, minute, carrySecond, 60);
-		int newHour = calculateTime(this.hour, hour, carryMinute, 24);
+		final int carryMillisecond = calculateTimeCarry(this.millisecond, millisecond, 0, 1000);
+		final int carrySecond = calculateTimeCarry(this.second, second, carryMillisecond, 60);
+		final int carryMinute = calculateTimeCarry(this.minute, minute, carrySecond, 60);
+		final int newMillisecond = calculateTime(this.millisecond, millisecond, 0, 1000);
+		final int newSecond = calculateTime(this.second, second, carryMillisecond, 60);
+		final int newMinute = calculateTime(this.minute, minute, carrySecond, 60);
+		final int newHour = calculateTime(this.hour, hour, carryMinute, 24);
 		return new Time(newHour, newMinute, newSecond, newMillisecond);
 	}
 	
@@ -120,12 +120,12 @@ public class Time implements Comparable<Time> {
 	}
 	
 	private int calculateTime(int oldValue, int newValue, int carry, int maxValue) {
-		int tempValue = oldValue + newValue + carry;
+		final int tempValue = oldValue + newValue + carry;
 		return (tempValue >= 0) ? tempValue % maxValue : maxValue + (tempValue % maxValue);
 	}
 	
 	private int calculateTimeCarry(int oldValue, int newValue, int carry, int maxValue) {
-		int tempValue = oldValue + newValue + carry;
+		final int tempValue = oldValue + newValue + carry;
 		return (tempValue >= 0) ? tempValue / maxValue : (tempValue / maxValue) - 1;
 	}
 	

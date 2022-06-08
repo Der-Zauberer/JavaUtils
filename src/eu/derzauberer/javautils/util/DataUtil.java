@@ -26,7 +26,7 @@ public class DataUtil {
 	
 	@SuppressWarnings("unchecked")
 	public static <T extends Number> T getNumber(Object object, Class<T> clazz) {
-		Class<T> numberClass = (Class<T>) getWrapperFromPrimitive(clazz);
+		final Class<T> numberClass = (Class<T>) getWrapperFromPrimitive(clazz);
 		if (object != null) {
 			if (object instanceof Number) {
 				if (numberClass == Number.class) return numberClass.cast(object);
@@ -75,7 +75,7 @@ public class DataUtil {
 	@SuppressWarnings("unchecked")
 	public static <T> T getObject(Object object, Class<T> clazz) {
 		if (clazz == Object.class) return clazz.cast(object);
-		Class<T> objectClass = (Class<T>) getWrapperFromPrimitive(clazz);
+		final Class<T> objectClass = (Class<T>) getWrapperFromPrimitive(clazz);
 		if (object.getClass() == objectClass) return objectClass.cast(object);
 		T value = null;
 		if (objectClass == Boolean.class) {
@@ -157,7 +157,7 @@ public class DataUtil {
 	}
 	
 	public static boolean isNumericString(String string) {
-		Pattern numericRegex = Pattern.compile(
+		final Pattern numericRegex = Pattern.compile(
 		        "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
 		        "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
 		        "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +

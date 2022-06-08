@@ -27,7 +27,7 @@ import eu.derzauberer.javautils.action.FileUpdatedAction;
 
 public class FileUtil {
 
-	private static ArrayList<FileObserver> fileObserver = new ArrayList<>();
+	private static final ArrayList<FileObserver> fileObserver = new ArrayList<>();
 	private static Timer timer;
 
 	public static void createFile(File file) {
@@ -46,7 +46,7 @@ public class FileUtil {
 	public static void deleteFile(File file) {
 		if (file.exists()) {
 			try {
-				Stream<Path> stream = Files.walk(Paths.get(file.toURI()));
+				final Stream<Path> stream = Files.walk(Paths.get(file.toURI()));
 				stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
 				stream.close();
 			} catch (IOException exception) {
@@ -61,14 +61,14 @@ public class FileUtil {
 				if (!copy.exists()) {
 					copy.mkdir();
 				}
-				String[] children = original.list();
+				final String[] children = original.list();
 				for (int i = 0; i < children.length; i++) {
 					copyDirectory(new File(original, children[i]), new File(copy, children[i]));
 				}
 			} else {
-				InputStream input = new FileInputStream(original);
-				OutputStream output = new FileOutputStream(copy);
-				byte[] buffer = new byte[1024];
+				final InputStream input = new FileInputStream(original);
+				final OutputStream output = new FileOutputStream(copy);
+				final byte[] buffer = new byte[1024];
 				int lennght = 0;
 				while ((lennght = input.read(buffer)) > 0) {
 					output.write(buffer, 0, lennght);
@@ -116,8 +116,8 @@ public class FileUtil {
 	public static String getStringFromWebsite(URL url, boolean removeHtmlTags) {
 		String string = "";
 		try {
-			Scanner scanner = new Scanner(url.openStream());
-			StringBuilder builder = new StringBuilder();
+			final Scanner scanner = new Scanner(url.openStream());
+			final StringBuilder builder = new StringBuilder();
 			while (scanner.hasNext()) {
 				builder.append(scanner.nextLine());
 				builder.append("\n");
@@ -135,8 +135,8 @@ public class FileUtil {
 
 	public static void downloadFileFromWebsite(URL url, File file) {
 		try {
-			ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
-			FileOutputStream output = new FileOutputStream(file.getPath());
+			final ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
+			final FileOutputStream output = new FileOutputStream(file.getPath());
 			output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
 		} catch (IOException exception) {
 			throw new UncheckedIOException(exception);
@@ -187,9 +187,7 @@ public class FileUtil {
 		} catch (URISyntaxException exception) {
 			exception.printStackTrace();
 		}
-		if (file.getName().endsWith(".jar")) {
-			return file;
-		}
+		if (file.getName().endsWith(".jar")) return file;
 		return file;
 	}
 
@@ -200,9 +198,7 @@ public class FileUtil {
 		} catch (URISyntaxException exception) {
 			exception.printStackTrace();
 		}
-		if (file.getName().endsWith(".jar")) {
-			return file.getParentFile();
-		}
+		if (file.getName().endsWith(".jar")) return file.getParentFile();
 		return file;
 	}
 

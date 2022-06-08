@@ -19,7 +19,7 @@ public class Accessible {
 	
 	public <T> Accessible(Class<T> clazz) {
 		try {
-			Constructor<?> constructor = clazz.getDeclaredConstructor();
+			final Constructor<?> constructor = clazz.getDeclaredConstructor();
 			constructor.setAccessible(true);
 			object = constructor.newInstance();
 			parseContent();
@@ -30,7 +30,7 @@ public class Accessible {
 	
 	public <T> Accessible(Class<T> clazz, Class<?> constructurTypes, Object... constructerArgs) {
 		try {
-			Constructor<?> constructor = clazz.getDeclaredConstructor(constructurTypes);
+			final Constructor<?> constructor = clazz.getDeclaredConstructor(constructurTypes);
 			constructor.setAccessible(true);
 			object = constructor.newInstance(constructerArgs);
 			parseContent();
@@ -47,8 +47,8 @@ public class Accessible {
 	private void parseContent() {
 		fields = new ArrayList<>();
 		methods = new ArrayList<>();
-		ArrayList<String> names = new ArrayList<>();
-		ArrayList<Class<?>> classes = new ArrayList<>();
+		final ArrayList<String> names = new ArrayList<>();
+		final ArrayList<Class<?>> classes = new ArrayList<>();
 		classes.add(object.getClass());
 		Class<?> superclass;
 		while ((superclass = classes.get(classes.size() - 1).getSuperclass()) != null) {
@@ -69,7 +69,7 @@ public class Accessible {
 				}
 				
 			}
-			HashMap<String, Method> getterAndSetters = new HashMap<>();
+			final HashMap<String, Method> getterAndSetters = new HashMap<>();
 			for (Method method : clazz.getDeclaredMethods()) {
 				String name = null;
 				boolean isSetter = true;
@@ -79,7 +79,7 @@ public class Accessible {
 					name = method.getAnnotation(AccessibleGetter.class).name();
 					isSetter = false;
 				} else if (getAnnotation(method) != null) {
-					AccessibleMethod accessibleMethod = new AccessibleMethod(object, method);
+					final AccessibleMethod accessibleMethod = new AccessibleMethod(object, method);
 					if (names.contains(accessibleMethod.getName())) {
 						throw new AccessibleException("The name " + accessibleMethod.getName() + "is used two times! Names have to be individual!");
 					} else {
@@ -125,7 +125,7 @@ public class Accessible {
 	}
 	
 	public List<String> getAccessibleFieldNames() {
-		List<String> names = new ArrayList<>();
+		final List<String> names = new ArrayList<>();
 		for (AccessibleField field : fields) {
 			names.add(field.getName());
 		}
@@ -144,7 +144,7 @@ public class Accessible {
 	}
 	
 	public List<String> getAccessibleMethodNames() {
-		List<String> names = new ArrayList<>();
+		final List<String> names = new ArrayList<>();
 		for (AccessibleMethod method : methods) {
 			names.add(method.getName());
 		}

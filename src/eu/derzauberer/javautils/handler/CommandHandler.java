@@ -16,12 +16,12 @@ import eu.derzauberer.javautils.util.Sender;
 
 public class CommandHandler {
 
-	private HashMap<String, Command> commands = new HashMap<>();
-	private ArrayList<String> history = new ArrayList<>();
+	private final HashMap<String, Command> commands = new HashMap<>();
+	private final ArrayList<String> history = new ArrayList<>();
 	
-	private CommandPreProcessingAction commandPreProcessingAction;
-	private CommandExecutionFailedAction commandExecutionFailedAction;
-	private CommandNotFoundAction commandNotFoundAction;
+	private CommandPreProcessingAction preProcessingAction;
+	private CommandExecutionFailedAction executionFailedAction;
+	private CommandNotFoundAction notFoundAction;
 	
 	public void registerCommand(String label, Command command) {
 		commands.put(label, command);
@@ -29,18 +29,18 @@ public class CommandHandler {
 
 	public boolean executeCommand(Sender sender, String string) {
 		history.add(string);
-		String command[] = getSplitedCommand(string);
+		final String command[] = getSplitedCommand(string);
 		if (command.length == 0) return false;
-		String label = command[0];
-		String args[] = Arrays.copyOfRange(command, 1, command.length);
+		final String label = command[0];
+		final String args[] = Arrays.copyOfRange(command, 1, command.length);
 		return executeCommand(sender, string, label, args);
 	}
 
 	private boolean executeCommand(Sender sender, String command, String label, String args[]) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
-				CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
-				if (commandPreProcessingAction != null && !event.isCancelled()) commandPreProcessingAction.onAction(event);
+				final CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
+				if (preProcessingAction != null && !event.isCancelled()) preProcessingAction.onAction(event);
 				if (!event.isCancelled()) {
 					boolean success;
 					ExecutionFailCause cause = ExecutionFailCause.BAD_RETURN;
@@ -53,16 +53,16 @@ public class CommandHandler {
 						cause = ExecutionFailCause.EXCEPTION;
 					}
 					if (!success) {
-						CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getString(), event.getLabel(), event.getArgs());
-						if (commandExecutionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) commandExecutionFailedAction.onAction(commandExecutionFailedEvent);
+						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getString(), event.getLabel(), event.getArgs());
+						if (executionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) executionFailedAction.onAction(commandExecutionFailedEvent);
 						if (!commandExecutionFailedEvent.isCancelled() && exception != null) exception.printStackTrace();
 					}
 					return success;
 				} else break;
 			}
 		}
-		CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(sender, command, label, args);
-		if (commandNotFoundAction != null) commandNotFoundAction.onAction(commandNotFoundEvent);
+		final CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(sender, command, label, args);
+		if (notFoundAction != null) notFoundAction.onAction(commandNotFoundEvent);
 		return false;
 	}
 
@@ -76,35 +76,35 @@ public class CommandHandler {
 	}
 
 	public String[] getHistory() {
-		String string[] = new String[history.size()];
+		final String string[] = new String[history.size()];
 		for (int i = 0; i < history.size(); i++) {
 			string[i] = history.get(i);
 		}
 		return string;
 	}
 	
-	public void setOnCommandPreProcessing(CommandPreProcessingAction action) {
-		commandPreProcessingAction = action;
+	public void setPreProcessingAction(CommandPreProcessingAction preProcessingAction) {
+		this.preProcessingAction = preProcessingAction;
 	}
 	
-	public CommandPreProcessingAction getOnCommandPreProcessing() {
-		return commandPreProcessingAction;
+	public CommandPreProcessingAction getPreProcessingAction() {
+		return preProcessingAction;
 	}
 	
-	public void setOnCommandExecutionFailed(CommandExecutionFailedAction action) {
-		commandExecutionFailedAction = action;
+	public void setExecutionFailedAction(CommandExecutionFailedAction executionFailedAction) {
+		this.executionFailedAction = executionFailedAction;
 	}
 	
-	public CommandExecutionFailedAction getOnCommandExecutionFailed() {
-		return commandExecutionFailedAction;
+	public CommandExecutionFailedAction getExecutionFailedAction() {
+		return executionFailedAction;
 	}
 	
-	public void setOnCommandNotFound(CommandNotFoundAction action) {
-		commandNotFoundAction = action;
+	public void setNotFoundAction(CommandNotFoundAction notFoundAction) {
+		this.notFoundAction = notFoundAction;
 	}
 	
-	public CommandNotFoundAction getOnCommandNotFound() {
-		return commandNotFoundAction;
+	public CommandNotFoundAction getNotFoundAction() {
+		return notFoundAction;
 	}
 	
 	public static boolean getCondition(String args[], String condition, int position) {
@@ -119,8 +119,8 @@ public class CommandHandler {
 	}
 
 	private static String[] getSplitedCommand(String string) {
-		ArrayList<String> strings = new ArrayList<>();
-		StringBuilder builder = new StringBuilder();
+		final ArrayList<String> strings = new ArrayList<>();
+		final StringBuilder builder = new StringBuilder();
 		char lastCharacter = ' ';
 		boolean enclosed = false;
 		for (char character : string.toCharArray()) {
@@ -143,7 +143,7 @@ public class CommandHandler {
 			lastCharacter = character;
 		}
 		if (builder.length() != 0) strings.add(DataUtil.addEscapeCodes(builder.toString()));
-		String command[] = new String[strings.size()];
+		final String command[] = new String[strings.size()];
 		for (int i = 0; i < command.length; i++) {
 			command[i] = strings.get(i);
 		}

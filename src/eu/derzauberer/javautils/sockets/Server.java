@@ -24,10 +24,10 @@ public class Server implements Sender, Closeable {
 	private ExecutorService service;
 	private int clientTimeout;
 	private MessageType defaultMessageType;
-	private ClientMessageReceiveAction clientMessageReceiveAction;
-	private ClientMessageSendAction clientMessageSendAction;
-	private ClientConnectAction clientConnectAction;
-	private ClientDisconnectAction clientDisconnectAction;
+	private ClientMessageReceiveAction messageReceiveAction;
+	private ClientMessageSendAction messageSendAction;
+	private ClientConnectAction connectAction;
+	private ClientDisconnectAction disconnectAction;
 	private ArrayList<Client> clients;
 	
 	public Server(int port) throws IOException {
@@ -38,7 +38,7 @@ public class Server implements Sender, Closeable {
 		this.server = server;
 		clients = new ArrayList<>();
 		service = Executors.newCachedThreadPool();
-		Thread thread = new Thread(this::inputLoop);
+		final Thread thread = new Thread(this::inputLoop);
 		clientTimeout = 0;
 		defaultMessageType = MessageType.DEFAULT;
 		thread.start();
@@ -48,8 +48,8 @@ public class Server implements Sender, Closeable {
 		try {
 			while (!server.isClosed()) {
 				try {
-					Socket socket = server.accept();
-					Client client = new Client(socket, this);
+					final Socket socket = server.accept();
+					final Client client = new Client(socket, this);
 					client.setTimeout(clientTimeout);
 					service.submit(client::inputLoop);
 					clients.add(client);
@@ -78,36 +78,36 @@ public class Server implements Sender, Closeable {
 		}
 	}
 	
-	public void setOnMessageReceive(ClientMessageReceiveAction action) {
-		clientMessageReceiveAction = action;
+	public void setMessageReceiveAction(ClientMessageReceiveAction messageReceiveAction) {
+		this.messageReceiveAction = messageReceiveAction;
 	}
 	
-	public ClientMessageReceiveAction getOnMessageReceive() {
-		return clientMessageReceiveAction;
+	public ClientMessageReceiveAction getMessageReceiveAction() {
+		return messageReceiveAction;
 	}
 	
-	public void setOnMessageSend(ClientMessageSendAction action) {
-		clientMessageSendAction = action;
+	public void setMessageSendAction(ClientMessageSendAction messageSendAction) {
+		this.messageSendAction = messageSendAction;
 	}
 	
-	public ClientMessageSendAction getOnMessageSend() {
-		return clientMessageSendAction;
+	public ClientMessageSendAction getMessageSendAction() {
+		return messageSendAction;
 	}
 	
-	public void setOnClientConnect(ClientConnectAction action) {
-		clientConnectAction = action;
+	public void setConnectAction(ClientConnectAction connectAction) {
+		this.connectAction = connectAction;
 	}
 	
-	public ClientConnectAction getOnClientConnect() {
-		return clientConnectAction;
+	public ClientConnectAction getConnectAction() {
+		return connectAction;
 	}
 	
-	public void setOnClientDisconnect(ClientDisconnectAction action) {
-		clientDisconnectAction = action;
+	public void setDisconnectAction(ClientDisconnectAction disconnectAction) {
+		this.disconnectAction = disconnectAction;
 	}
 	
-	public ClientDisconnectAction getOnClientDisconnect() {
-		return clientDisconnectAction;
+	public ClientDisconnectAction getDisconnectAction() {
+		return disconnectAction;
 	}
 	
 	public void setServerTimeout(int timeout) {

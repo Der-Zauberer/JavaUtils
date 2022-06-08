@@ -29,10 +29,10 @@ public class Client implements Sender, Closeable {
 	private Thread thread;
 	private PrintStream output;
 	private BufferedReader input;
-	private ClientMessageReceiveAction clientMessageReceiveAction;
-	private ClientMessageSendAction clientMessageSendAction;
-	private ClientConnectAction clientConnectAction;
-	private ClientDisconnectAction clientDisconnectAction;
+	private ClientMessageReceiveAction messageReceiveAction;
+	private ClientMessageSendAction messageSendAction;
+	private ClientConnectAction connectAction;
+	private ClientDisconnectAction disconnectAction;
 	private boolean isDisconnected;
 	private MessageType defaultMessageType;
 	private DisconnectCause cause;
@@ -52,9 +52,9 @@ public class Client implements Sender, Closeable {
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		isDisconnected = false;
 		defaultMessageType = MessageType.DEFAULT;
-		ClientConnectEvent event = new ClientConnectEvent(this);
-		if (clientConnectAction != null) clientConnectAction.onAction(event);
-		if (isPartOfServer() && server.getOnClientConnect() != null) server.getOnClientConnect().onAction(event);
+		final ClientConnectEvent event = new ClientConnectEvent(this);
+		if (connectAction != null) connectAction.onAction(event);
+		if (isPartOfServer() && server.getConnectAction() != null) server.getConnectAction().onAction(event);
 		if (!isPartOfServer()) {
 			thread = new Thread(this::inputLoop);
 			thread.start();
@@ -85,16 +85,16 @@ public class Client implements Sender, Closeable {
 	
 	@Override
 	public void sendInput(String input) {
-		ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, input);
-		if (clientMessageReceiveAction != null && !event.isCancelled()) clientMessageReceiveAction.onAction(event);
-		if (!event.isCancelled() && isPartOfServer() && server.getOnMessageReceive() != null) server.getOnMessageReceive().onAction(event);
+		final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, input);
+		if (messageReceiveAction != null && !event.isCancelled()) messageReceiveAction.onAction(event);
+		if (!event.isCancelled() && isPartOfServer() && server.getMessageReceiveAction() != null) server.getMessageReceiveAction().onAction(event);
 	}
 	
 	@Override
 	public void sendOutput(String message, MessageType type) {
-		ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
-		if (clientMessageSendAction != null && !event.isCancelled()) clientMessageSendAction.onAction(event);
-		if (!event.isCancelled() && isPartOfServer() && server.getOnMessageSend() != null) server.getOnMessageSend().onAction(event);
+		final ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
+		if (messageSendAction != null && !event.isCancelled()) messageSendAction.onAction(event);
+		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().onAction(event);
 		if (!event.isCancelled()) output.println(event.getMessage());
 	}
 	
@@ -142,9 +142,9 @@ public class Client implements Sender, Closeable {
 			isDisconnected = true;
 			socket.close();
 			if (cause == null) cause = DisconnectCause.CLOSED;
-		 	ClientDisconnectEvent event = new ClientDisconnectEvent(this, cause);
-		 	if (clientDisconnectAction != null) clientDisconnectAction.onAction(event);
-		 	if (isPartOfServer() && server.getOnClientDisconnect() != null) server.getOnClientDisconnect().onAction(event);
+			final ClientDisconnectEvent event = new ClientDisconnectEvent(this, cause);
+		 	if (disconnectAction != null) disconnectAction.onAction(event);
+		 	if (isPartOfServer() && server.getDisconnectAction() != null) server.getDisconnectAction().onAction(event);
 			if (isPartOfServer()) server.getClients().remove(this);
 		}
 	}
@@ -153,36 +153,36 @@ public class Client implements Sender, Closeable {
 		return socket.isClosed();
 	}
 	
-	public void setOnMessageReceive(ClientMessageReceiveAction action) {
-		clientMessageReceiveAction = action;
+	public void setMessageReceiveAction(ClientMessageReceiveAction messageReceiveAction) {
+		this.messageReceiveAction = messageReceiveAction;
 	}
 	
-	public ClientMessageReceiveAction getOnMessageReceive() {
-		return clientMessageReceiveAction;
+	public ClientMessageReceiveAction getMessageReceiveAction() {
+		return messageReceiveAction;
 	}
 	
-	public void setOnMessageSend(ClientMessageSendAction action) {
-		clientMessageSendAction = action;
+	public void setMessageSendAction(ClientMessageSendAction messageSendAction) {
+		this.messageSendAction = messageSendAction;
 	}
 	
-	public ClientMessageSendAction getOnMessageSend() {
-		return clientMessageSendAction;
+	public ClientMessageSendAction getMessageSendAction() {
+		return messageSendAction;
 	}
 	
-	public void setOnClientConnect(ClientConnectAction action) {
-		clientConnectAction = action;
+	public void setConnectAction(ClientConnectAction connectAction) {
+		this.connectAction = connectAction;
 	}
 	
-	public ClientConnectAction getOnClientConnect() {
-		return clientConnectAction;
+	public ClientConnectAction getConnectAction() {
+		return connectAction;
 	}
 	
-	public void setOnClientDisconnect(ClientDisconnectAction action) {
-		clientDisconnectAction = action;
+	public void setDisconnectAction(ClientDisconnectAction disconnectAction) {
+		this.disconnectAction = disconnectAction;
 	}
 	
-	public ClientDisconnectAction getOnClientDisconnect() {
-		return clientDisconnectAction;
+	public ClientDisconnectAction getDisconnectAction() {
+		return disconnectAction;
 	}
 	
 	@Override

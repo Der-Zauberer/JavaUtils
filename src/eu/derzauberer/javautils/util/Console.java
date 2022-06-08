@@ -125,7 +125,7 @@ public class Console implements Sender {
 	
 	@Override
 	public void sendInput(String input) {
-		ConsoleInputEvent event = new ConsoleInputEvent(this, input);
+		final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
 		if (inputAction != null && !event.isCancelled()) inputAction.onAction(event);
 		if (!event.isCancelled()) {
 			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
@@ -135,7 +135,7 @@ public class Console implements Sender {
 	
 	@Override
 	public void sendOutput(String message, MessageType type) {
-		ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
+		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
 		if (outputAction != null && !event.isCancelled()) outputAction.onAction(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
@@ -177,7 +177,7 @@ public class Console implements Sender {
 	
 	private void log(String string) {
 		if (isLogEnabled() && logDirectory != null) {
-			String name = "log-" + Date.now() + ".txt";
+			final String name = "log-" + Date.now() + ".txt";
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}

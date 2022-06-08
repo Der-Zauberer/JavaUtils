@@ -74,7 +74,7 @@ public class JsonParser {
 			setNull(key);
 			return this;
 		} else {
-			List<Object> objects = new ArrayList<>();
+			final List<Object> objects = new ArrayList<>();
 			for (Object object : list) {
 				objects.add(object);
 			}
@@ -84,9 +84,9 @@ public class JsonParser {
 	}
 	
 	public JsonParser remove(String key) {
-		JsonPath path = getJsonPath(key);
-		JsonParser parser = path.parent;
-		String subKey = path.key;
+		final JsonPath path = getJsonPath(key);
+		final JsonParser parser = path.parent;
+		final String subKey = path.key;
 		if (path.isListItem) {
 			path.list.remove(path.index);
 			return this;
@@ -103,7 +103,7 @@ public class JsonParser {
 	}
 	
 	public boolean exists(String key) {
-		JsonPath path = getJsonPath(key);
+		final JsonPath path = getJsonPath(key);
 		return path.parent.structure.contains(path.key);
 	}
 	
@@ -116,7 +116,7 @@ public class JsonParser {
 	}
 	
 	public List<String> getKeys() {
-		ArrayList<String> keys = new ArrayList<>();
+		final ArrayList<String> keys = new ArrayList<>();
 		for (String string : structure) {
 			keys.add(string);
 		}
@@ -128,7 +128,7 @@ public class JsonParser {
 	}
 	
 	public List<String> getKeys(String key, boolean fullkeys) {
-		List<String> keys = getKeys();
+		final List<String> keys = getKeys();
 		for (int i = 0; i < keys.size(); i++) {
 			if (!(keys.get(i).equals(key) || (keys.get(i).length() > key.length() && keys.get(i).startsWith(key + ".")))) {
 				keys.remove(i);
@@ -182,7 +182,7 @@ public class JsonParser {
 	}
 	
 	public JsonParser getJsonObject(String key) {
-		Object object = getObject(key);
+		final Object object = getObject(key);
 		if (key.isEmpty()) return this;
 		else if (object instanceof JsonParser) {
 			return (JsonParser) object;
@@ -222,7 +222,7 @@ public class JsonParser {
 	}
 	
 	public JsonParser serializeJson(String key, Object object) {
-		Accessible accessible = new Accessible(object);
+		final Accessible accessible = new Accessible(object);
 		for (AccessibleField field : accessible.getAccessibleFields()) {
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
@@ -232,9 +232,9 @@ public class JsonParser {
 				} else if (field.getValue() instanceof JsonParser) {
 					set(name, (JsonParser) field.getValue());
 				} else if (field.getValue() instanceof List) {
-					List<Object> objectList = new ArrayList<>();
+					final List<Object> objectList = new ArrayList<>();
 					@SuppressWarnings("rawtypes")
-					List list = (List) field.getValue();
+					final List list = (List) field.getValue();
 					for (Object listObject : list) {
 						if (DataUtil.isPrimitiveType(listObject.getClass())) {
 							objectList.add(DataUtil.getObject(listObject, listObject.getClass()));
@@ -272,7 +272,7 @@ public class JsonParser {
 		for (AccessibleField field : accessible.getAccessibleFields()) {
 			String name = field.getName();
 			if (key != null && !key.isEmpty()) name = key + "." + field.getName();
-			Object object = get(name);
+			final Object object = get(name);
 				if (object != null) {
 					if (DataUtil.isPrimitiveType(field.getClassType()) || (field.getClass() == object && DataUtil.isPrimitiveType(object.getClass()))) {
 						if (DataUtil.isPrimitiveType(object.getClass())) field.setValue(DataUtil.getObject(object, field.getClassType()));
@@ -284,7 +284,7 @@ public class JsonParser {
 							list = new LinkedList<>();
 						}
 						if (list != null) {
-							Class<?> listType = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
+							final Class<?> listType = DataUtil.getClassFromGenericTypeOfList(field.getGenericType());
 							if (DataUtil.isPrimitiveType(listType) || listType == Object.class) {
 								for (Object listObject : getList(name, listType)) {
 									list.add(listObject);
@@ -297,7 +297,7 @@ public class JsonParser {
 							field.setValue(list);
 						}
 					} else {
-						JsonParser value = getJsonObject(name);
+						final JsonParser value = getJsonObject(name);
 						if (new Accessible(field.getClassType()).getAccessibleFields().isEmpty()) field.setValue(value);
 						else if (!value.isEmpty()) field.setValue(value.deserializeJson(field.getClassType()));
 					}
@@ -316,10 +316,10 @@ public class JsonParser {
 	}
 
 	private void parse(String string) {
-		StringBuilder key = new StringBuilder();
-		StringBuilder name = new StringBuilder();
-		StringBuilder value = new StringBuilder();
-		ArrayList<Object> array = new ArrayList<>();
+		final StringBuilder key = new StringBuilder();
+		final StringBuilder name = new StringBuilder();
+		final StringBuilder value = new StringBuilder();
+		final ArrayList<Object> array = new ArrayList<>();
 		int arrayLayer = 0;
 		boolean isString = false;
 		boolean isValue = false;
@@ -393,14 +393,14 @@ public class JsonParser {
 
 	@SuppressWarnings("unchecked")
 	private JsonParser setObject(String key, Object value) {
-		JsonPath path = getJsonPath(key);
-		JsonParser parser = path.parent;
-		String subKey = path.key;
+		final JsonPath path = getJsonPath(key);
+		final JsonParser parser = path.parent;
+		final String subKey = path.key;
 		if (path.isListItem) {
 			path.list.set(path.index, value);
 			return this;
 		} else if (value instanceof JsonParser) {
-			JsonParser jsonObject = (JsonParser) value;
+			final JsonParser jsonObject = (JsonParser) value;
 			for (String objectKey : jsonObject.getKeys()) {
 				setObject((!subKey.isEmpty()) ?  subKey + "." + objectKey : objectKey, jsonObject.get(objectKey));
 			}
@@ -410,11 +410,11 @@ public class JsonParser {
 		}
 		if (!parser.structure.contains(subKey)) {
 			if (subKey.contains(".")) {
-				String keys[] = subKey.split("\\.");
+				final String keys[] = subKey.split("\\.");
 				int layer = -1;
 				int position = 0;
 				for (String struct : parser.structure) {
-					String structKeys[] = struct.split("\\.");
+					final String structKeys[] = struct.split("\\.");
 					for (int i = 0; i < structKeys.length; i++) {
 						if (!structKeys[i].equals(keys[i])) {
 							if (layer <= i - 1) {
@@ -446,9 +446,9 @@ public class JsonParser {
 	}
 	
 	private Object getObject(String key) {
-		JsonPath path = getJsonPath(key);
-		JsonParser parser = path.parent;
-		String subKey = path.key;
+		final JsonPath path = getJsonPath(key);
+		final JsonParser parser = path.parent;
+		final String subKey = path.key;
 		if (path.isListItem) return path.list.get(path.index);
 		Object value = parser.elements.get(subKey);
 		if (parser.elements.get(subKey) == null && parser.getKeys(subKey).size() > 0) {
@@ -465,7 +465,7 @@ public class JsonParser {
 	}
 
 	private String getOutput(boolean oneliner, int offset) {
-		StringBuilder string = new StringBuilder();
+		final StringBuilder string = new StringBuilder();
 		String tab = "";
 		String space = "";
 		String newLine = "";
@@ -492,7 +492,7 @@ public class JsonParser {
 		}
 		for (String key : structure) {
 			keys = key.split("\\.");
-			String name = keys[keys.length - 1];
+			final String name = keys[keys.length - 1];
 			layer = keys.length;
 			int sameLayer = 0;
 			for (String subKey : keys) {
@@ -514,7 +514,7 @@ public class JsonParser {
 			if (!(elements.get(key) instanceof List<?>)) {
 				string.append(tabs + "\"" + name + "\":" + space + getStringFromObject(elements.get(key), true));
 			} else {
-				List<Object> list = DataUtil.getList(getObject(key), Object.class);
+				final List<Object> list = DataUtil.getList(getObject(key), Object.class);
 				if (list.isEmpty()) {
 					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[]");
 				} else {
@@ -551,7 +551,7 @@ public class JsonParser {
 	
 	private void removeWrongKeys(String key, String[] keys) {
 		if (key.contains(".")) {
-			String parentKey = key.substring(0, key.lastIndexOf("."));
+			final String parentKey = key.substring(0, key.lastIndexOf("."));
 			if (structure.contains(parentKey)) {
 				remove(parentKey);
 			}

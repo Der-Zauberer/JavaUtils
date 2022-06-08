@@ -14,8 +14,8 @@ public class TickHandler {
 	private Timer timer;
 	private TimerTask timertask;
 	
-	private ArrayList<TickTask> tasks = new ArrayList<>();
-	private HashMap<TickTask, Integer> asyncTasks = new HashMap<>();
+	private final ArrayList<TickTask> tasks = new ArrayList<>();
+	private final HashMap<TickTask, Integer> asyncTasks = new HashMap<>();
 	
 	public TickHandler() {
 		this(1000);
@@ -87,7 +87,7 @@ public class TickHandler {
 	}
 	
 	private void onTick() {
-		ArrayList<TickTask> deletetasks = new ArrayList<>();
+		final ArrayList<TickTask> deletetasks = new ArrayList<>();
 		for(TickTask task : tasks) {
 			if(task.decrementTicks() && !task.isRemoved()) {
 				task.getAction().run(task);
@@ -107,7 +107,7 @@ public class TickHandler {
 	}
 	
 	private void createAsyncTask(TickTask task, int tickspeed) {
-		TimerTask timerTask = new TimerTask() {
+		final TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
 				if (task.decrementTicks() && !task.isRemoved()) {

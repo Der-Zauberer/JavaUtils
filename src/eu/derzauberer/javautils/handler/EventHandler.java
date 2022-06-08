@@ -11,7 +11,7 @@ import eu.derzauberer.javautils.util.Listener;
 
 public class EventHandler {
 
-	private static HashMap<Method, Listener> methods = new HashMap<>();
+	private static final HashMap<Method, Listener> methods = new HashMap<>();
 	
 	public static void registerEvents(Listener listener) {
 		for (Method method : listener.getClass().getDeclaredMethods()) {
@@ -23,11 +23,11 @@ public class EventHandler {
 	}
 	
 	public static void executeEvent(Event event) {
-		ArrayList<Method> highestPriority = new ArrayList<>();
-		ArrayList<Method> hightPriority = new ArrayList<>();
-		ArrayList<Method> normalPriority = new ArrayList<>();
-		ArrayList<Method> lowPriority = new ArrayList<>();
-		ArrayList<Method> lowestPriority = new ArrayList<>();
+		final ArrayList<Method> highestPriority = new ArrayList<>();
+		final ArrayList<Method> hightPriority = new ArrayList<>();
+		final ArrayList<Method> normalPriority = new ArrayList<>();
+		final ArrayList<Method> lowPriority = new ArrayList<>();
+		final ArrayList<Method> lowestPriority = new ArrayList<>();
 		for (Method method : methods.keySet()) {
 			for (Class<?> type : method.getParameterTypes()) {
 				if (type == event.getClass()) {
