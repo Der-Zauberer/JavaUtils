@@ -4,10 +4,10 @@ import eu.derzauberer.javautils.util.Sender;
 
 public class CommandNotFoundEvent extends Event {
 	
-	private Sender sender;
-	private String string;
-	private String label;
-	private String args[];
+	private final Sender sender;
+	private final String string;
+	private final String label;
+	private final String args[];
 	
 	public CommandNotFoundEvent(Sender sender, String string, String label, String args[]) {
 		this.sender = sender;

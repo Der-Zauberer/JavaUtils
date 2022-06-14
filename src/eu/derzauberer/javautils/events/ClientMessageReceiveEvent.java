@@ -4,7 +4,7 @@ import eu.derzauberer.javautils.sockets.Client;
 
 public class ClientMessageReceiveEvent extends Event {
 	
-	private Client client;
+	private final Client client;
 	private String message;
 	
 	public ClientMessageReceiveEvent(Client client, String message) {

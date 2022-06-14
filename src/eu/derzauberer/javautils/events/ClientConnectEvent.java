@@ -4,7 +4,7 @@ import eu.derzauberer.javautils.sockets.Client;
 
 public class ClientConnectEvent extends Event {
 	
-	private Client client;
+	private final Client client;
 	
 	public ClientConnectEvent(Client client) {
 		this.client = client;

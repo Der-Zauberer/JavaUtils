@@ -5,9 +5,9 @@ import eu.derzauberer.javautils.util.Sender;
 
 public class CommandPreProcessingEvent extends Event {
 
-	private Sender sender;
-	private Command command;
-	private String string;
+	private final Sender sender;
+	private final Command command;
+	private final String string;
 	private String label;
 	private String args[];
 	

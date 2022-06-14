@@ -5,18 +5,15 @@ import eu.derzauberer.javautils.util.Sender;
 
 public class CommandExecutionFailedEvent extends Event {
 
-	public enum ExecutionFailCause {
-		EXCEPTION,
-		BAD_RETURN
-	}
+	public enum ExecutionFailCause {EXCEPTION, BAD_RETURN}
 	
-	private Sender sender;
-	private Command command;
-	private ExecutionFailCause cause;
-	private Exception exception;
-	private String string;
-	private String label;
-	private String args[];
+	private final Sender sender;
+	private final Command command;
+	private final ExecutionFailCause cause;
+	private final Exception exception;
+	private final String string;
+	private final String label;
+	private final String args[];
 	
 	public CommandExecutionFailedEvent(Sender sender, Command command, ExecutionFailCause cause, Exception exception, String string, String label, String args[]) {
 		this.sender = sender;

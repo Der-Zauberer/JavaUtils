@@ -6,8 +6,8 @@ public class ClientDisconnectEvent extends Event {
 	
 	public enum DisconnectCause {CLOSED, DISCONNECTED, TIMEOUT}
 	
-	private Client client;
-	private DisconnectCause cause;
+	private final Client client;
+	private final DisconnectCause cause;
 	
 	public ClientDisconnectEvent(Client client, DisconnectCause cause) {
 		this.client = client;

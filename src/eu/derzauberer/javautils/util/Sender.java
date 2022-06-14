@@ -5,14 +5,7 @@ import java.util.regex.Pattern;
 
 public interface Sender {
 	
-	public enum MessageType {
-		DEFAULT,
-		DEBUG,
-		INFO,
-		SUCCESS,
-		WARNING,
-		ERROR,
-	}
+	public enum MessageType {DEFAULT, DEBUG, INFO, SUCCESS, WARNING, ERROR}
 	
 	public abstract void sendInput(String input);
 	public abstract void sendOutput(String message, MessageType type);

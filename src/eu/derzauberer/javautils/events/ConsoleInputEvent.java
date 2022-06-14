@@ -4,7 +4,7 @@ import eu.derzauberer.javautils.util.Console;
 
 public class ConsoleInputEvent extends Event {
 	
-	private Console console;
+	private final Console console;
 	private String input;
 	
 	public ConsoleInputEvent(Console console, String input) {

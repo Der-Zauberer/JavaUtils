@@ -5,9 +5,9 @@ import eu.derzauberer.javautils.util.Sender.MessageType;
 
 public class ConsoleOutputEvent extends Event {
 	
-	private Console console;
+	private final Console console;
 	private String output;
-	private MessageType type;
+	private final MessageType type;
 	
 	public ConsoleOutputEvent(Console console, String output, MessageType type) {
 		this.console = console;
