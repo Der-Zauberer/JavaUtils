@@ -4,10 +4,10 @@ import eu.derzauberer.javautils.action.TickTaskAction;
 
 public class TickTask {
 	
-	private TickTaskAction action;
-	private int ticks;
-	private int repeats;
-	private boolean endless;
+	private final TickTaskAction action;
+	private final int ticks;
+	private final int repeats;
+	private final boolean endless;
 	private boolean removed;
 	private int ticksLeft;
 	private int repeatsLetft;

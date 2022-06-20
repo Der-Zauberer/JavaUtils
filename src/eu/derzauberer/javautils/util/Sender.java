@@ -5,20 +5,20 @@ import java.util.regex.Pattern;
 
 public interface Sender {
 	
-	public enum MessageType {DEFAULT, DEBUG, INFO, SUCCESS, WARNING, ERROR}
+	enum MessageType {DEFAULT, DEBUG, INFO, SUCCESS, WARNING, ERROR}
 	
-	public abstract void sendInput(String input);
-	public abstract void sendOutput(String message, MessageType type);
+	void sendInput(String input);
+	void sendOutput(String message, MessageType type);
 	
-	public default void sendMessage(String message) {
+	default void sendMessage(String message) {
 		sendMessage(getDefaultMessageType(), message);
 	}
 	
-	public default void sendMessage(String message, String... args) {
+	default void sendMessage(String message, String... args) {
 		sendMessage(getDefaultMessageType(), message, args);
 	}
 	
-	public default void sendMessage(MessageType type, String message) {
+	default void sendMessage(MessageType type, String message) {
 		if (type != MessageType.DEBUG || isDebugEnabled()) {
 			String output;
 			if (type == MessageType.DEFAULT) output = message;
@@ -27,7 +27,7 @@ public interface Sender {
 		}
 	}
 	
-	public default void sendMessage(MessageType type, String message, String... args) {
+	default void sendMessage(MessageType type, String message, String... args) {
 		String output = message;
 		for (int i = 0; i < args.length && output.contains("{}"); i++) {
 			output = output.replaceFirst(Pattern.quote("{}"), args[i]);
@@ -35,11 +35,12 @@ public interface Sender {
 		sendMessage(type, output);
 	}
 	
-	public default boolean isDebugEnabled() {
+	default boolean isDebugEnabled() {
 		return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 	}
 	
-	public abstract void setDefaultMessageType(MessageType type);
-	public abstract MessageType getDefaultMessageType();
+	void setDefaultMessageType(MessageType type);
+	
+	MessageType getDefaultMessageType();
 
 }
