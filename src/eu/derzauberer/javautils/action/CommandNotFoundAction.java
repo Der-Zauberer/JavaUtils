@@ -4,6 +4,6 @@ import eu.derzauberer.javautils.events.CommandNotFoundEvent;
 
 public interface CommandNotFoundAction {
 
-	public abstract void onAction(CommandNotFoundEvent event);
+	void onAction(CommandNotFoundEvent event);
 	
 }

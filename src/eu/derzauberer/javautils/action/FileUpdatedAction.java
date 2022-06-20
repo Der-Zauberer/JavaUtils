@@ -4,6 +4,6 @@ import java.io.File;
 
 public interface FileUpdatedAction {
 
-	public abstract void onAction(File file);
+	void onAction(File file);
 	
 }

@@ -4,6 +4,6 @@ import eu.derzauberer.javautils.util.TickTask;
 
 public interface TickTaskAction {
 
-	public abstract void run(TickTask ticktask);
+	void run(TickTask ticktask);
 	
 }

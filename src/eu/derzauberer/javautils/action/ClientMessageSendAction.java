@@ -4,6 +4,6 @@ import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 
 public interface ClientMessageSendAction {
 
-	public abstract void onAction(ClientMessageSendEvent event);
+	void onAction(ClientMessageSendEvent event);
 	
 }

@@ -4,6 +4,6 @@ import eu.derzauberer.javautils.events.ClientConnectEvent;
 
 public interface ClientConnectAction {
 	
-	public abstract void onAction(ClientConnectEvent event);
+	void onAction(ClientConnectEvent event);
 
 }

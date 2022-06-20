@@ -4,6 +4,6 @@ import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 
 public interface ConsoleOutputAction {
 
-	public abstract void onAction(ConsoleOutputEvent event);
+	void onAction(ConsoleOutputEvent event);
 	
 }

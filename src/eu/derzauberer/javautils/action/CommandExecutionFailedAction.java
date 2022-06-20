@@ -4,6 +4,6 @@ import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
 
 public interface CommandExecutionFailedAction {
 	
-	public abstract void onAction(CommandExecutionFailedEvent event);
+	void onAction(CommandExecutionFailedEvent event);
 
 }
