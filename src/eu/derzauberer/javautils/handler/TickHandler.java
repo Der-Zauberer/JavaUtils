@@ -90,7 +90,7 @@ public class TickHandler {
 		final ArrayList<TickTask> deletetasks = new ArrayList<>();
 		for(TickTask task : tasks) {
 			if(task.decrementTicks() && !task.isRemoved()) {
-				task.getAction().run(task);
+				task.getAction().accept(task);
 				if(!task.isEndless() && task.decrementRepeats()) {
 					deletetasks.add(task);
 				} else {
@@ -111,7 +111,7 @@ public class TickHandler {
 			@Override
 			public void run() {
 				if (task.decrementTicks() && !task.isRemoved()) {
-					task.getAction().run(task);
+					task.getAction().accept(task);
 					if(!task.isEndless() && task.decrementRepeats()) {
 						task.remove();
 					} else {

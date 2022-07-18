@@ -3,9 +3,7 @@ package eu.derzauberer.javautils.handler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import eu.derzauberer.javautils.action.CommandExecutionFailedAction;
-import eu.derzauberer.javautils.action.CommandNotFoundAction;
-import eu.derzauberer.javautils.action.CommandPreProcessingAction;
+import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent.ExecutionFailCause;
 import eu.derzauberer.javautils.events.CommandNotFoundEvent;
@@ -19,9 +17,9 @@ public class CommandHandler {
 	private final HashMap<String, Command> commands = new HashMap<>();
 	private final ArrayList<String> history = new ArrayList<>();
 	
-	private CommandPreProcessingAction preProcessingAction;
-	private CommandExecutionFailedAction executionFailedAction;
-	private CommandNotFoundAction notFoundAction;
+	private Consumer<CommandPreProcessingEvent> preProcessingAction;
+	private Consumer<CommandExecutionFailedEvent> executionFailedAction;
+	private Consumer<CommandNotFoundEvent> notFoundAction;
 	
 	public void registerCommand(String label, Command command) {
 		commands.put(label, command);
@@ -40,7 +38,7 @@ public class CommandHandler {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				final CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
-				if (preProcessingAction != null && !event.isCancelled()) preProcessingAction.onAction(event);
+				if (preProcessingAction != null && !event.isCancelled()) preProcessingAction.accept(event);
 				if (!event.isCancelled()) {
 					boolean success;
 					ExecutionFailCause cause = ExecutionFailCause.BAD_RETURN;
@@ -54,7 +52,7 @@ public class CommandHandler {
 					}
 					if (!success) {
 						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getString(), event.getLabel(), event.getArgs());
-						if (executionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) executionFailedAction.onAction(commandExecutionFailedEvent);
+						if (executionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) executionFailedAction.accept(commandExecutionFailedEvent);
 						if (!commandExecutionFailedEvent.isCancelled() && exception != null) exception.printStackTrace();
 					}
 					return success;
@@ -62,7 +60,7 @@ public class CommandHandler {
 			}
 		}
 		final CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(sender, command, label, args);
-		if (notFoundAction != null) notFoundAction.onAction(commandNotFoundEvent);
+		if (notFoundAction != null) notFoundAction.accept(commandNotFoundEvent);
 		return false;
 	}
 
@@ -83,27 +81,27 @@ public class CommandHandler {
 		return string;
 	}
 	
-	public void setPreProcessingAction(CommandPreProcessingAction preProcessingAction) {
+	public void setPreProcessingAction(Consumer<CommandPreProcessingEvent> preProcessingAction) {
 		this.preProcessingAction = preProcessingAction;
 	}
 	
-	public CommandPreProcessingAction getPreProcessingAction() {
+	public Consumer<CommandPreProcessingEvent> getPreProcessingAction() {
 		return preProcessingAction;
 	}
 	
-	public void setExecutionFailedAction(CommandExecutionFailedAction executionFailedAction) {
+	public void setExecutionFailedAction(Consumer<CommandExecutionFailedEvent> executionFailedAction) {
 		this.executionFailedAction = executionFailedAction;
 	}
 	
-	public CommandExecutionFailedAction getExecutionFailedAction() {
+	public Consumer<CommandExecutionFailedEvent> getExecutionFailedAction() {
 		return executionFailedAction;
 	}
 	
-	public void setNotFoundAction(CommandNotFoundAction notFoundAction) {
+	public void setNotFoundAction(Consumer<CommandNotFoundEvent> notFoundAction) {
 		this.notFoundAction = notFoundAction;
 	}
 	
-	public CommandNotFoundAction getNotFoundAction() {
+	public Consumer<CommandNotFoundEvent> getNotFoundAction() {
 		return notFoundAction;
 	}
 	

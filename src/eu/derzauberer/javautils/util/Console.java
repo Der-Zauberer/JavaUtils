@@ -4,9 +4,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-
-import eu.derzauberer.javautils.action.ConsoleInputAction;
-import eu.derzauberer.javautils.action.ConsoleOutputAction;
+import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.handler.CommandHandler;
@@ -48,8 +46,8 @@ public class Console implements Sender {
 	private boolean areColorCodesEnabled;
 	private boolean isTimestampEnabled;
 	private boolean isLogEnabled;
-	private ConsoleInputAction inputAction;
-	private ConsoleOutputAction outputAction;
+	private Consumer<ConsoleInputEvent> inputAction;
+	private Consumer<ConsoleOutputEvent> outputAction;
 	private String inputPrefix;
 	private Thread thread;
 	private Scanner scanner;
@@ -126,7 +124,7 @@ public class Console implements Sender {
 	@Override
 	public void sendInput(String input) {
 		final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
-		if (inputAction != null && !event.isCancelled()) inputAction.onAction(event);
+		if (inputAction != null && !event.isCancelled()) inputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
 			if (isLogEnabled) log(inputPrefix + " " + input);
@@ -136,7 +134,7 @@ public class Console implements Sender {
 	@Override
 	public void sendOutput(String message, MessageType type) {
 		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
-		if (outputAction != null && !event.isCancelled()) outputAction.onAction(event);
+		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
 			if (isTimestampEnabled) event.setOutput(Time.now().toString("[hh:mm:ss] ") + event.getOutput());
@@ -235,19 +233,19 @@ public class Console implements Sender {
 		return isLogEnabled;
 	}
 	
-	public void setOnInput(ConsoleInputAction inputAction) {
+	public void setInputAction(Consumer<ConsoleInputEvent> inputAction) {
 		this.inputAction = inputAction;
 	}
 	
-	public ConsoleInputAction getOnInput() {
+	public Consumer<ConsoleInputEvent> getInputAction() {
 		return inputAction;
 	}
 	
-	public void setOnOutput(ConsoleOutputAction outputAction) {
+	public void setOutputAction(Consumer<ConsoleOutputEvent> outputAction) {
 		this.outputAction = outputAction;
 	}
 	
-	public ConsoleOutputAction getOnOutput() {
+	public Consumer<ConsoleOutputEvent> getOutputAction() {
 		return outputAction;
 	}
 

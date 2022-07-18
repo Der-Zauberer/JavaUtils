@@ -10,17 +10,13 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-
-import eu.derzauberer.javautils.action.ClientConnectAction;
-import eu.derzauberer.javautils.action.ClientDisconnectAction;
-import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
-import eu.derzauberer.javautils.action.ClientMessageSendAction;
+import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent.DisconnectCause;
-import eu.derzauberer.javautils.util.Sender;
 import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
 import eu.derzauberer.javautils.events.ClientMessageSendEvent;
+import eu.derzauberer.javautils.util.Sender;
 
 public class Client implements Sender, Closeable {
 
@@ -29,10 +25,10 @@ public class Client implements Sender, Closeable {
 	private Thread thread;
 	private PrintStream output;
 	private BufferedReader input;
-	private ClientMessageReceiveAction messageReceiveAction;
-	private ClientMessageSendAction messageSendAction;
-	private ClientConnectAction connectAction;
-	private ClientDisconnectAction disconnectAction;
+	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
+	private Consumer<ClientMessageSendEvent> messageSendAction;
+	private Consumer<ClientConnectEvent> connectAction;
+	private Consumer<ClientDisconnectEvent> disconnectAction;
 	private boolean isDisconnected;
 	private MessageType defaultMessageType;
 	private DisconnectCause cause;
@@ -53,8 +49,8 @@ public class Client implements Sender, Closeable {
 		isDisconnected = false;
 		defaultMessageType = MessageType.DEFAULT;
 		final ClientConnectEvent event = new ClientConnectEvent(this);
-		if (connectAction != null) connectAction.onAction(event);
-		if (isPartOfServer() && server.getConnectAction() != null) server.getConnectAction().onAction(event);
+		if (connectAction != null) connectAction.accept(event);
+		if (isPartOfServer() && server.getConnectAction() != null) server.getConnectAction().accept(event);
 		if (!isPartOfServer()) {
 			thread = new Thread(this::inputLoop);
 			thread.start();
@@ -86,15 +82,15 @@ public class Client implements Sender, Closeable {
 	@Override
 	public void sendInput(String input) {
 		final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, input);
-		if (messageReceiveAction != null && !event.isCancelled()) messageReceiveAction.onAction(event);
-		if (!event.isCancelled() && isPartOfServer() && server.getMessageReceiveAction() != null) server.getMessageReceiveAction().onAction(event);
+		if (messageReceiveAction != null && !event.isCancelled()) messageReceiveAction.accept(event);
+		if (!event.isCancelled() && isPartOfServer() && server.getMessageReceiveAction() != null) server.getMessageReceiveAction().accept(event);
 	}
 	
 	@Override
 	public void sendOutput(String message, MessageType type) {
 		final ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
-		if (messageSendAction != null && !event.isCancelled()) messageSendAction.onAction(event);
-		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().onAction(event);
+		if (messageSendAction != null && !event.isCancelled()) messageSendAction.accept(event);
+		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().accept(event);
 		if (!event.isCancelled()) output.println(event.getMessage());
 	}
 	
@@ -143,8 +139,8 @@ public class Client implements Sender, Closeable {
 			socket.close();
 			if (cause == null) cause = DisconnectCause.CLOSED;
 			final ClientDisconnectEvent event = new ClientDisconnectEvent(this, cause);
-		 	if (disconnectAction != null) disconnectAction.onAction(event);
-		 	if (isPartOfServer() && server.getDisconnectAction() != null) server.getDisconnectAction().onAction(event);
+		 	if (disconnectAction != null) disconnectAction.accept(event);
+		 	if (isPartOfServer() && server.getDisconnectAction() != null) server.getDisconnectAction().accept(event);
 			if (isPartOfServer()) server.getClients().remove(this);
 		}
 	}
@@ -153,35 +149,35 @@ public class Client implements Sender, Closeable {
 		return socket.isClosed();
 	}
 	
-	public void setMessageReceiveAction(ClientMessageReceiveAction messageReceiveAction) {
+	public void setMessageReceiveAction(Consumer<ClientMessageReceiveEvent> messageReceiveAction) {
 		this.messageReceiveAction = messageReceiveAction;
 	}
 	
-	public ClientMessageReceiveAction getMessageReceiveAction() {
+	public Consumer<ClientMessageReceiveEvent> getMessageReceiveAction() {
 		return messageReceiveAction;
 	}
 	
-	public void setMessageSendAction(ClientMessageSendAction messageSendAction) {
+	public void setMessageSendAction(Consumer<ClientMessageSendEvent> messageSendAction) {
 		this.messageSendAction = messageSendAction;
 	}
 	
-	public ClientMessageSendAction getMessageSendAction() {
+	public Consumer<ClientMessageSendEvent> getMessageSendAction() {
 		return messageSendAction;
 	}
 	
-	public void setConnectAction(ClientConnectAction connectAction) {
+	public void setConnectAction(Consumer<ClientConnectEvent> connectAction) {
 		this.connectAction = connectAction;
 	}
 	
-	public ClientConnectAction getConnectAction() {
+	public Consumer<ClientConnectEvent> getConnectAction() {
 		return connectAction;
 	}
 	
-	public void setDisconnectAction(ClientDisconnectAction disconnectAction) {
+	public void setDisconnectAction(Consumer<ClientDisconnectEvent> disconnectAction) {
 		this.disconnectAction = disconnectAction;
 	}
 	
-	public ClientDisconnectAction getDisconnectAction() {
+	public Consumer<ClientDisconnectEvent> getDisconnectAction() {
 		return disconnectAction;
 	}
 	

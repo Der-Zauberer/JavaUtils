@@ -1,10 +1,10 @@
 package eu.derzauberer.javautils.util;
 
-import eu.derzauberer.javautils.action.TickTaskAction;
+import java.util.function.Consumer;
 
 public class TickTask {
 	
-	private final TickTaskAction action;
+	private final Consumer<TickTask> action;
 	private final int ticks;
 	private final int repeats;
 	private final boolean endless;
@@ -13,19 +13,19 @@ public class TickTask {
 	private int repeatsLetft;
 	private long repeatCounter;
 	
-	public TickTask(TickTaskAction action, int ticks) {
+	public TickTask(Consumer<TickTask> action, int ticks) {
 		this(action, ticks, 0, false);
 	}
 	
-	public TickTask(TickTaskAction action, int ticks, int repeats) {
+	public TickTask(Consumer<TickTask> action, int ticks, int repeats) {
 		this(action, ticks, repeats, false);
 	}
 	
-	public TickTask(TickTaskAction action, int ticks, boolean endless) {
+	public TickTask(Consumer<TickTask> action, int ticks, boolean endless) {
 		this(action, ticks, 0, endless);
 	}
 	
-	private TickTask(TickTaskAction action, int ticks, int repeats, boolean endless) {
+	private TickTask(Consumer<TickTask> action, int ticks, int repeats, boolean endless) {
 		this.action = action;
 		this.ticks = ticks;
 		this.repeats = repeats;
@@ -36,7 +36,7 @@ public class TickTask {
 		this.repeatCounter = 0;
 	}
 	
-	public TickTaskAction getAction() {
+	public Consumer<TickTask> getAction() {
 		return action;
 	}
 	

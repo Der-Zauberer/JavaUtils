@@ -21,9 +21,8 @@ import java.util.Comparator;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
-
-import eu.derzauberer.javautils.action.FileUpdatedAction;
 
 public class FileUtil {
 
@@ -151,7 +150,7 @@ public class FileUtil {
 		}
 	}
 
-	public static void setOnFileUpdated(File file, FileUpdatedAction action) {
+	public static void setOnFileUpdated(File file, Consumer<File> action) {
 		if (timer == null) timer = new Timer();
 		fileObserver.add(new FileUtil().new FileObserver(file, action));
 	}
@@ -205,10 +204,10 @@ public class FileUtil {
 	private class FileObserver extends TimerTask {
 
 		private File file;
-		private FileUpdatedAction action;
+		private Consumer<File> action;
 		private long timestamp;
 
-		public FileObserver(File file, FileUpdatedAction action) {
+		public FileObserver(File file, Consumer<File> action) {
 			this.file = file;
 			this.action = action;
 			this.timestamp = file.lastModified();
@@ -220,7 +219,7 @@ public class FileUtil {
 			if (!file.exists()) {
 				FileUtil.removeFileFromUpdateObserver(file);
 			} else if (file.lastModified() != timestamp) {
-				action.onAction(file);
+				action.accept(file);
 				timestamp = file.lastModified();
 			}
 		}

@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-
-import eu.derzauberer.javautils.action.ClientConnectAction;
-import eu.derzauberer.javautils.action.ClientDisconnectAction;
-import eu.derzauberer.javautils.action.ClientMessageReceiveAction;
-import eu.derzauberer.javautils.action.ClientMessageSendAction;
+import java.util.function.Consumer;
+import eu.derzauberer.javautils.events.ClientConnectEvent;
+import eu.derzauberer.javautils.events.ClientDisconnectEvent;
+import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
+import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 import eu.derzauberer.javautils.util.Sender;
 
 public class Server implements Sender, Closeable {
@@ -24,10 +24,10 @@ public class Server implements Sender, Closeable {
 	private ExecutorService service;
 	private int clientTimeout;
 	private MessageType defaultMessageType;
-	private ClientMessageReceiveAction messageReceiveAction;
-	private ClientMessageSendAction messageSendAction;
-	private ClientConnectAction connectAction;
-	private ClientDisconnectAction disconnectAction;
+	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
+	private Consumer<ClientMessageSendEvent> messageSendAction;
+	private Consumer<ClientConnectEvent> connectAction;
+	private Consumer<ClientDisconnectEvent> disconnectAction;
 	private ArrayList<Client> clients;
 	
 	public Server(int port) throws IOException {
@@ -78,35 +78,35 @@ public class Server implements Sender, Closeable {
 		}
 	}
 	
-	public void setMessageReceiveAction(ClientMessageReceiveAction messageReceiveAction) {
+	public void setMessageReceiveAction(Consumer<ClientMessageReceiveEvent> messageReceiveAction) {
 		this.messageReceiveAction = messageReceiveAction;
 	}
 	
-	public ClientMessageReceiveAction getMessageReceiveAction() {
+	public Consumer<ClientMessageReceiveEvent> getMessageReceiveAction() {
 		return messageReceiveAction;
 	}
 	
-	public void setMessageSendAction(ClientMessageSendAction messageSendAction) {
+	public void setMessageSendAction(Consumer<ClientMessageSendEvent> messageSendAction) {
 		this.messageSendAction = messageSendAction;
 	}
 	
-	public ClientMessageSendAction getMessageSendAction() {
+	public Consumer<ClientMessageSendEvent> getMessageSendAction() {
 		return messageSendAction;
 	}
 	
-	public void setConnectAction(ClientConnectAction connectAction) {
+	public void setConnectAction(Consumer<ClientConnectEvent> connectAction) {
 		this.connectAction = connectAction;
 	}
 	
-	public ClientConnectAction getConnectAction() {
+	public Consumer<ClientConnectEvent> getConnectAction() {
 		return connectAction;
 	}
 	
-	public void setDisconnectAction(ClientDisconnectAction disconnectAction) {
+	public void setDisconnectAction(Consumer<ClientDisconnectEvent> disconnectAction) {
 		this.disconnectAction = disconnectAction;
 	}
 	
-	public ClientDisconnectAction getDisconnectAction() {
+	public Consumer<ClientDisconnectEvent> getDisconnectAction() {
 		return disconnectAction;
 	}
 	
