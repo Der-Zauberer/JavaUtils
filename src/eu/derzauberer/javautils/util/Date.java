@@ -32,13 +32,13 @@ public class Date implements Comparable<Date> {
 		day = 1;
 		time = new Time(string, pattern);
 		for (int i = 0; i < pattern.length() - 1; i++) {
-			if (pattern.charAt(i) == 'Y' && pattern.charAt(i + 1) == 'Y' && pattern.charAt(i + 2) == 'Y' && pattern.charAt(i + 3) == 'Y' && DataUtil.isIntegerString(string.substring(i, i + 4))) {
+			if (pattern.charAt(i) == 'Y' && pattern.charAt(i + 1) == 'Y' && pattern.charAt(i + 2) == 'Y' && pattern.charAt(i + 3) == 'Y' && DataUtil2.isIntegerString(string.substring(i, i + 4))) {
 				year = Integer.parseInt(string.substring(i, i + 4));
-			} else if (year == 0 && pattern.charAt(i) == 'Y' && pattern.charAt(i + 1) == 'Y' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			} else if (year == 0 && pattern.charAt(i) == 'Y' && pattern.charAt(i + 1) == 'Y' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				year = Integer.parseInt(string.substring(i, i + 2)) + 2000;
-			} else if (pattern.charAt(i) == 'M' && pattern.charAt(i + 1) == 'M' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			} else if (pattern.charAt(i) == 'M' && pattern.charAt(i + 1) == 'M' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				month = Integer.parseInt(string.substring(i, i + 2));
-			} else if (pattern.charAt(i) == 'D' && pattern.charAt(i + 1) == 'D' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			} else if (pattern.charAt(i) == 'D' && pattern.charAt(i + 1) == 'D' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				day = Integer.parseInt(string.substring(i, i + 2));
 			}
 		}

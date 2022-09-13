@@ -36,13 +36,13 @@ public class Time implements Comparable<Time> {
 		second = 0;
 		millisecond = 0;
 		for (int i = 0; i < pattern.length() - 1; i++) {
-			if (pattern.charAt(i) == 'h' && pattern.charAt(i + 1) == 'h' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			if (pattern.charAt(i) == 'h' && pattern.charAt(i + 1) == 'h' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				hour = Integer.parseInt(string.substring(i, i + 2));
-			} else if (pattern.charAt(i) == 'm' && pattern.charAt(i + 1) == 'm' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			} else if (pattern.charAt(i) == 'm' && pattern.charAt(i + 1) == 'm' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				minute = Integer.parseInt(string.substring(i, i + 2));
-			} else if (pattern.charAt(i) == 's' && pattern.charAt(i + 1) == 's' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			} else if (pattern.charAt(i) == 's' && pattern.charAt(i + 1) == 's' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				second = Integer.parseInt(string.substring(i, i + 2));
-			} else if (pattern.charAt(i) == 'm' && pattern.charAt(i + 1) == 's' && DataUtil.isIntegerString(string.substring(i, i + 2))) {
+			} else if (pattern.charAt(i) == 'm' && pattern.charAt(i + 1) == 's' && DataUtil2.isIntegerString(string.substring(i, i + 2))) {
 				millisecond = Integer.parseInt(string.substring(i, i + 2));
 			}
 		}
