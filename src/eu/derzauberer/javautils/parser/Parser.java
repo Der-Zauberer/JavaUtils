@@ -18,6 +18,6 @@ public interface Parser {
 	 * converted back to a string.
 	 * @return the output of the parser
 	 */
-	public abstract String output();
+	public abstract String out();
 
 }

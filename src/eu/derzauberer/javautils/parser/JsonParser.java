@@ -2,9 +2,36 @@ package eu.derzauberer.javautils.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
+
 import eu.derzauberer.javautils.util.DataUtil;
 import eu.derzauberer.javautils.util.DataUtil2;
 
+/**
+ * The class provides a parser based on a {@link TreeMap} and basic parser
+ * operations. Input and output operation are based on keys. Each key represents
+ * a value, but the value can be null. A string key is a path separated by dots.
+ * Stored values can be null.<br>
+ * <br>
+ * Example:<br>
+ * 
+ * <pre>
+ * parser.set("my.path", "Input");
+ * 
+ * Object object = parser.get("my.path");
+ * String string = parser.get("my.path", String.class);
+ * </pre>
+ * Parsed output:<br>
+ * <pre>
+ *     {
+ *         "my": {
+ *             "path": "Input"
+ *         }
+ *     }
+ * <pre>
+ * 
+ * @see {@link TreeMap}, {@link KeyParser}
+ */
 public class JsonParser extends KeyParser {
 	
 	public JsonParser() {
@@ -100,7 +127,15 @@ public class JsonParser extends KeyParser {
 	 */
 	@Override
 	protected void setObject(String key, Object value) {
-		//TODO
+		if (!key.contains(".")) return;
+		String keys[] = key.split("\\.");
+		String minKey = key.substring(0, key.lastIndexOf("."));
+		if (containsKey(minKey)) remove(minKey);
+		for (String maxKey : getStructrue()) {
+			if (maxKey.startsWith(key) && maxKey.split("\\.").length - 1 == keys.length) {
+				remove(maxKey);
+			}
+		}
 		super.setObject(key, value);
 	}
 	
@@ -113,7 +148,10 @@ public class JsonParser extends KeyParser {
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * This is the output method of the parser. The object structure will be
+	 * converted back to a string.
+	 * @param oneliner if the output should be given in a single line
+	 * @return the output of the parser
 	 */
 	public String out(boolean oneliner) {
 		return out(oneliner, 0);

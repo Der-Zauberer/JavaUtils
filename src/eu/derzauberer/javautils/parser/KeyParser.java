@@ -26,9 +26,11 @@ import eu.derzauberer.javautils.util.DataUtil;
  * String string = parser.get("my.path", String.class);
  * </pre>
  * 
- * @see {@link TreeMap}
+ * @see {@link TreeMap}, {@link Parser}
  */
-public abstract class KeyParser {
+public abstract class KeyParser implements Parser {
+	
+	//TODO Collections and Maps implementations
 
 	private final ArrayList<String> structrue = new ArrayList<>();
 	private final HashMap<String, Object> entries = new HashMap<>();
@@ -73,6 +75,7 @@ public abstract class KeyParser {
 	 * @throws NullPointerException if the key is null
 	 */
 	public void remove(final String key) {
+		structrue.remove(Objects.requireNonNull(key));
 		entries.remove(Objects.requireNonNull(key));
 	}
 
@@ -289,19 +292,5 @@ public abstract class KeyParser {
 	 * @return the instance of the implementation
 	 */
 	protected abstract KeyParser getImplementationInstance();
-	
-	/**
-	 * The parse method is the input for the parser, the string will be parsed to
-	 * the object structure of the parser in this method.
-	 * @param input the input for the parser
-	 */
-	public abstract void parse(final String input);
-
-	/**
-	 * This is the output method of the parser. The object structure will be
-	 * converted back to a string.
-	 * @return the output of the parser
-	 */
-	public abstract String out();
 
 }
