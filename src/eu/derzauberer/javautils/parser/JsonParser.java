@@ -99,6 +99,15 @@ public class JsonParser extends KeyParser {
 	 * {@inheritDoc}
 	 */
 	@Override
+	protected void setObject(String key, Object value) {
+		//TODO
+		super.setObject(key, value);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public String out() {
 		return out(false, 0);
 	}

@@ -1,37 +1,32 @@
 package eu.derzauberer.javautils.parser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import eu.derzauberer.javautils.util.DataUtil2;
+import eu.derzauberer.javautils.util.DataUtil;
 
 /**
  * The class provides a parser based on a {@link TreeMap} and basic parser
  * operations. Input and output operation are based on keys. Each key represents
  * a value, but the value can be null. A string key is a path separated by dots.
- * Stored values can be null and will be returned as {@link Optional}.<br>
+ * Stored values can be null.<br>
  * <br>
  * Example:<br>
  * 
  * <pre>
  * parser.set("my.path", "Input");
  * 
- * Object object = parser.get("my.path").orElse(null);
- * String string = parser.get("my.path", String.class).orElse("default");
+ * Object object = parser.get("my.path");
+ * String string = parser.get("my.path", String.class);
  * </pre>
  * 
- * @see {@link TreeMap}, {@link Optional}
+ * @see {@link TreeMap}
  */
 public abstract class KeyParser {
 
@@ -82,57 +77,45 @@ public abstract class KeyParser {
 	}
 
 	/**
-	 * Get the value by it's key if present in an {@link Optional}. If there is no
-	 * value then it will return an empty {@link Optional}.
+	 * Get the value by it's key and convert it to the requested type. If there is
+	 * no value then it will return null.
 	 * @param key the path, which refers to the value
-	 * @return an {@link Optional} with the value represented by it's key
-	 * @throws NullPointerException if the key is null
-	 * @see {@link Optional}
+	 * @return the value represented by it's key
 	 */
-	public Optional<?> get(final String key) {
+	public Object get(final String key) {
 		return getObject(key);
 	}
-
+	
 	/**
-	 * Get the value by it's key if present in an {@link Optional} in a specific
-	 * type. If there is no value then it will return an empty {@link Optional}.
+	 * Get the value by it's key and convert it to the requested type. If there is
+	 * no value then it will return null.
 	 * @param <T>   type which the value will be casted in
 	 * @param key   the path, which represents to the value
-	 * @param clazz type which the value will be casted in
-	 * @return an {@link Optional} with the value represented by it's key
-	 * @throws NullPointerException if the key is null
-	 * @see {@link Optional}, {@link DataUtil2}
+	 * @param type type which the value will be casted in
+	 * @return the value represented by it's key
+	 * @see {@link DataUtil}
 	 */
-	public <T> Optional<T> getType(final String key, final Class<T> clazz) {
-		final Optional<?> optional = getObject(Objects.requireNonNull(key));
-		// if (optional.isPresent()) return DataUtil.convert(optional.get(),
-		// Objects.requireNonNull(clazz));
-		//TODO
-		return Optional.empty();
+	public <T> T get(final String key, final Class<T> type) {
+		return DataUtil.convert(getObject(key), type);
 	}
 	
-	public <T> Collection<T> getCollection(final String key, final Collection<T> collection, final Class<T> clazz) {
-		return null; //TODO
-	}
-	
-	public <T> Collection<T> getCollection(final String key, final Class<T> clazz) {
-		return null; //TODO
-	}
-	
-	public <T> Set<T> getSet(final String key, final Class<T> clazz) {
-		return null; //TODO
-	}
-	
-	public <T> List<T> getList(final String key, final Class<T> clazz) {
-		return null; //TODO
-	}
-	
-	public <T> Queue<T> getQueue(final String key, final Class<T> clazz) {
-		return null; //TODO
-	}
-	
-	public <T> Deque<T> getDeque(final String key, final Class<T> clazz) {
-		return null; //TODO
+	/**
+	 * Get the collection as value by it's key and convert it to the requested type. If there is
+	 * no value then it will return null.
+	 * @param <T>   type which the value will be casted in
+	 * @param key   the path, which represents to the value
+	 * @param type type which the value will be casted in
+	 * @return the collection as value represented by it's key
+	 * @see {@link DataUtil}, {@link Collection}
+	 */
+	@SuppressWarnings("unchecked")
+	public <T, C extends Collection<T>> C getCollection(final String key, final Supplier<C> collectionFactory, final Class<T> type) {
+		if (!(getObject(key) instanceof Collection)) return null;
+		final Collection<T> collection = collectionFactory.get();
+		for (Object object : (Collection<?>) getObject(key)) {
+			collection.add(DataUtil.convert(object, type));
+		}
+		return (C) collection;
 	}
 
 	/**
@@ -254,27 +237,23 @@ public abstract class KeyParser {
 	}
 
 	/**
-	 * Get the value by it's key if present in an {@link Optional}. If there is no
-	 * value then it will return an empty {@link Optional}.
+	 * Get the value by it's key. If there is no value then it will return null.
 	 * @param key the path, which refers to the value
-	 * @return an {@link Optional} with the value represented by it's key
-	 * @throws NullPointerException if the key is null
-	 * @see {@link Optional}
+	 * @return the value represented by it's key
 	 */
-	protected Optional<Object> getObject(final String key) {
+	protected Object getObject(final String key) {
 		final List<String> list = structrue.stream().filter(path -> {
 			return path.startsWith(key) && (key.length() == path.length() || path.charAt(key.length()) ==  '.');
 		}).collect(Collectors.toList());
 		if (list.isEmpty()) {
-			return Optional.empty();
+			return null;
 		} else if (list.size() == 1) {
-			return Optional.of(list.get(0));
+			return entries.get(key);
 		} else {
 			KeyParser parser = getImplementationInstance();
 			list.forEach(path -> parser.set(path.substring(key.length()), entries.get(path)));
-			return Optional.of(parser);
+			return parser;
 		}
-		//TODO
 	}
 	
 	/**

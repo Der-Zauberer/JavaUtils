@@ -10,32 +10,36 @@ public class DataUtil {
 	 * data type.
 	 * @param <T>    the type into which the object should be converted
 	 * @param object the object input of the convert function
-	 * @param clazz  the class into which the object should be converted
+	 * @param type  the class into which the object should be converted
 	 * @return the converted object
 	 * @throws ClassCastException thrown when it is not possible to convert the
 	 *                            object into the given type
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T convert(final Object object, final Class<T> clazz) {
+	public static <T> T convert(final Object object, final Class<T> type) {
 		if (object == null) {
 			return null;
-		} else if (object.getClass() == clazz) {
-			return clazz.cast(object);
-		} else if (Number.class.isAssignableFrom(clazz)) {
-			return clazz.cast(convertNumber(object, (Class<? extends Number>) clazz));
-		} else if (clazz == Boolean.class || clazz == boolean.class) {
-			if (object instanceof Number) {
-				if (((Number) object).intValue() == 0) return clazz.cast(new Boolean(false));
-				else return clazz.cast(new Boolean(true));
+		} else if (object.getClass() == type) {
+			return (T) object;
+		} else if (Number.class.isAssignableFrom(type) 
+				|| type == byte.class || type == short.class || type == int.class || 
+				type == long.class || type == float.class || type == double.class) {
+			return (T) convertNumber(object, (Class<? extends Number>) type);
+		} else if (type == Boolean.class || type == boolean.class) {
+			if (object instanceof Boolean) {
+				return (T) object;
+			} else if (object instanceof Number) {
+				if (((Number) object).intValue() == 0) return (T) Boolean.FALSE;
+				else return (T) Boolean.TRUE;
 			} else if (object instanceof String) {
-				return clazz.cast(Boolean.valueOf(object.toString()));
+				return (T) Boolean.valueOf(object.toString());
 			}
-		} else if (clazz == Character.class || clazz == char.class) {
-			return clazz.cast(object.toString().charAt(0));
-		} else if (clazz == String.class) {
-			return clazz.cast(object.toString());
+		} else if (type == Character.class || type == char.class) {
+			return (T) Character.valueOf(object.toString().charAt(0));
+		} else if (type == String.class) {
+			return (T) object.toString();
 		}
-		throw new ClassCastException("The class " + object.getClass().getName() + " can not be casted to " + clazz.getName() + "!");
+		throw new ClassCastException("Cannot cast " + object.getClass().getName() + " to " + type.getName() + "!");
 	}
 
 	/**
@@ -43,25 +47,27 @@ public class DataUtil {
 	 * of {@link Number}.
 	 * @param <T>    the type into which the number should be converted
 	 * @param object the number input of the convert function
-	 * @param clazz  the class into which the object should be converted
+	 * @param type  the class into which the object should be converted
 	 * @return the converted number
 	 * @throws ClassCastException thrown when object or the class is not an instance
 	 *                            of {@link Number}
 	 */
-	public static <T extends Number> T convertNumber(final Object object, final Class<T> clazz) {
+	@SuppressWarnings("unchecked")
+	public static <T extends Number> T convertNumber(final Object object, final Class<T> type) {
 		Number number;
 		if (object instanceof String) number = Double.parseDouble((String) object);
 		else if (object instanceof Number) number = (Number) object;
+		else if (object instanceof Boolean) number = (Boolean) object ? 1 : 0;
 		else throw new ClassCastException(
-				"The class " + object.getClass().getName() + " is not an instance of java.lang.Number or java.lang.String!");
-		if (clazz == Number.class) return clazz.cast(number);
-		else if (clazz == Byte.class || clazz == byte.class) return clazz.cast(number.byteValue());
-		else if (clazz == Short.class || clazz == short.class) return clazz.cast(number.shortValue());
-		else if (clazz == Integer.class || clazz == int.class) return clazz.cast(number.intValue());
-		else if (clazz == Long.class || clazz == long.class) return clazz.cast(number.longValue());
-		else if (clazz == Float.class || clazz == float.class) return clazz.cast(number.floatValue());
-		else if (clazz == Double.class || clazz == double.class) return clazz.cast(number.doubleValue());
-		else throw new ClassCastException("The class " + clazz.getName() + " is not an instance of java.lang.Number!");
+				"The class " + object.getClass().getName() + " is not an instance of java.lang.Number, java.lang.Boolean or java.lang.String!");
+		if (type == Number.class) return type.cast(number);
+		else if (type == Byte.class || type == byte.class) return (T) new Byte(number.byteValue());
+		else if (type == Short.class || type == short.class) return (T) new Short(number.shortValue());
+		else if (type == Integer.class || type == int.class) return (T) Integer.valueOf(number.intValue());
+		else if (type == Long.class || type == long.class) return (T) Long.valueOf(number.longValue());
+		else if (type == Float.class || type == float.class) return (T) Float.valueOf(number.floatValue());
+		else if (type == Double.class || type == double.class) return (T) Double.valueOf(number.doubleValue());
+		else throw new ClassCastException("The class " + type.getName() + " is not an instance of java.lang.Number!");
 	}
 
 	/**
@@ -84,7 +90,7 @@ public class DataUtil {
 	}
 
 	/**
-	 * Try to convert a string back in an object. This does only work with
+	 * Try to convert a string back to an object. This does only work with
 	 * {@link Boolean}, {@link Number} and {@link String} as output. The method will
 	 * return the {@link String}, if there was not type found, in which the string
 	 * could be converted in.
@@ -108,8 +114,7 @@ public class DataUtil {
 					if (Float.MIN_VALUE <= number && number <= Float.MAX_VALUE) return (float) number;
 					else return number;
 				}
-			} catch (NumberFormatException exception) {
-			}
+			} catch (NumberFormatException exception) {}
 			return addEscapeCodes(input);
 		}
 	}
