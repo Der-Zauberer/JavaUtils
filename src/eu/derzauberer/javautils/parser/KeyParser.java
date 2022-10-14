@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.util.DataUtil2;
 
@@ -175,35 +177,37 @@ public abstract class KeyParser {
 	}
 
 	/**
-	 * Returns a {@link Set} of all keys in the parser. Each key represents a value,
+	 * Returns a {@link List} of all keys in the parser. Each key represents a value,
 	 * but the value can be null.
 	 * @return the amount of entries
 	 */
-	public Set<String> getKeys() {
-		return entries.keySet();
+	public List<String> getKeys() {
+		return new ArrayList<>(structrue);
 	}
 
 	/**
-	 * Returns a {@link Set} of all keys in the parser which are sub elements of the
+	 * Returns a {@link List} of all keys in the parser which are sub elements of the
 	 * given key. Each key represents a value, but the value can be null.
 	 * @param the path, which contains the keys
 	 * @return the amount of entries
 	 */
-	public Set<String> getKeys(final String key) {
-		return entries.keySet()
+	public List<String> getKeys(final String key) {
+		return getKeys()
 				.stream()
 				.filter(string -> string.startsWith(Objects.requireNonNull(key)))
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 	}
 
 	/**
-	 * Returns a copy of the parsers {@link TreeMap}. Changes of this map doesn't
-	 * have any impact on the original parser.
-	 * @return a clone of the {@link TreeMap}
+	 * Returns a {@link Map} representation of the parser. The map may not have 
+	 * the correct order of the keys. Changes of this map doesn't have any impact on 
+	 * the original parser.
+	 * @return a {@link Map} representation of the parser
 	 */
-	@SuppressWarnings("unchecked")
-	public Map<String, Object> copyMap() {
-		return (Map<String, Object>) entries.clone();
+	public Map<String, Object> getMap() {
+		final Map<String, Object> map = new TreeMap<>();
+		for (String key : structrue) map.put(key, entries.get(key));
+		return map;
 	}
 
 	/**
@@ -222,15 +226,31 @@ public abstract class KeyParser {
 		if (value instanceof Map<?, ?> || value instanceof KeyParser) {
 			Map<?, ?> map;
 			if (value instanceof Map<?, ?>) map = (Map<?, ?>) value;
-			else map = ((KeyParser) value).copyMap();
+			else map = ((KeyParser) value).getMap();
 			map.forEach((mapKey, mapValue) -> {
 				setObject(key + "." + mapKey, mapValue);
 			});
 		} else {
 			entries.put(key, value);
-			//TODO
+			if (structrue.contains(key)) return;
+			final String keys[] = key.split("\\.");
+			String currentKeys[];
+			int layer = -1;
+			for (int i = 0; i < structrue.size(); i++) {
+				currentKeys = structrue.get(i).split("\\.");
+				for (int j = 0; j < currentKeys.length && j < keys.length; j++) {
+					if (currentKeys[j].equals(keys[j])) {
+						if (j > layer) layer = j;
+					} else if (j <= layer && layer != -1) {
+						structrue.add(i, key);
+						return;
+					} else {
+						break;
+					}
+				}
+			}
+			structrue.add(key);
 		}
-		// TODO
 	}
 
 	/**
@@ -264,7 +284,7 @@ public abstract class KeyParser {
 	 */
 	@Override
 	public String toString() {
-		return output();
+		return out();
 	}
 
 	/**
@@ -303,6 +323,6 @@ public abstract class KeyParser {
 	 * converted back to a string.
 	 * @return the output of the parser
 	 */
-	public abstract String output();
+	public abstract String out();
 
 }

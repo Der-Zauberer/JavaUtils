@@ -15,6 +15,9 @@ public class JsonParser extends KeyParser {
 		super(string);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void parse(String input) {
 		final StringBuilder key = new StringBuilder();
@@ -92,16 +95,25 @@ public class JsonParser extends KeyParser {
 		}
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public String output() {
-		return output(false, 0);
+	public String out() {
+		return out(false, 0);
 	}
 	
-	public String output(boolean oneliner) {
-		return output(oneliner, 0);
+	/**
+	 * {@inheritDoc}
+	 */
+	public String out(boolean oneliner) {
+		return out(oneliner, 0);
 	}
 	
-	private String output(boolean oneliner, int offset) {
+	/**
+	 * {@inheritDoc}
+	 */
+	private String out(boolean oneliner, int offset) {
 		final StringBuilder string = new StringBuilder();
 		String tab = "";
 		String space = "";
@@ -159,11 +171,11 @@ public class JsonParser extends KeyParser {
 					if (!oneliner) tabs += tab;
 					for (Object object : list) {
 						if (object instanceof JsonParser) {
-							string.append(tabs + ((JsonParser) object).output(oneliner, tabs.length()) + "," + newLine);
+							string.append(tabs + ((JsonParser) object).out(oneliner, tabs.length()) + "," + newLine);
 						} else if (object instanceof List<?>) {
 							JsonParser parser = new JsonParser();
 							parser.setObject("null", object);
-							string.append(tabs + parser.output(oneliner, tabs.length()) + "," + newLine);
+							string.append(tabs + parser.out(oneliner, tabs.length()) + "," + newLine);
 						} else {
 							string.append(tabs + DataUtil.autoSerializePrimitive(object, true) + "," + newLine);
 						}
@@ -188,6 +200,9 @@ public class JsonParser extends KeyParser {
 		return string.toString();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected KeyParser getImplementationInstance() {
 		return new JsonParser();
