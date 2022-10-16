@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
- * The class provides a parser based on a {@link TreeMap} and basic parser
+ * The class provides a parser based on key-value pairs and basic parser
  * operations. Input and output operation are based on keys. Each key represents
  * a value, but the value can be null. A string key is a path separated by dots.
  * Stored values can be null.<br>
@@ -26,22 +26,22 @@ import eu.derzauberer.javautils.util.DataUtil;
  * String string = parser.get("my.path", String.class);
  * </pre>
  * 
- * @see {@link TreeMap}, {@link Parser}
+ * @see {@link Parser}
  */
-public abstract class KeyParser implements Parser {
+public abstract class KeyValueParser implements Parser {
 	
 	//TODO Collections and Maps implementations
 
 	private final ArrayList<String> structrue = new ArrayList<>();
 	private final HashMap<String, Object> entries = new HashMap<>();
 
-	public KeyParser() {}
+	public KeyValueParser() {}
 	
-	public KeyParser(final String string) {
+	public KeyValueParser(final String string) {
 		parse(string);
 	}
 	
-	public KeyParser(Map<String, ?> map) {
+	public KeyValueParser(Map<String, ?> map) {
 		map.forEach(this::setObject);
 	}
 
@@ -49,7 +49,7 @@ public abstract class KeyParser implements Parser {
 	 * Set the value to a given key. A key represents a value, but the value can be
 	 * null. A string key is a path separated by dots. Supported types are primitive
 	 * types and their wrappers, {@link String}, {@link Collection} and
-	 * superclasses, {@link Map} and superclasses and {@link KeyParser}. All other
+	 * superclasses, {@link Map} and superclasses and {@link KeyValueParser}. All other
 	 * objects will be saved as {@link String} by their <tt>toString()</tt> method.
 	 * The value will be overwritten, if the key already stores a value.<br>
 	 * Example:<br>
@@ -183,24 +183,20 @@ public abstract class KeyParser implements Parser {
 				.filter(string -> string.startsWith(Objects.requireNonNull(key)))
 				.collect(Collectors.toList());
 	}
-
+	
 	/**
-	 * Returns a {@link Map} representation of the parser. The map may not have 
-	 * the correct order of the keys. Changes of this map doesn't have any impact on 
-	 * the original parser.
-	 * @return a {@link Map} representation of the parser
+	 * Iterates over all entries in the parser.
+	 * @param iterates over all entries by key and value
 	 */
-	public Map<String, Object> getMap() {
-		final Map<String, Object> map = new TreeMap<>();
-		for (String key : structrue) map.put(key, entries.get(key));
-		return map;
+	public void forEach(BiConsumer<String, Object> action) {
+		for (String key : structrue) action.accept(key, entries.get(key));
 	}
 
 	/**
 	 * Set the value to a given key. A key represents a value, but the value can be
 	 * null. A string key is a path separated by dots. Supported types are primitive
 	 * types and their wrappers, {@link String}, {@link Collection} and
-	 * superclasses, {@link Map} and superclasses and {@link KeyParser}. All other
+	 * superclasses, {@link Map} and superclasses and {@link KeyValueParser}. All other
 	 * objects will be saved as {@link String} by their <tt>toString()</tt> method.
 	 * The value will be overwritten, if the key already stores a value.<br>
 	 * @param key   the path, which represents to the value
@@ -209,12 +205,13 @@ public abstract class KeyParser implements Parser {
 	 */
 	protected void setObject(final String key, final Object value) {
 		Objects.requireNonNull(key);
-		if (value instanceof Map<?, ?> || value instanceof KeyParser) {
-			Map<?, ?> map;
-			if (value instanceof Map<?, ?>) map = (Map<?, ?>) value;
-			else map = ((KeyParser) value).getMap();
-			map.forEach((mapKey, mapValue) -> {
+		if (value instanceof Map<?, ?>) {
+			((Map<?, ?>) value).forEach((mapKey, mapValue) -> {
 				setObject(key + "." + mapKey, mapValue);
+			});
+		} else if (value instanceof KeyValueParser) {
+			((KeyValueParser) value).forEach((parserKey, parserValue) -> {
+				setObject(key + "." + parserKey, parserValue);
 			});
 		} else {
 			entries.put(key, value);
@@ -253,7 +250,7 @@ public abstract class KeyParser implements Parser {
 		} else if (list.size() == 1) {
 			return entries.get(key);
 		} else {
-			KeyParser parser = getImplementationInstance();
+			KeyValueParser parser = getImplementationInstance();
 			list.forEach(path -> parser.set(path.substring(key.length()), entries.get(path)));
 			return parser;
 		}
@@ -291,6 +288,6 @@ public abstract class KeyParser implements Parser {
 	 * Create an instance of the KeyParser implementation and returns it.
 	 * @return the instance of the implementation
 	 */
-	protected abstract KeyParser getImplementationInstance();
+	protected abstract KeyValueParser getImplementationInstance();
 
 }

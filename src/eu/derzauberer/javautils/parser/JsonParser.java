@@ -30,9 +30,9 @@ import eu.derzauberer.javautils.util.DataUtil2;
  *     }
  * <pre>
  * 
- * @see {@link TreeMap}, {@link KeyParser}
+ * @see {@link TreeMap}, {@link KeyValueParser}
  */
-public class JsonParser extends KeyParser {
+public class JsonParser extends KeyValueParser {
 	
 	public JsonParser() {
 		super();
@@ -251,7 +251,7 @@ public class JsonParser extends KeyParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected KeyParser getImplementationInstance() {
+	protected KeyValueParser getImplementationInstance() {
 		return new JsonParser();
 	}
 
