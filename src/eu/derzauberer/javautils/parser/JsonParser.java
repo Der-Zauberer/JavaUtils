@@ -127,7 +127,10 @@ public class JsonParser extends KeyValueParser {
 	 */
 	@Override
 	protected void setObject(String key, Object value) {
-		if (!key.contains(".")) return;
+		if (!key.contains(".")) {
+			super.setObject(key, value);
+			return;
+		};
 		String keys[] = key.split("\\.");
 		String minKey = key.substring(0, key.lastIndexOf("."));
 		if (containsKey(minKey)) remove(minKey);
