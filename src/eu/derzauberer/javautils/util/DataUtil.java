@@ -19,7 +19,7 @@ public class DataUtil {
 	public static <T> T convert(final Object object, final Class<T> type) {
 		if (object == null) {
 			return null;
-		} else if (object.getClass() == type) {
+		} else if (object.getClass() == type || type.isAssignableFrom(object.getClass())) {
 			return (T) object;
 		} else if (Number.class.isAssignableFrom(type) 
 				|| type == byte.class || type == short.class || type == int.class || 
@@ -55,14 +55,20 @@ public class DataUtil {
 	@SuppressWarnings("unchecked")
 	public static <T extends Number> T convertNumber(final Object object, final Class<T> type) {
 		Number number;
-		if (object instanceof String) number = Double.parseDouble((String) object);
+		if (object instanceof String) {
+			try {
+				number = Double.parseDouble((String) object);
+			} catch (NumberFormatException exception) {
+				number = 0;
+			}
+		}
 		else if (object instanceof Number) number = (Number) object;
 		else if (object instanceof Boolean) number = (Boolean) object ? 1 : 0;
 		else throw new ClassCastException(
 				"The class " + object.getClass().getName() + " is not an instance of java.lang.Number, java.lang.Boolean or java.lang.String!");
 		if (type == Number.class) return type.cast(number);
-		else if (type == Byte.class || type == byte.class) return (T) new Byte(number.byteValue());
-		else if (type == Short.class || type == short.class) return (T) new Short(number.shortValue());
+		else if (type == Byte.class || type == byte.class) return (T) Byte.valueOf(number.byteValue());
+		else if (type == Short.class || type == short.class) return (T) Short.valueOf(number.shortValue());
 		else if (type == Integer.class || type == int.class) return (T) Integer.valueOf(number.intValue());
 		else if (type == Long.class || type == long.class) return (T) Long.valueOf(number.longValue());
 		else if (type == Float.class || type == float.class) return (T) Float.valueOf(number.floatValue());
