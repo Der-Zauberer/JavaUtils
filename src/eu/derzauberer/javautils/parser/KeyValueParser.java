@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -214,7 +215,11 @@ public abstract class KeyValueParser implements Parser {
 				setObject(key + "." + parserKey, parserValue);
 			});
 		} else {
-			entries.put(key, value);
+			if (value.getClass().isArray()) {
+				entries.put(key, Arrays.asList((Object[]) value));
+			} else {
+				entries.put(key, value);
+			}
 			if (structrue.contains(key)) return;
 			final String keys[] = key.split("\\.");
 			String currentKeys[];
