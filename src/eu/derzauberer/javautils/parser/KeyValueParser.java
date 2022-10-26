@@ -1,5 +1,6 @@
 package eu.derzauberer.javautils.parser;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.util.DataUtil;
 
@@ -99,7 +99,9 @@ public abstract class KeyValueParser implements Parser {
 	 * @return the value represented by it's key
 	 * @see {@link DataUtil}
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> T get(final String key, final Class<T> type) {
+		if (type.isArray()) return (T) getArray(key, type);
 		return DataUtil.convert(getObject(key), type);
 	}
 	
@@ -112,14 +114,32 @@ public abstract class KeyValueParser implements Parser {
 	 * @return the collection as value represented by it's key
 	 * @see {@link DataUtil}, {@link Collection}
 	 */
-	@SuppressWarnings("unchecked")
-	public <T, C extends Collection<T>> C getCollection(final String key, final Supplier<C> collectionFactory, final Class<T> type) {
+	public <T, C extends Collection<T>> C getCollection(final String key, final C collection, final Class<T> type) {
 		if (!(getObject(key) instanceof Collection)) return null;
-		final Collection<T> collection = collectionFactory.get();
 		for (Object object : (Collection<?>) getObject(key)) {
 			collection.add(DataUtil.convert(object, type));
 		}
-		return (C) collection;
+		return collection;
+	}
+	
+	/**
+	 * Get the array as value by it's key and convert it to the requested type. If there is
+	 * no value then it will return null.
+	 * @param <T>   type which the value will be casted in
+	 * @param key   the path, which represents to the value
+	 * @param type type which the value will be casted in
+	 * @return the array as value represented by it's key
+	 * @see {@link DataUtil}
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T[] getArray(final String key, final Class<T> type) {
+		final List<T> list = getCollection(key, new ArrayList<>(), type.isArray() ? (Class<T>) type.getComponentType() : type);
+		if (list == null) return null;
+		T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, list.size());
+		for (int i = 0; i < t.length; i++) {
+			t[i] = list.get(i);
+		}
+		return t;
 	}
 
 	/**
