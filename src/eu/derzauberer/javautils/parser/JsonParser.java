@@ -38,7 +38,7 @@ public class JsonParser extends KeyValueParser {
 		super();
 	}
 	
-	public JsonParser(String string) {
+	public JsonParser(final String string) {
 		super(string);
 	}
 
@@ -46,7 +46,7 @@ public class JsonParser extends KeyValueParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void parse(String input) {
+	public void parse(final String input) {
 		final StringBuilder key = new StringBuilder();
 		final StringBuilder name = new StringBuilder();
 		final StringBuilder value = new StringBuilder();
@@ -126,7 +126,7 @@ public class JsonParser extends KeyValueParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void setObject(String key, Object value) {
+	protected void setObject(final String key, final Object value) {
 		if (!key.contains(".")) {
 			super.setObject(key, value);
 			return;
@@ -156,14 +156,14 @@ public class JsonParser extends KeyValueParser {
 	 * @param oneliner if the output should be given in a single line
 	 * @return the output of the parser
 	 */
-	public String out(boolean oneliner) {
+	public String out(final boolean oneliner) {
 		return out(oneliner, 0);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	private String out(boolean oneliner, int offset) {
+	private String out(final boolean oneliner, final int offset) {
 		final StringBuilder string = new StringBuilder();
 		String tab = "";
 		String space = "";
