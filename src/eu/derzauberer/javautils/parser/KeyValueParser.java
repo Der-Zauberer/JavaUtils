@@ -29,7 +29,7 @@ import eu.derzauberer.javautils.util.DataUtil;
  * 
  * @see {@link Parser}
  */
-public abstract class KeyValueParser implements Parser {
+public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Parser {
 
 	private final List<String> structrue = new ArrayList<>();
 	private final Map<String, Object> entries = new HashMap<>();
@@ -65,10 +65,13 @@ public abstract class KeyValueParser implements Parser {
 	 * 
 	 * @param key   the path, which represents to the value
 	 * @param value any object
+	 * @return the own parser object for further customization
 	 * @throws NullPointerException if the key is null
 	 */
-	public void set(final String key, final Object value) {
+	@SuppressWarnings("unchecked")
+	public P set(final String key, final Object value) {
 		setObject(key, value);
+		return (P) this;
 	}
 
 	/**
@@ -76,11 +79,14 @@ public abstract class KeyValueParser implements Parser {
 	 * the root list.
 	 * 
 	 * @param key the path, which represents to the value
+	 * @return the own parser object for further customization
 	 * @throws NullPointerException if the key is null
 	 */
-	public void remove(final String key) {
+	@SuppressWarnings("unchecked")
+	public P remove(final String key) {
 		structrue.remove(key == null || key.equals("null") ? "null" : key);
 		entries.remove(key == null || key.equals("null") ? "null" : key);
+		return (P) this;
 	}
 
 	/**
@@ -351,7 +357,7 @@ public abstract class KeyValueParser implements Parser {
 				setObject((key == null || key.equals("null") ? "" : key + ".") + mapKey, mapValue);
 			});
 		} else if (value instanceof KeyValueParser) {
-			((KeyValueParser) value).forEach((parserKey, parserValue) -> {
+			((KeyValueParser<?>) value).forEach((parserKey, parserValue) -> {
 				setObject(key + "." + parserKey, parserValue);
 				setObject((key == null || key.equals("null") ? "" : key + ".") + parserKey, parserValue);
 			});
@@ -403,7 +409,7 @@ public abstract class KeyValueParser implements Parser {
 		} else if (list.size() == 1) {
 			return entries.get(key);
 		} else {
-			KeyValueParser parser = getImplementationInstance();
+			KeyValueParser<?> parser = getImplementationInstance();
 			list.forEach(path -> parser.set(path.substring(key.length()), entries.get(path)));
 			return parser;
 		}
@@ -445,6 +451,6 @@ public abstract class KeyValueParser implements Parser {
 	 * 
 	 * @return the instance of the implementation
 	 */
-	protected abstract KeyValueParser getImplementationInstance();
+	protected abstract P getImplementationInstance();
 
 }

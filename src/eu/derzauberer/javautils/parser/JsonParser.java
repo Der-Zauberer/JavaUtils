@@ -30,7 +30,7 @@ import eu.derzauberer.javautils.util.DataUtil;
  *     }
  * <pre>
  */
-public class JsonParser extends KeyValueParser {
+public class JsonParser extends KeyValueParser<JsonParser> {
 	
 	public JsonParser() {
 		super();
@@ -221,7 +221,7 @@ public class JsonParser extends KeyValueParser {
 					for (Object object : list) {
 						if (object instanceof KeyValueParser) {
 							final JsonParser parser = new JsonParser();
-							((KeyValueParser) object).forEach((parserKey, parserValue) -> parser.set(parserKey, parserValue));
+							((KeyValueParser<?>) object).forEach((parserKey, parserValue) -> parser.set(parserKey, parserValue));
 							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
 						} else if (object.getClass().isArray() || object instanceof Collection<?>) {
 							final JsonParser parser = new JsonParser();
@@ -255,7 +255,7 @@ public class JsonParser extends KeyValueParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected KeyValueParser getImplementationInstance() {
+	protected JsonParser getImplementationInstance() {
 		return new JsonParser();
 	}
 
