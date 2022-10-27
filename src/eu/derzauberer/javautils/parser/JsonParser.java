@@ -61,9 +61,9 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			} else if (isArray) {
 				if ((character == ',' || character == ']') && arrayLayer == 0) {
 					if (value.length() > 0 && value.charAt(0) == '{' && value.charAt(value.length() - 1) == '}') {
-						array.add(new JsonParser2(value.toString()));
+						array.add(new JsonParser(value.toString()));
 					} else if (value.length() > 0 && value.charAt(0) == '[' && value.charAt(value.length() - 1) == ']') {
-						array.add(new JsonParser2(value.toString()).get("null"));
+						array.add(new JsonParser(value.toString()).get("null"));
 					} else if (value.length() > 0) {
 						array.add(DataUtil.autoDeserializePrimitive(value.toString()));
 					}

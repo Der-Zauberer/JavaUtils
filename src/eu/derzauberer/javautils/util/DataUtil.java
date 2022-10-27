@@ -92,7 +92,7 @@ public class DataUtil {
 		if (input == null) {
 			return null;
 		} else if (!(input instanceof Boolean || input instanceof Number) && stringWithQotationMark) {
-			return "\"" + DataUtil2.removeEscapeCodes(input.toString()) + "\"";
+			return "\"" + removeEscapeCodes(input.toString()) + "\"";
 		} else {
 			return removeEscapeCodes(input.toString());
 		}

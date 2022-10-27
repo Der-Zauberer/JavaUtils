@@ -2,6 +2,9 @@ package eu.derzauberer.javautils.util;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.function.Consumer;
@@ -137,7 +140,7 @@ public class Console implements Sender {
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
-			if (isTimestampEnabled) event.setOutput(Time.now().toString("[hh:mm:ss] ") + event.getOutput());
+			if (isTimestampEnabled) event.setOutput("[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] " + event.getOutput());
 			System.out.println(event.getOutput());
 			if (isLogEnabled) {
 				log(removeEscapeCodes(event.getOutput()));
@@ -175,7 +178,7 @@ public class Console implements Sender {
 	
 	private void log(String string) {
 		if (isLogEnabled() && logDirectory != null) {
-			final String name = "log-" + Date.now() + ".txt";
+			final String name = "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt";
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}
