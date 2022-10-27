@@ -8,9 +8,10 @@ public class DataUtil {
 	 * It will return the same object back if the input is an instance of the class
 	 * but will throw a {@link ClassCastException} if the class is an unsupported
 	 * data type.
+	 * 
 	 * @param <T>    the type into which the object should be converted
 	 * @param object the object input of the convert function
-	 * @param type  the class into which the object should be converted
+	 * @param type   the class into which the object should be converted
 	 * @return the converted object
 	 * @throws ClassCastException thrown when it is not possible to convert the
 	 *                            object into the given type
@@ -45,9 +46,10 @@ public class DataUtil {
 	/**
 	 * Converts any object into a number if possible. Supported types are instances
 	 * of {@link Number}.
+	 * 
 	 * @param <T>    the type into which the number should be converted
 	 * @param object the number input of the convert function
-	 * @param type  the class into which the object should be converted
+	 * @param type   the class into which the object should be converted
 	 * @return the converted number
 	 * @throws ClassCastException thrown when object or the class is not an instance
 	 *                            of {@link Number}
@@ -80,6 +82,7 @@ public class DataUtil {
 	 * Try to convert any object into a string using the <code>toString()</code>
 	 * method. If the object is a string, you can decide if the output should be
 	 * with quotation mars or without.
+	 * 
 	 * @param input                  which will be converted into a object
 	 * @param stringWithQotationMark decide if you are output strings with quotation
 	 *                               mark or not
@@ -100,6 +103,7 @@ public class DataUtil {
 	 * {@link Boolean}, {@link Number} and {@link String} as output. The method will
 	 * return the {@link String}, if there was not type found, in which the string
 	 * could be converted in.
+	 * 
 	 * @param input the string, what will, converted in a primitive type or return
 	 *              itself if it is not a primitive type.
 	 * @return a primitive type or the input string
@@ -128,6 +132,7 @@ public class DataUtil {
 	/**
 	 * Replaces the in string readable escape codes into real escape codes. For
 	 * example: \\n -> \n
+	 * 
 	 * @param string with readable escape codes
 	 * @return the string with real escape codes
 	 */
@@ -144,6 +149,7 @@ public class DataUtil {
 	/**
 	 * Replaces the real escape codes into in string readable escape codes. For
 	 * example: \n -> \\n
+	 * 
 	 * @param string with string with real escape codes
 	 * @return the readable escape codes
 	 */

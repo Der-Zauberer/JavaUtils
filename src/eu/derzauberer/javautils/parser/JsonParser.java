@@ -3,14 +3,12 @@ package eu.derzauberer.javautils.parser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
- * The class provides a parser based on a {@link TreeMap} and basic parser
- * operations. Input and output operation are based on keys. Each key represents
+ * The class provides a parser based on keys. Each key represents
  * a value, but the value can be null. A string key is a path separated by dots.
  * Stored values can be null.<br>
  * <br>
@@ -181,9 +179,9 @@ public class JsonParser extends KeyValueParser {
 			if (!getEntries().containsKey("null")) tabs = tab;
 			for (int i = 0; i < offset; i++) tabs += tab; 
 		}
-		if (getEntries().containsKey("null")) {
+		if (getEntries().containsKey("null") && (isCollection("null") || isArray("null"))) {
 			string.append("[");
-			if ((isCollection("null") || isArray("null")) && getCollection("null").isEmpty()) {
+			if (getCollection("null").isEmpty()) {
 				string.append("]");
 				return string.toString();
 			}
