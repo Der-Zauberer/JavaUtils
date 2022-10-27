@@ -2,7 +2,10 @@ package eu.derzauberer.javautils.parser;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -19,6 +22,7 @@ import eu.derzauberer.javautils.util.DataUtil;
  * Object object = parser.get("my.path");
  * String string = parser.get("my.path", String.class);
  * </pre>
+ * 
  * Parsed output:<br>
  * <pre>
  *     {
@@ -42,7 +46,7 @@ public class JsonParser extends KeyValueParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void parse(final String input) {
+	public void parseIn(final String input) {
 		final StringBuilder key = new StringBuilder();
 		final StringBuilder name = new StringBuilder();
 		final StringBuilder value = new StringBuilder();
@@ -130,11 +134,11 @@ public class JsonParser extends KeyValueParser {
 		String keys[] = key.split("\\.");
 		String minKey = key.substring(0, key.lastIndexOf("."));
 		if (containsKey(minKey)) remove(minKey);
-		for (String maxKey : getStructrue()) {
-			if (maxKey.startsWith(key) && maxKey.split("\\.").length - 1 == keys.length) {
-				remove(maxKey);
-			}
-		}
+		final List<String> oldKeys = getStructrue()
+				.stream()
+				.filter(maxKey -> maxKey.startsWith(key) && maxKey.split("\\.").length - 1 == keys.length)
+				.collect(Collectors.toList());
+		getStructrue().removeAll(oldKeys);
 		super.setObject(key, value);
 	}
 	
@@ -142,24 +146,25 @@ public class JsonParser extends KeyValueParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String out() {
-		return out(false, 0);
+	public String parseOut() {
+		return parseOut(false, 0);
 	}
 	
 	/**
 	 * This is the output method of the parser. The object structure will be
 	 * converted back to a string.
+	 * 
 	 * @param oneliner if the output should be given in a single line
 	 * @return the output of the parser
 	 */
-	public String out(final boolean oneliner) {
-		return out(oneliner, 0);
+	public String parseOut(final boolean oneliner) {
+		return parseOut(oneliner, 0);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	private String out(final boolean oneliner, final int offset) {
+	private String parseOut(final boolean oneliner, final int offset) {
 		final StringBuilder string = new StringBuilder();
 		String tab = "";
 		String space = "";
@@ -178,7 +183,7 @@ public class JsonParser extends KeyValueParser {
 		}
 		if (getEntries().containsKey("null")) {
 			string.append("[");
-			if (get("null") instanceof Collection<?> && ((Collection<?>) get("null")).isEmpty()) {
+			if ((isCollection("null") || isArray("null")) && getCollection("null").isEmpty()) {
 				string.append("]");
 				return string.toString();
 			}
@@ -206,22 +211,24 @@ public class JsonParser extends KeyValueParser {
 				if (!oneliner) tabs += tab;
 				lastLayer++;
 			}
-			if (!(get(key) instanceof Collection<?>)) {
+			if (!isArray(key) && !isCollection(key)) {
 				string.append(tabs + "\"" + name + "\":" + space + DataUtil.autoSerializePrimitive(get(key), true));
 			} else {
-				final Collection<Object> list = getCollection(key, new ArrayList<>(), Object.class);
+				final Collection<?> list = getCollection(key);
 				if (list.isEmpty()) {
 					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[]");
 				} else {
 					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
 					if (!oneliner) tabs += tab;
 					for (Object object : list) {
-						if (object instanceof JsonParser) {
-							string.append(tabs + ((JsonParser) object).out(oneliner, tabs.length()) + "," + newLine);
-						} else if (object instanceof Collection<?>) {
-							JsonParser parser = new JsonParser();
+						if (object instanceof KeyValueParser) {
+							final JsonParser parser = new JsonParser();
+							((KeyValueParser) object).forEach((parserKey, parserValue) -> parser.set(parserKey, parserValue));
+							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
+						} else if (object.getClass().isArray() || object instanceof Collection<?>) {
+							final JsonParser parser = new JsonParser();
 							parser.setObject("null", object);
-							string.append(tabs + parser.out(oneliner, tabs.length()) + "," + newLine);
+							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
 						} else {
 							string.append(tabs + DataUtil.autoSerializePrimitive(object, true) + "," + newLine);
 						}
