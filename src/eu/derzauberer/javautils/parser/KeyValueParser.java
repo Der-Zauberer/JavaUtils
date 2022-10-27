@@ -48,11 +48,12 @@ public abstract class KeyValueParser implements Parser {
 
 	/**
 	 * Set the value to a given key. A key represents a value, but the value can be
-	 * null. A string key is a path separated by dots. Supported types are primitive
-	 * types and their wrappers, {@link String}, {@link Collection} and
-	 * superclasses, {@link Map} and superclasses and {@link KeyValueParser}. All other
-	 * objects will be saved as {@link String} by their <tt>toString()</tt> method.
-	 * The value will be overwritten, if the key already stores a value.<br>
+	 * null. The key null or "null" represents the root list. A string key is a path
+	 * separated by dots. Supported types are primitive types and their wrappers,
+	 * {@link String}, {@link Collection} and superclasses, {@link Map} and
+	 * superclasses and {@link KeyValueParser}. All other objects will be saved as
+	 * {@link String} by their <tt>toString()</tt> method. The value will be
+	 * overwritten, if the key already stores a value.<br>
 	 * Example:<br>
 	 * 
 	 * <pre>
@@ -71,18 +72,20 @@ public abstract class KeyValueParser implements Parser {
 	}
 
 	/**
-	 * Remove the value by it's key if present.
+	 * Remove the value by it's key if present. The key null or "null" represents
+	 * the root list.
 	 * @param key the path, which represents to the value
 	 * @throws NullPointerException if the key is null
 	 */
 	public void remove(final String key) {
-		structrue.remove(Objects.requireNonNull(key));
-		entries.remove(Objects.requireNonNull(key));
+		structrue.remove(key == null || key.equals("null") ? "null" : key);
+		entries.remove(key == null || key.equals("null") ? "null" : key);
 	}
 
 	/**
 	 * Get the value by it's key and convert it to the requested type. If there is
-	 * no value then it will return null.
+	 * no value then it will return null. The key null or "null" represents the root
+	 * list.
 	 * @param key the path, which refers to the value
 	 * @return the value represented by it's key
 	 */
@@ -91,10 +94,11 @@ public abstract class KeyValueParser implements Parser {
 	}
 	
 	/**
-	 * Get the value by it's key and convert it to the requested type. If there is
-	 * no value then it will return null.
-	 * @param <T>   type which the value will be casted in
-	 * @param key   the path, which represents to the value
+	 * Get the value by it's key and convert it to the requested type. The key null
+	 * or "null" represents the root list. If there is no value then it will return
+	 * null.
+	 * @param <T>  type which the value will be casted in
+	 * @param key  the path, which represents to the value
 	 * @param type type which the value will be casted in
 	 * @return the value represented by it's key
 	 * @see {@link DataUtil}
@@ -106,10 +110,11 @@ public abstract class KeyValueParser implements Parser {
 	}
 	
 	/**
-	 * Get the collection as value by it's key and convert it to the requested type. If there is
-	 * no value then it will return null.
-	 * @param <T>   type which the value will be casted in
-	 * @param key   the path, which represents to the value
+	 * Get the collection as value by it's key and convert it to the requested type.
+	 * The key null or "null" represents the root list. If there is no value then it
+	 * will return null.
+	 * @param <T>  type which the value will be casted in
+	 * @param key  the path, which represents to the value
 	 * @param type type which the value will be casted in
 	 * @return the collection as value represented by it's key
 	 * @see {@link DataUtil}, {@link Collection}
@@ -123,10 +128,11 @@ public abstract class KeyValueParser implements Parser {
 	}
 	
 	/**
-	 * Get the array as value by it's key and convert it to the requested type. If there is
-	 * no value then it will return null.
-	 * @param <T>   type which the value will be casted in
-	 * @param key   the path, which represents to the value
+	 * Get the array as value by it's key and convert it to the requested type. The
+	 * key null or "null" represents the root list.If there is no value then it will
+	 * return null.
+	 * @param <T>  type which the value will be casted in
+	 * @param key  the path, which represents to the value
 	 * @param type type which the value will be casted in
 	 * @return the array as value represented by it's key
 	 * @see {@link DataUtil}
@@ -135,7 +141,7 @@ public abstract class KeyValueParser implements Parser {
 	public <T> T[] getArray(final String key, final Class<T> type) {
 		final List<T> list = getCollection(key, new ArrayList<>(), type.isArray() ? (Class<T>) type.getComponentType() : type);
 		if (list == null) return null;
-		T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, list.size());
+		final T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, list.size());
 		for (int i = 0; i < t.length; i++) {
 			t[i] = list.get(i);
 		}
@@ -143,27 +149,28 @@ public abstract class KeyValueParser implements Parser {
 	}
 
 	/**
-	 * Check if the value of the key is present. It will also return false if the
-	 * value does not exist. If you want to check if the value exists please use
-	 * {@link #containsKey(String)}.
+	 * Check if the value of the key is present. The key null or "null" represents
+	 * the root list. It will also return false if the value does not exist. If you
+	 * want to check if the value exists please use {@link #containsKey(String)}.
 	 * @param key the path, which represents to the value
 	 * @return if the value is present
 	 * @throws NullPointerException if the key is null
 	 */
 	public boolean isPresent(final String key) {
-		return entries.get(Objects.requireNonNull(key)) == null;
+		return entries.get(key == null || key.equals("null") ? "null" : key) == null;
 	}
 
 	/**
-	 * Check if the value of the key exists. I will also return true if the value
-	 * does exist but is null. If you want to check if the value is present please
-	 * use {@link #isPresent(String)}.
+	 * Check if the value of the key exists. The key null or "null" represents the
+	 * root list. I will also return true if the value does exist but is null. If
+	 * you want to check if the value is present please use
+	 * {@link #isPresent(String)}.
 	 * @param key the path, which represents to the value
 	 * @return if the value exist
 	 * @throws NullPointerException if the key is null
 	 */
 	public boolean containsKey(final String key) {
-		return entries.containsKey(Objects.requireNonNull(key));
+		return entries.containsKey(key == null || key.equals("null") ? "null" : key);
 	}
 
 	/**
@@ -215,24 +222,31 @@ public abstract class KeyValueParser implements Parser {
 
 	/**
 	 * Set the value to a given key. A key represents a value, but the value can be
-	 * null. A string key is a path separated by dots. Supported types are primitive
-	 * types and their wrappers, {@link String}, {@link Collection} and
-	 * superclasses, {@link Map} and superclasses and {@link KeyValueParser}. All other
-	 * objects will be saved as {@link String} by their <tt>toString()</tt> method.
-	 * The value will be overwritten, if the key already stores a value.<br>
+	 * null. The key null or "null" represents the root list. A string key is a path
+	 * separated by dots. Supported types are primitive types and their wrappers,
+	 * {@link String}, {@link Collection} and superclasses, {@link Map} and
+	 * superclasses and {@link KeyValueParser}. All other objects will be saved as
+	 * {@link String} by their <tt>toString()</tt> method. The value will be
+	 * overwritten, if the key already stores a value.<br>
 	 * @param key   the path, which represents to the value
 	 * @param value any object
 	 * @throws NullPointerException if the key is null
 	 */
 	protected void setObject(final String key, final Object value) {
-		Objects.requireNonNull(key);
-		if (value instanceof Map<?, ?>) {
+		if ((key == null || key.equals("null")) && (value instanceof Collection<?> || value.getClass().isArray())) {
+			structrue.clear();
+			entries.clear();
+			structrue.add("null");
+			entries.put("null", value.getClass().isArray() ? Arrays.asList((Object[]) value) : value);
+			return;
+		} else if (value instanceof Map<?, ?>) {
 			((Map<?, ?>) value).forEach((mapKey, mapValue) -> {
-				setObject(key + "." + mapKey, mapValue);
+				setObject((key == null || key.equals("null") ? "" : key + "." ) + mapKey, mapValue);
 			});
 		} else if (value instanceof KeyValueParser) {
 			((KeyValueParser) value).forEach((parserKey, parserValue) -> {
 				setObject(key + "." + parserKey, parserValue);
+				setObject((key == null || key.equals("null") ? "" : key + "." ) + parserKey, parserValue);
 			});
 		} else {
 			if (value.getClass().isArray()) {
@@ -262,11 +276,15 @@ public abstract class KeyValueParser implements Parser {
 	}
 
 	/**
-	 * Get the value by it's key. If there is no value then it will return null.
+	 * Get the value by it's key. The key null or "null" represents
+	 * the root list. If there is no value then it will return null.
 	 * @param key the path, which refers to the value
 	 * @return the value represented by it's key
 	 */
 	protected Object getObject(final String key) {
+		if (key == null || key.equals("null")) {
+			return entries.get("null");
+		}
 		final List<String> list = structrue.stream().filter(path -> {
 			return path.startsWith(key) && (key.length() == path.length() || path.charAt(key.length()) ==  '.');
 		}).collect(Collectors.toList());

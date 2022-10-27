@@ -1,11 +1,9 @@
 package eu.derzauberer.javautils.parser;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.TreeMap;
-
 import eu.derzauberer.javautils.util.DataUtil;
-import eu.derzauberer.javautils.util.DataUtil2;
 
 /**
  * The class provides a parser based on a {@link TreeMap} and basic parser
@@ -29,8 +27,6 @@ import eu.derzauberer.javautils.util.DataUtil2;
  *         }
  *     }
  * <pre>
- * 
- * @see {@link TreeMap}, {@link KeyValueParser}
  */
 public class JsonParser extends KeyValueParser {
 	
@@ -127,7 +123,7 @@ public class JsonParser extends KeyValueParser {
 	 */
 	@Override
 	protected void setObject(final String key, final Object value) {
-		if (!key.contains(".")) {
+		if (key == null || !key.contains(".")) {
 			super.setObject(key, value);
 			return;
 		};
@@ -182,7 +178,7 @@ public class JsonParser extends KeyValueParser {
 		}
 		if (getEntries().containsKey("null")) {
 			string.append("[");
-			if (getEntries().get("null") instanceof List<?> && ((List<?>) getEntries().get("null")).isEmpty()) {
+			if (get("null") instanceof Collection<?> && ((Collection<?>) get("null")).isEmpty()) {
 				string.append("]");
 				return string.toString();
 			}
@@ -210,10 +206,10 @@ public class JsonParser extends KeyValueParser {
 				if (!oneliner) tabs += tab;
 				lastLayer++;
 			}
-			if (!(getEntries().get(key) instanceof List<?>)) {
-				string.append(tabs + "\"" + name + "\":" + space + DataUtil.autoSerializePrimitive(getEntries().get(key), true));
+			if (!(get(key) instanceof Collection<?>)) {
+				string.append(tabs + "\"" + name + "\":" + space + DataUtil.autoSerializePrimitive(get(key), true));
 			} else {
-				final List<Object> list = DataUtil2.getList(getObject(key), Object.class);
+				final Collection<Object> list = getCollection(key, new ArrayList<>(), Object.class);
 				if (list.isEmpty()) {
 					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[]");
 				} else {
@@ -222,7 +218,7 @@ public class JsonParser extends KeyValueParser {
 					for (Object object : list) {
 						if (object instanceof JsonParser) {
 							string.append(tabs + ((JsonParser) object).out(oneliner, tabs.length()) + "," + newLine);
-						} else if (object instanceof List<?>) {
+						} else if (object instanceof Collection<?>) {
 							JsonParser parser = new JsonParser();
 							parser.setObject("null", object);
 							string.append(tabs + parser.out(oneliner, tabs.length()) + "," + newLine);
@@ -245,8 +241,8 @@ public class JsonParser extends KeyValueParser {
 			if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
 			string.append(tabs + "}");
 		}
-		if (!oneliner && !getEntries().containsKey("null")) tabs = tabs.substring(0, tabs.length() - 1);
-		if (getEntries().containsKey("null")) string.append(tabs + "]"); else string.append(newLine + tabs + "}");
+		if (!oneliner && !containsKey("null")) tabs = tabs.substring(0, tabs.length() - 1);
+		if (containsKey("null")) string.append(tabs + "]"); else string.append(newLine + tabs + "}");
 		return string.toString();
 	}
 
