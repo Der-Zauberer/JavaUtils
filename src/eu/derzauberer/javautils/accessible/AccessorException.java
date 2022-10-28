@@ -1,10 +1,10 @@
 package eu.derzauberer.javautils.accessible;
 
-public class AccessibleException extends RuntimeException {
+public class AccessorException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 	
-	public AccessibleException(String string) {
+	public AccessorException(String string) {
 		super(string);
 	}
 

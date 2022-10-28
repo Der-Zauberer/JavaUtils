@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.annotations;
+package eu.derzauberer.javautils.util;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
