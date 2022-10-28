@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.accessible;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 
 /**
@@ -58,6 +59,33 @@ public class FieldAccessor {
 	 */
 	public String getName() {
 		return field.getName();
+	}
+	
+	/**
+	 * Returns the visibility of the field.
+	 * 
+	 * @return the visibility of the field
+	 */
+	public Visibility getVisibility() {
+		return Visibility.of(field);
+	}
+	
+	/**
+	 * Returns if the field is static
+	 * 
+	 * @return if the field is static
+	 */
+	public boolean isStatic() {
+		return Modifier.isStatic(field.getModifiers());
+	}
+	
+	/**
+	 * Returns if the field is final
+	 * 
+	 * @return if the field is final
+	 */
+	public boolean isFinal() {
+		return Modifier.isFinal(field.getModifiers());
 	}
 	
 	/**

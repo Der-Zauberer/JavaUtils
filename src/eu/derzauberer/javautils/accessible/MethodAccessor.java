@@ -2,6 +2,7 @@ package eu.derzauberer.javautils.accessible;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 
@@ -45,6 +46,24 @@ public class MethodAccessor {
 	 */
 	public String getName() {
 		return method.getName();
+	}
+	
+	/**
+	 * Returns the visibility of the method.
+	 * 
+	 * @return the visibility of the method
+	 */
+	public Visibility getVisibility() {
+		return Visibility.of(method);
+	}
+	
+	/**
+	 * Returns if the method is static
+	 * 
+	 * @return if the method is static
+	 */
+	public boolean isStatic() {
+		return Modifier.isStatic(method.getModifiers());
 	}
 	
 	/**
