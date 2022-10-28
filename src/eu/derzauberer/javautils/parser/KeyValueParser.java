@@ -46,7 +46,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Set the value to a given key. A key represents a value, but the value can be
+	 * Sets the value to a given key. A key represents a value, but the value can be
 	 * null. The key null or "null" represents the root list. A string key is a path
 	 * separated by dots. Supported types are primitive types and their wrappers,
 	 * {@link String}, {@link Collection} and superclasses, {@link Map} and
@@ -75,7 +75,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Remove the value by it's key if present. The key null or "null" represents
+	 * Removes the value by it's key if present. The key null or "null" represents
 	 * the root list.
 	 * 
 	 * @param key the path, which represents to the value
@@ -90,7 +90,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the value by it's key and convert it to the requested type. If there is
+	 * Gets the value by it's key and convert it to the requested type. If there is
 	 * no value then it will return null. The key null or "null" represents the root
 	 * list.
 	 * 
@@ -102,7 +102,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the value by it's key and convert it to the requested type. The key null
+	 * Gets the value by it's key and convert it to the requested type. The key null
 	 * or "null" represents the root list. If there is no value then it will return
 	 * null. 
 	 *  
@@ -120,7 +120,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the collection as value by it's key The key null or "null" represents the
+	 * Gets the collection as value by it's key The key null or "null" represents the
 	 * root list. If there is no value then it will return null. Note, that the
 	 * returned value is a copy of the original one, changes doesn't have any impact
 	 * on the original object. The change the value please put the object back in
@@ -140,7 +140,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the collection as value by it's key and convert it to the requested type.
+	 * Gets the collection as value by it's key and convert it to the requested type.
 	 * The key null or "null" represents the root list. If there is no value then it
 	 * will return null. Note, that the returned value is a copy of the original
 	 * one, changes doesn't have any impact on the original object. The change the
@@ -161,7 +161,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 	
 	/**
-	 * Get the array as value by it's key. The key null or "null" represents the
+	 * Gets the array as value by it's key. The key null or "null" represents the
 	 * root list. If there is no value then it will return null. Note, that the
 	 * returned value is a copy of the original one, changes doesn't have any impact
 	 * on the original object. The change the value please put the object back in
@@ -183,7 +183,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the array as value by it's key and convert it to the requested type. The
+	 * Gets the array as value by it's key and convert it to the requested type. The
 	 * key null or "null" represents the root list. If there is no value then it
 	 * will return null. Note, that the returned value is a copy of the original
 	 * one, changes doesn't have any impact on the original object. The change the
@@ -209,7 +209,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the array as value by it's key and check if it is primitive. The key null
+	 * Gets the array as value by it's key and check if it is primitive. The key null
 	 * or "null" represents the root list. A primitive type is what isn't a
 	 * {@link Collection}, an array or a {@link KeyValueParser}. All other values
 	 * will be converted to strings and are not parsed as objects.
@@ -222,7 +222,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the array as value by it's key and check if it is a {@link Collection}.
+	 * Gets the array as value by it's key and check if it is a {@link Collection}.
 	 * The key null or "null" represents the root list.
 	 * 
 	 * @param key the path, which represents to the value
@@ -233,7 +233,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the array as value by it's key and check if it is an array. The key null
+	 * Gets the array as value by it's key and check if it is an array. The key null
 	 * or "null" represents the root list.
 	 * 
 	 * @param key the path, which represents to the value
@@ -244,7 +244,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the array as value by it's key and check if it is an object
+	 * Gets the array as value by it's key and check if it is an object
 	 * ({@link KeyValueParser}). The key null or "null" represents the root list.
 	 * 
 	 * @param key the path, which represents to the value
@@ -256,7 +256,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Check if the value of the key is present. The key null or "null" represents
+	 * Checks if the value of the key is present. The key null or "null" represents
 	 * the root list. It will also return false if the value does not exist. If you
 	 * want to check if the value exists please use {@link #containsKey(String)}.
 	 * 
@@ -269,7 +269,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Check if the value of the key exists. The key null or "null" represents the
+	 * Checks if the value of the key exists. The key null or "null" represents the
 	 * root list. I will also return true if the value does exist but is null. If
 	 * you want to check if the value is present please use
 	 * {@link #isPresent(String)}.
@@ -283,7 +283,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Check if there is nothing stored in the parser.
+	 * Check sif there is nothing stored in the parser.
 	 * 
 	 * @return if there is nothing stored
 	 */
@@ -333,7 +333,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Set the value to a given key. A key represents a value, but the value can be
+	 * Sets the value to a given key. A key represents a value, but the value can be
 	 * null. The key null or "null" represents the root list. A string key is a path
 	 * separated by dots. Supported types are primitive types and their wrappers,
 	 * {@link String}, {@link Collection} and superclasses, {@link Map} and
@@ -391,7 +391,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the value by it's key. The key null or "null" represents the root list.
+	 * Gets the value by it's key. The key null or "null" represents the root list.
 	 * If there is no value then it will return null.
 	 * 
 	 * @param key the path, which refers to the value
@@ -416,7 +416,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * This is the output method of the parser. The object structure will be
+	 * Gets the output of the parser. The object structure will be
 	 * converted back to a string.
 	 * 
 	 * @return the output of the parser
@@ -427,7 +427,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the list of all keys in the right order, changing the order of the keys
+	 * Gets the list of all keys in the right order, changing the order of the keys
 	 * will effect the output.
 	 * 
 	 * @return the ordered list of the keys
@@ -437,7 +437,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Get the {@link HashMap} of all entries in the parser. Each key represents a
+	 * Gets the {@link HashMap} of all entries in the parser. Each key represents a
 	 * value, but the value can be null. A string key is a path separated by dots.
 	 * 
 	 * @return the {@link HashMap} of all entries in the parser
@@ -447,7 +447,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Create an instance of the KeyParser implementation and returns it.
+	 * Creates an instance of the KeyParser implementation and returns it.
 	 * 
 	 * @return the instance of the implementation
 	 */

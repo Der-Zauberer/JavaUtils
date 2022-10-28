@@ -149,7 +149,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	}
 	
 	/**
-	 * This is the output method of the parser. The object structure will be
+	 * Gets the output of the parser. The object structure will be
 	 * converted back to a string.
 	 * 
 	 * @param oneliner if the output should be given in a single line
