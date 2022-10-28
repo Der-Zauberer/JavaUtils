@@ -73,13 +73,13 @@ public class Accessor {
 			if (clazz.getAnnotation(AccessibleWhitelist.class) != null) {
 				Arrays.asList(clazz.getAnnotation(AccessibleWhitelist.class).value())
 					.stream()
-					.filter(Predicate.not(whitelist::contains))
+					.filter(name -> !whitelist.contains(name))
 					.forEach(whitelist::add);
 			}
 			if (clazz.getAnnotation(AccessibleBlacklist.class) != null) {
 				Arrays.asList(clazz.getAnnotation(AccessibleBlacklist.class).value())
 					.stream()
-					.filter(Predicate.not(blacklist::contains))
+					.filter(name -> !blacklist.contains(name))
 					.forEach(blacklist::add);
 			}
 			Arrays.asList(clazz.getDeclaredFields())
