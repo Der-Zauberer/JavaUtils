@@ -1,183 +1,142 @@
 package eu.derzauberer.javautils.util;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Pattern;
-
 public class DataUtil {
-	
-	public static boolean getBoolean(Object object) {
-		if (object != null) {
-			if (object instanceof Boolean) return (Boolean) object; 
-			if (object instanceof Number) {
-				return (((Number) object).intValue() > 0);
-			} else if (object instanceof String) {
-				if (object.toString().equalsIgnoreCase("true")) return true;
-				else if (object.toString().equalsIgnoreCase("false")) return false;
-				else if (isNumericString(object.toString())) {
-					return (Double.parseDouble(object.toString().replace("\"", "")) == 0);
-				}
-			}
-		}
-		return false;
-	}
-	
+
+	/**
+	 * Converts any object into a specific type. Supported types are primitive types
+	 * and {@link String}. The method returns null if the input object is also null.
+	 * It will return the same object back if the input is an instance of the class
+	 * but will throw a {@link ClassCastException} if the class is an unsupported
+	 * data type.
+	 * 
+	 * @param <T>    the type into which the object should be converted
+	 * @param object the object input of the convert function
+	 * @param type   the class into which the object should be converted
+	 * @return the converted object
+	 * @throws ClassCastException thrown when it is not possible to convert the
+	 *                            object into the given type
+	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Number> T getNumber(Object object, Class<T> clazz) {
-		final Class<T> numberClass = (Class<T>) getWrapperFromPrimitive(clazz);
-		if (object != null) {
-			if (object instanceof Number) {
-				if (numberClass == Number.class) return numberClass.cast(object);
-				else if (numberClass == Byte.class) return numberClass.cast(new Byte(((Number)object).byteValue()));
-				else if (numberClass == Short.class) return numberClass.cast(new Short(((Number)object).shortValue()));
-				else if (numberClass == Integer.class) return numberClass.cast(new Integer(((Number)object).intValue()));
-				else if (numberClass == Long.class) return numberClass.cast(new Long(((Number)object).longValue()));
-				else if (numberClass == Float.class) return numberClass.cast(new Float(((Number)object).floatValue()));
-				else if (numberClass == Double.class) return numberClass.cast(new Double(((Number)object).doubleValue()));
-			} else if (object instanceof Boolean) {
-				if ((boolean) object) return getNumber(1, numberClass);
-				else return getNumber(0, numberClass);
-			} else if (object instanceof Character) {
-				return getNumber(new Integer((Character) object).intValue(), numberClass);
-			} else if (object instanceof String) {
-				if (object.toString().equalsIgnoreCase("true")) {
-					return getNumber(1, numberClass);
-				} else if (object.toString().equalsIgnoreCase("false")) {
-					return getNumber(0, numberClass);
-				} else if (isNumericString(object.toString())) {
-					try {
-						return getNumber(Double.parseDouble(object.toString()), numberClass);
-					} catch (NumberFormatException exception) {
-						return getNumber(0, numberClass);
-					}
-				}
-			}
-		}
-		return getNumber(0, numberClass);
-	}
-	
-	public static char getCharacter(Object object) {
-		if (object != null) {
-			if (object instanceof Boolean) {
-				if ((boolean) object) return 't'; else return 'f'; 
-			} else if (object instanceof Number) {
-				return (char) ((Number) object).intValue();
-			} else if (object instanceof String && !((String) object).isEmpty()) {
-				if (((String) object).length() > 1 && isNumericString((String) object)) return (char) getNumber(object, Integer.class).intValue();
-				return ((String) object).toCharArray()[0];
-			}
-		}
-		return ' ';
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <T> T getObject(Object object, Class<T> clazz) {
-		if (clazz == Object.class) return clazz.cast(object);
-		final Class<T> objectClass = (Class<T>) getWrapperFromPrimitive(clazz);
-		if (object.getClass() == objectClass) return objectClass.cast(object);
-		T value = null;
-		if (objectClass == Boolean.class) {
-			value = objectClass.cast(getBoolean(object));
-		} else if (objectClass == Number.class || objectClass == Byte.class || objectClass == Short.class || objectClass == Integer.class || objectClass == Long.class || objectClass == Float.class || objectClass == Double.class) {
-			value = objectClass.cast(getNumber(object, (Class<? extends Number>) objectClass));
-		} else if (objectClass == Character.class) {
-			value = objectClass.cast(getCharacter(object));
-		} else if (objectClass == String.class) {
-			value = objectClass.cast(object.toString());
-		} else {
-			throw new IllegalArgumentException("Type " + objectClass.toGenericString() + " is not an allowed type!");
-		}
-		return value;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <T> List<T> getList(Object object, Class<T> clazz) {
-		try {
-			return new ArrayList<>((Collection<T>)object);
-		} catch (ClassCastException | NullPointerException exception) {
-			return new ArrayList<>();
-		}
-	}
-	
-	public static <T> List<T> getPrimitiveTypeList(List<?> list, Class<T> clazz) {
-		List <T> newList = new ArrayList<>();
-		for (Object object : list) {
-			newList.add(getObject(object, clazz));
-		}
-		return newList;
-	}
-	
-	public static <T> List<T> getPrimitiveTypeList(Object object, Class<T> clazz) {
-		if (object instanceof List<?>) {
-			return getPrimitiveTypeList(getList(object, Object.class), clazz);
-		}
-		return null;
-	}
-	
-	public static Class<?> getClassFromGenericTypeOfList(Type type) {
-		try {
-			String name = type.getTypeName();
-			name = name.substring(name.indexOf("<") + 1, name.length() - 1);
-			return Class.forName(name);
-		} catch (ClassNotFoundException exception) {
+	public static <T> T convert(final Object object, final Class<T> type) {
+		if (object == null) {
 			return null;
+		} else if (object.getClass() == type || type.isAssignableFrom(object.getClass())) {
+			return (T) object;
+		} else if (Number.class.isAssignableFrom(type) 
+				|| type == byte.class || type == short.class || type == int.class || 
+				type == long.class || type == float.class || type == double.class) {
+			return (T) convertNumber(object, (Class<? extends Number>) type);
+		} else if (type == Boolean.class || type == boolean.class) {
+			if (object instanceof Boolean) {
+				return (T) object;
+			} else if (object instanceof Number) {
+				if (((Number) object).intValue() == 0) return (T) Boolean.FALSE;
+				else return (T) Boolean.TRUE;
+			} else if (object instanceof String) {
+				return (T) Boolean.valueOf(object.toString());
+			}
+		} else if (type == Character.class || type == char.class) {
+			return (T) Character.valueOf(object.toString().charAt(0));
+		} else if (type == String.class) {
+			return (T) object.toString();
+		}
+		throw new ClassCastException("Cannot cast " + object.getClass().getName() + " to " + type.getName() + "!");
+	}
+
+	/**
+	 * Converts any object into a number if possible. Supported types are instances
+	 * of {@link Number}.
+	 * 
+	 * @param <T>    the type into which the number should be converted
+	 * @param object the number input of the convert function
+	 * @param type   the class into which the object should be converted
+	 * @return the converted number
+	 * @throws ClassCastException thrown when object or the class is not an instance
+	 *                            of {@link Number}
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends Number> T convertNumber(final Object object, final Class<T> type) {
+		Number number;
+		if (object instanceof String) {
+			try {
+				number = Double.parseDouble((String) object);
+			} catch (NumberFormatException exception) {
+				number = 0;
+			}
+		}
+		else if (object instanceof Number) number = (Number) object;
+		else if (object instanceof Boolean) number = (Boolean) object ? 1 : 0;
+		else throw new ClassCastException(
+				"The class " + object.getClass().getName() + " is not an instance of java.lang.Number, java.lang.Boolean or java.lang.String!");
+		if (type == Number.class) return type.cast(number);
+		else if (type == Byte.class || type == byte.class) return (T) Byte.valueOf(number.byteValue());
+		else if (type == Short.class || type == short.class) return (T) Short.valueOf(number.shortValue());
+		else if (type == Integer.class || type == int.class) return (T) Integer.valueOf(number.intValue());
+		else if (type == Long.class || type == long.class) return (T) Long.valueOf(number.longValue());
+		else if (type == Float.class || type == float.class) return (T) Float.valueOf(number.floatValue());
+		else if (type == Double.class || type == double.class) return (T) Double.valueOf(number.doubleValue());
+		else throw new ClassCastException("The class " + type.getName() + " is not an instance of java.lang.Number!");
+	}
+
+	/**
+	 * Try to convert any object into a string using the <code>toString()</code>
+	 * method. If the object is a string, you can decide if the output should be
+	 * with quotation mars or without.
+	 * 
+	 * @param input                  which will be converted into a object
+	 * @param stringWithQotationMark decide if you are output strings with quotation
+	 *                               mark or not
+	 * @return the string, which was converted from an object
+	 */
+	public static String autoSerializePrimitive(final Object input, final boolean stringWithQotationMark) {
+		if (input == null) {
+			return null;
+		} else if (!(input instanceof Boolean || input instanceof Number) && stringWithQotationMark) {
+			return "\"" + removeEscapeCodes(input.toString()) + "\"";
+		} else {
+			return removeEscapeCodes(input.toString());
 		}
 	}
-	
-	public static Class<?> getWrapperFromPrimitive(Class<?> clazz) {
-		if (clazz.isPrimitive()) {
-			if (clazz == boolean.class) return Boolean.class;
-			else if (clazz == byte.class) return Byte.class;
-			else if (clazz == short.class) return Short.class;
-			else if (clazz == int.class) return Integer.class;
-			else if (clazz == long.class) return Long.class;
-			else if (clazz == float.class) return Float.class;
-			else if (clazz == double.class) return Double.class;
-			else if (clazz == char.class) return Character.class;
+
+	/**
+	 * Try to convert a string back to an object. This does only work with
+	 * {@link Boolean}, {@link Number} and {@link String} as output. The method will
+	 * return the {@link String}, if there was not type found, in which the string
+	 * could be converted in.
+	 * 
+	 * @param input the string, what will, converted in a primitive type or return
+	 *              itself if it is not a primitive type.
+	 * @return a primitive type or the input string
+	 */
+	public static Object autoDeserializePrimitive(final String input) {
+		if (input == null || input.isEmpty()) return null;
+		else if (input.equals("true")) return true;
+		else if (input.equals("true")) return false;
+		else {
+			try {
+				double number = Double.parseDouble(input);
+				if (!input.contains(".")) {
+					if (Byte.MIN_VALUE <= number && number <= Byte.MAX_VALUE) return (byte) number;
+					else if (Short.MIN_VALUE <= number && number <= Short.MAX_VALUE) return (short) number;
+					else if (Integer.MIN_VALUE <= number && number <= Integer.MAX_VALUE) return (int) number;
+					else return (long) number;
+				} else {
+					if (Float.MIN_VALUE <= number && number <= Float.MAX_VALUE) return (float) number;
+					else return number;
+				}
+			} catch (NumberFormatException exception) {}
+			return addEscapeCodes(input);
 		}
-		return clazz;
 	}
-	
-	public static boolean isPrimitiveWrapperType(Class<?> clazz) {
-		return clazz == Boolean.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class || clazz == Character.class || clazz == String.class;
-	}
-	
-	public static boolean isPrimitiveType(Class<?> clazz) {
-		return clazz.isPrimitive() || clazz == Boolean.class || clazz == Byte.class || clazz == Short.class || clazz == Integer.class || clazz == Long.class || clazz == Float.class || clazz == Double.class || clazz == Character.class || clazz == String.class;
-	}
-	
-	public static boolean isInstanceOfPrimitiveType(Object object) {
-		return object instanceof Boolean || object instanceof Byte || object instanceof Short || object instanceof Integer || object instanceof Long || object instanceof Float || object instanceof Double || object instanceof Character || object instanceof String;
-	}
-	
-	public static boolean isBooleanString(String string) {
-		return string.equalsIgnoreCase("true") || string.equalsIgnoreCase("false");
-	}
-	
-	public static boolean isNumericString(String string) {
-		final Pattern numericRegex = Pattern.compile(
-		        "[\\x00-\\x20]*[+-]?(NaN|Infinity|((((\\p{Digit}+)(\\.)?((\\p{Digit}+)?)" +
-		        "([eE][+-]?(\\p{Digit}+))?)|(\\.((\\p{Digit}+))([eE][+-]?(\\p{Digit}+))?)|" +
-		        "(((0[xX](\\p{XDigit}+)(\\.)?)|(0[xX](\\p{XDigit}+)?(\\.)(\\p{XDigit}+)))" +
-		        "[pP][+-]?(\\p{Digit}+)))[fFdD]?))[\\x00-\\x20]*");
-		return numericRegex.matcher(string).matches();
-	}
-	
-	public static boolean isIntegerString(String string) {
-		return string.matches("^(-?|\\+?)\\d+$");
-	}
-	
-	public static boolean isValidIdName(String string) {
-		return string.matches("^([a-zA-Z0-9]|-|_)+$");
-	}
-	
-	public static boolean isValidName(String string) {
-		return string.matches("^(\\d|\\w|[ -_+^°!§$%&\\/\\\\()=?#'*~|\\x{00DC}\\x{00C4}\\x{00D6}\\x{00E4}\\x{00F6}\\x{00FC}])+$");
-	}
-	
-	public static String addEscapeCodes(String string) {
+
+	/**
+	 * Replaces the in string readable escape codes into real escape codes. For
+	 * example: \\n -> \n
+	 * 
+	 * @param string with readable escape codes
+	 * @return the string with real escape codes
+	 */
+	public static String addEscapeCodes(final String string) {
 		String result = string;
 		result = result.replace("\\\"", "\"");
 		result = result.replace("\\b", "\b");
@@ -186,8 +145,15 @@ public class DataUtil {
 		result = result.replace("\\t", "\t");
 		return result;
 	}
-	
-	public static String removeEscapeCodes(String string) {
+
+	/**
+	 * Replaces the real escape codes into in string readable escape codes. For
+	 * example: \n -> \\n
+	 * 
+	 * @param string with string with real escape codes
+	 * @return the readable escape codes
+	 */
+	public static String removeEscapeCodes(final String string) {
 		String result = string;
 		result = result.replace("\"", "\\\"");
 		result = result.replace("\b", "\\b");
@@ -196,5 +162,5 @@ public class DataUtil {
 		result = result.replace("\t", "\\t");
 		return result;
 	}
-	
+
 }

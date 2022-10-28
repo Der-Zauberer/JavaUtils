@@ -5,8 +5,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import eu.derzauberer.javautils.annotations.EventListener;
 import eu.derzauberer.javautils.events.Event;
+import eu.derzauberer.javautils.util.EventListener;
 import eu.derzauberer.javautils.util.Listener;
 
 public class EventHandler {
