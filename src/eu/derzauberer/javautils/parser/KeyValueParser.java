@@ -1,5 +1,7 @@
 package eu.derzauberer.javautils.parser;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,19 +31,45 @@ import eu.derzauberer.javautils.util.DataUtil;
  * 
  * @see {@link Parser}
  */
-public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Parser {
+public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Parser<P> {
 
 	private final List<String> structrue = new ArrayList<>();
 	private final Map<String, Object> entries = new HashMap<>();
 
+	/**
+	 * Creates a new empty parser.
+	 */
 	public KeyValueParser() {
 	}
 
-	public KeyValueParser(final String string) {
-		parseIn(string);
+	/**
+	 * Creates a new parser and parses the string into the parser
+	 * object structure.
+	 * 
+	 * @param input the input for the parser
+	 */
+	public KeyValueParser(final String input) {
+		parseIn(input);
+	}
+	
+	/**
+	 * Creates a new parser and reads a file and parse the file
+	 * content in the parser.
+	 * 
+	 * @param file file the file to read
+	 * @throws SecurityException if java has no permission to write to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public KeyValueParser(final File file) throws IOException {
+		parseFromFile(file);
 	}
 
-	public KeyValueParser(Map<String, ?> map) {
+	/**
+	 * Creates a new parser and puts the map entries in the parser.
+	 * 
+	 * @param map the map for the parser
+	 */
+	public KeyValueParser(final Map<String, ?> map) {
 		map.forEach(this::setObject);
 	}
 
