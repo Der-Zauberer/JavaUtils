@@ -1,6 +1,7 @@
 package eu.derzauberer.javautils.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -92,8 +93,8 @@ public class Console implements Sender {
 		this.inputPrefix = inputPrefix;
 		if (start) start();
 		scanner = new Scanner(System.in);
-		directory = FileUtil.getJarDirectory();
-		logDirectory = new File(FileUtil.getJarDirectory(), "logs");
+		directory = FileUtil.getExecutionDirectory();
+		logDirectory = new File(FileUtil.getExecutionDirectory(), "logs");
 	}
 	
 	public void start() {
@@ -182,7 +183,11 @@ public class Console implements Sender {
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}
-			FileUtil.appendString(latestLogFile, (string.endsWith("\n")) ? string : string + "\n");
+			try {
+				FileUtil.appendString(latestLogFile, (string.endsWith("\n")) ? string : string + "\n");
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
 		}
 	}
 	
