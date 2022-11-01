@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.util.DataUtil;
@@ -142,9 +143,47 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T get(final String key, final Class<T> type) {
-		if (type.isArray())
-			return (T) getArray(key, type);
+		if (type.isArray()) return (T) getArray(key, type);
 		return DataUtil.convert(getObject(key), type);
+	}
+	
+	/**
+	 * Gets the value by it's key and convert it to the requested type. The key null
+	 * or "null" represents the root list. If there is no value then it will return
+	 * the standard value from the parameter.
+	 * 
+	 * @param <T>      type which the value will be casted in
+	 * @param key      the path, which represents to the value
+	 * @param type     type which the value will be casted in
+	 * @param standard the standard value, which will returned, if the requested
+	 *                 value is null
+	 * @return the value represented by it's key
+	 * @see {@link DataUtil}
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T get(final String key, final Class<T> type, final T standard) {
+		if (!isPresent(key)) return standard;
+		if (type.isArray()) return (T) getArray(key, type);
+		return DataUtil.convert(getObject(key), type);
+	}
+	
+	/**
+	 * Gets the value by it's key and convert it to the requested type in an optional. The key null
+	 * or "null" represents the root list. If there is no value then it will return
+	 * an empty optional.
+	 * 
+	 * @param <T>      type which the value will be casted in
+	 * @param key      the path, which represents to the value
+	 * @param type     type which the value will be casted in
+	 *                 value is null
+	 * @return the value as {@link Optional} represented by it's key
+	 * @see {@link DataUtil}, {@link Optional}
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> Optional<T> getOptional(final String key, final Class<T> type) {
+		if (!isPresent(key)) return Optional.empty();
+		if (type.isArray()) return Optional.of((T) getArray(key, type));
+		return Optional.of(DataUtil.convert(getObject(key), type));
 	}
 
 	/**
@@ -246,6 +285,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return if the value represented by it's key is primitive
 	 */
 	public boolean isPrimitive(final String key) {
+		if (!isPresent(key)) return false;
 		return !isCollection(key) && !isArray(key) && !isObject(key);
 	}
 
@@ -257,6 +297,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return if the value represented by it's key is a {@link Collection}
 	 */
 	public boolean isCollection(final String key) {
+		if (!isPresent(key)) return false;
 		return get(key) instanceof Collection<?>;
 	}
 
@@ -268,6 +309,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return if the value represented by it's key is an array
 	 */
 	public boolean isArray(final String key) {
+		if (!isPresent(key)) return false;
 		return get(key).getClass().isArray();
 	}
 
@@ -280,6 +322,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 *         ({@link KeyValueParser})
 	 */
 	public boolean isObject(final String key) {
+		if (!isPresent(key)) return false;
 		return get(key) instanceof KeyValueParser;
 	}
 
@@ -290,10 +333,9 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * 
 	 * @param key the path, which represents to the value
 	 * @return if the value is present
-	 * @throws NullPointerException if the key is null
 	 */
 	public boolean isPresent(final String key) {
-		return entries.get(key == null || key.equals("null") ? "null" : key) == null;
+		return entries.get(key == null || key.equals("null") ? "null" : key) != null;
 	}
 
 	/**
@@ -304,14 +346,13 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * 
 	 * @param key the path, which represents to the value
 	 * @return if the value exist
-	 * @throws NullPointerException if the key is null
 	 */
 	public boolean containsKey(final String key) {
 		return entries.containsKey(key == null || key.equals("null") ? "null" : key);
 	}
 
 	/**
-	 * Check sif there is nothing stored in the parser.
+	 * Check if there is nothing stored in the parser.
 	 * 
 	 * @return if there is nothing stored
 	 */
@@ -390,7 +431,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				setObject((key == null || key.equals("null") ? "" : key + ".") + parserKey, parserValue);
 			});
 		} else {
-			if (value.getClass().isArray()) {
+			if (value != null && value.getClass().isArray()) {
 				entries.put(key, Arrays.asList((Object[]) value));
 			} else {
 				entries.put(key, value);
