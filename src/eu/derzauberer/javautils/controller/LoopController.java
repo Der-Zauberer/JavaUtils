@@ -69,7 +69,7 @@ public class LoopController {
 	/**
 	 * Returns if the {@link LoopController} is running.
 	 * 
-	 * @return if the {@link LoopController} is running
+	 * @return if the controller is running
 	 */
 	public boolean isRunning() {
 		return isRunning;
