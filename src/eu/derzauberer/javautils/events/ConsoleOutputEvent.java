@@ -3,7 +3,7 @@ package eu.derzauberer.javautils.events;
 import eu.derzauberer.javautils.util.Console;
 import eu.derzauberer.javautils.util.Sender.MessageType;
 
-public class ConsoleOutputEvent extends Event {
+public class ConsoleOutputEvent extends CancellableEvent {
 	
 	private final Console console;
 	private String output;
@@ -13,11 +13,6 @@ public class ConsoleOutputEvent extends Event {
 		this.console = console;
 		this.output = output;
 		this.type = type;
-		execute();
-	}
-	
-	public void setCancelled(boolean cancelled) {
-		super.setCancelled(cancelled);
 	}
 	
 	public Console getConsole() {

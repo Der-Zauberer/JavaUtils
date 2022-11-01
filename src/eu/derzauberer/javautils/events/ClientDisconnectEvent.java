@@ -2,7 +2,7 @@ package eu.derzauberer.javautils.events;
 
 import eu.derzauberer.javautils.sockets.Client;
 
-public class ClientDisconnectEvent extends Event {
+public class ClientDisconnectEvent extends CancellableEvent {
 	
 	public enum DisconnectCause {CLOSED, DISCONNECTED, TIMEOUT}
 	
@@ -12,7 +12,6 @@ public class ClientDisconnectEvent extends Event {
 	public ClientDisconnectEvent(Client client, DisconnectCause cause) {
 		this.client = client;
 		this.cause = cause;
-		execute();
 	}
 	
 	public Client getClient() {

@@ -2,7 +2,7 @@ package eu.derzauberer.javautils.events;
 
 import eu.derzauberer.javautils.sockets.Client;
 
-public class ClientMessageReceiveEvent extends Event {
+public class ClientMessageReceiveEvent extends CancellableEvent {
 	
 	private final Client client;
 	private String message;
@@ -10,11 +10,6 @@ public class ClientMessageReceiveEvent extends Event {
 	public ClientMessageReceiveEvent(Client client, String message) {
 		this.client = client;
 		this.message = message;
-		execute();
-	}
-	
-	public void setCancled(boolean cancelled) {
-		super.setCancelled(cancelled);
 	}
 	
 	public Client getClient() {

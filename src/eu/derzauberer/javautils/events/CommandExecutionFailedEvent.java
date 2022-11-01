@@ -3,7 +3,7 @@ package eu.derzauberer.javautils.events;
 import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.Sender;
 
-public class CommandExecutionFailedEvent extends Event {
+public class CommandExecutionFailedEvent extends CancellableEvent {
 
 	public enum ExecutionFailCause {EXCEPTION, BAD_RETURN}
 	
@@ -23,7 +23,6 @@ public class CommandExecutionFailedEvent extends Event {
 		this.string = string;
 		this.label = label;
 		this.args = args;
-		execute();
 	}
 	
 	public Sender getSender() {
@@ -52,10 +51,6 @@ public class CommandExecutionFailedEvent extends Event {
 	
 	public String[] getArgs() {
 		return args;
-	}
-	
-	public void setCancelled(boolean cancelled) {
-		super.setCancelled(cancelled);
 	}
 	
 }

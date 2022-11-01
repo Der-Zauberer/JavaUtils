@@ -3,7 +3,7 @@ package eu.derzauberer.javautils.events;
 import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.Sender;
 
-public class CommandPreProcessingEvent extends Event {
+public class CommandPreProcessingEvent extends CancellableEvent {
 
 	private final Sender sender;
 	private final Command command;
@@ -17,11 +17,6 @@ public class CommandPreProcessingEvent extends Event {
 		this.string = string;
 		this.label = label;
 		this.args = args;
-		execute();
-	}
-	
-	public void setCancelled(boolean cancelled) {
-		super.setCancelled(cancelled);
 	}
 	
 	public Sender getSender() {
