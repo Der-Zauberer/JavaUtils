@@ -7,8 +7,8 @@ import java.net.URL;
 import eu.derzauberer.javautils.util.FileUtil;
 
 /**
- * The <tt>Parser</tt> interface contains the abstract methods
- * <tt>parse(String input)</tt> and <tt>toString()</tt> for input and output.
+ * This interface contains the abstract methods {@link #parseIn(String)} and
+ * {@link #parseOut()} for input and output.
  */
 public interface Parser<P extends Parser<P>> {
 
