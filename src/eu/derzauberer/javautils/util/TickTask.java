@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 import eu.derzauberer.javautils.controller.TickController;
 
 /**
- * This is a task for the {@link TickController}, which is called in
+ * This is a task for the {@link TickController} that is called in
  * regular intervals.
  */
 public class TickTask {
@@ -18,9 +18,9 @@ public class TickTask {
 	private int repeatsLetft;
 
 	/**
-	 * Creates a new task with a consumer, which is called ever tick.
+	 * Creates a new task with a consumer that is called ever tick.
 	 * 
-	 * @param consumer which is called ever tick
+	 * @param consumer the consumer that is called ever tick
 	 * @param repeats  amount of repeats before the task stops executing
 	 */
 	public TickTask(Consumer<TickTask> consumer, int repeats) {
@@ -28,9 +28,9 @@ public class TickTask {
 	}
 
 	/**
-	 * Creates a new task with a consumer, which is called ever tick.
+	 * Creates a new task with a consumer that is called ever tick.
 	 * 
-	 * @param consumer which is called ever tick
+	 * @param consumer the consumer that is called ever tick
 	 * @param endless  if the task will repeat endless
 	 */
 	public TickTask(Consumer<TickTask> consumer, boolean endless) {
@@ -38,11 +38,11 @@ public class TickTask {
 	}
 
 	/**
-	 * Creates a new task with a consumer, which is called every few
+	 * Creates a new task with a consumer that is called every few
 	 * ticks.
 	 * 
-	 * @param consumer which is called ever tick
-	 * @param repeats  mount of repeats before the task stops executing
+	 * @param consumer the consumer that is called ever tick
+	 * @param repeats  amount of repeats before the task stops executing
 	 * @param ticks    pause the task for that amount of ticks
 	 */
 	public TickTask(Consumer<TickTask> consumer, int repeats, int ticks) {
@@ -50,11 +50,11 @@ public class TickTask {
 	}
 
 	/**
-	 * Creates a new task with a consumer, which is called every few
+	 * Creates a new task with a consumer that is called every few
 	 * ticks.
 	 * 
-	 * @param consumer which is called ever tick
-	 * @param repeats  mount of repeats before the task stops executing
+	 * @param consumer the consumer that is called ever tick
+	 * @param endless  if the task will repeat endless
 	 * @param ticks    pause the task for that amount of ticks
 	 */
 	public TickTask(Consumer<TickTask> consumer, boolean endless, int ticks) {
@@ -62,11 +62,11 @@ public class TickTask {
 	}
 
 	/**
-	 * Creates a new task with a consumer, which is called every few
+	 * Creates a new task with a consumer that is called every few
 	 * ticks.
 	 * 
-	 * @param consumer which is called ever tick
-	 * @param repeats  mount of repeats before the task stops executing
+	 * @param consumer the consumer that is called ever tick
+	 * @param repeats  amount of repeats before the task stops executing
 	 * @param endless  if the task will repeat endless
 	 * @param ticks    pause the task for that amount of ticks
 	 */
@@ -166,10 +166,10 @@ public class TickTask {
 	}
 
 	/**
-	 * Returns the amount of ticks, which passed since the last execution
+	 * Returns the amount of ticks passed since the last execution
 	 * of the {@link Consumer}.
 	 * 
-	 * @return the amount of ticks, which passed since the last execution
+	 * @return the amount of ticks passed since the last execution
 	 */
 	public int getTickCount() {
 		return ticks - ticksLeft;

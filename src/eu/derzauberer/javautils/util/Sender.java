@@ -3,7 +3,7 @@ package eu.derzauberer.javautils.util;
 import java.lang.management.ManagementFactory;
 
 /**
- * Represents an object, which can send and receive messages.
+ * Represents an object that can send and receive messages.
  */
 public interface Sender {
 	
