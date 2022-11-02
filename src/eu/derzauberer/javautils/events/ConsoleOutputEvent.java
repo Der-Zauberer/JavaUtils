@@ -1,21 +1,21 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.util.Console;
+import eu.derzauberer.javautils.controller.ConsoleController;
 import eu.derzauberer.javautils.util.Sender.MessageType;
 
 public class ConsoleOutputEvent extends CancellableEvent {
 	
-	private final Console console;
+	private final ConsoleController console;
 	private String output;
 	private final MessageType type;
 	
-	public ConsoleOutputEvent(Console console, String output, MessageType type) {
+	public ConsoleOutputEvent(ConsoleController console, String output, MessageType type) {
 		this.console = console;
 		this.output = output;
 		this.type = type;
 	}
 	
-	public Console getConsole() {
+	public ConsoleController getConsole() {
 		return console;
 	}
 	

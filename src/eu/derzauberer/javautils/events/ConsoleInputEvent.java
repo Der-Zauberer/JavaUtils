@@ -1,18 +1,18 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.util.Console;
+import eu.derzauberer.javautils.controller.ConsoleController;
 
 public class ConsoleInputEvent extends CancellableEvent {
 	
-	private final Console console;
+	private final ConsoleController console;
 	private String input;
 	
-	public ConsoleInputEvent(Console console, String input) {
+	public ConsoleInputEvent(ConsoleController console, String input) {
 		this.console = console;
 		this.input = input;
 	}
 	
-	public Console getConsole() {
+	public ConsoleController getConsole() {
 		return console;
 	}
 	

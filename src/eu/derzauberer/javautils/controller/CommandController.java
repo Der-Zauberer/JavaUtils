@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.handler;
+package eu.derzauberer.javautils.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.DataUtil;
 import eu.derzauberer.javautils.util.Sender;
 
-public class CommandHandler {
+public class CommandController {
 
 	private final HashMap<String, Command> commands = new HashMap<>();
 	private final ArrayList<String> history = new ArrayList<>();
