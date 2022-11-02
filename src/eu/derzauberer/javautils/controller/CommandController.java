@@ -51,7 +51,7 @@ public class CommandController {
 						cause = ExecutionFailCause.EXCEPTION;
 					}
 					if (!success) {
-						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getString(), event.getLabel(), event.getArgs());
+						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getInput(), event.getLabel(), event.getArgs());
 						if (executionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) executionFailedAction.accept(commandExecutionFailedEvent);
 						if (!commandExecutionFailedEvent.isCancelled() && exception != null) exception.printStackTrace();
 					}

@@ -1,9 +1,10 @@
 package eu.derzauberer.javautils.events;
 
 /**
- * The {@link Event} represents an event. An event contains data about
- * specific occurrences. This event is cancellable. The event will
- * execute nothing after the event call if the event is cancelled.
+ * The {@link Event} represents an event. An event contains data about specific
+ * occurrences. Events can also manipulate the data for the execution. This
+ * event is cancellable. The event will execute nothing after the event call if
+ * the event is cancelled.
  */
 public abstract class CancellableEvent extends Event {
 
