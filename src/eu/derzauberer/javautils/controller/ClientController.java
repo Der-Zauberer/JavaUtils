@@ -76,6 +76,7 @@ public class ClientController implements Sender, Closeable {
 		isDisconnected = false;
 		defaultMessageType = MessageType.DEFAULT;
 		final ClientConnectEvent event = new ClientConnectEvent(this);
+		EventController.getGlobalEventController().callListeners(event);
 		if (connectAction != null) connectAction.accept(event);
 		if (isPartOfServer() && server.getConnectAction() != null) server.getConnectAction().accept(event);
 		if (!isPartOfServer()) {
@@ -96,6 +97,7 @@ public class ClientController implements Sender, Closeable {
 				message = input.readLine();
 				if (message.equals("null")) break;
 				final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, message);
+				EventController.getGlobalEventController().callListeners(event);
 				if (messageReceiveAction != null && !event.isCancelled()) {
 					messageReceiveAction.accept(event);
 				}
@@ -123,6 +125,7 @@ public class ClientController implements Sender, Closeable {
 	@Override
 	public void sendOutput(String message, MessageType type) {
 		final ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
+		EventController.getGlobalEventController().callListeners(event);
 		if (messageSendAction != null && !event.isCancelled()) messageSendAction.accept(event);
 		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().accept(event);
 		if (!event.isCancelled()) output.println(event.getMessage());

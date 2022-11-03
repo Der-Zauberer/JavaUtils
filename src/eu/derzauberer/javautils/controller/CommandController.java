@@ -73,6 +73,7 @@ public class CommandController {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				final CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
+				EventController.getGlobalEventController().callListeners(event);
 				if (preProcessingAction != null && !event.isCancelled()) preProcessingAction.accept(event);
 				if (!event.isCancelled()) {
 					boolean success;
@@ -87,6 +88,7 @@ public class CommandController {
 					}
 					if (!success) {
 						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getInput(), event.getLabel(), event.getArgs());
+						EventController.getGlobalEventController().callListeners(event);
 						if (executionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) executionFailedAction.accept(commandExecutionFailedEvent);
 						if (!commandExecutionFailedEvent.isCancelled() && exception != null) exception.printStackTrace();
 					}
@@ -95,6 +97,7 @@ public class CommandController {
 			}
 		}
 		final CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(sender, command, label, args);
+		EventController.getGlobalEventController().callListeners(commandNotFoundEvent);
 		if (notFoundAction != null) notFoundAction.accept(commandNotFoundEvent);
 		return false;
 	}

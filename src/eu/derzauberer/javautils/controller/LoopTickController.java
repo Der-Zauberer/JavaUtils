@@ -2,27 +2,29 @@ package eu.derzauberer.javautils.controller;
 
 import java.util.function.Consumer;
 
+import eu.derzauberer.javautils.events.TickEvent;
+
 /**
  * The class keeps calling a {@link Consumer} and measures the time
- * between the calls.
+ * between the calls. One iteration is called a tick.
  * 
  * @see {@link Consumer}
  */
-public class LoopController {
+public class LoopTickController {
 	
 	private Thread thread;
-	private Consumer<LoopController> consumer;
+	private Consumer<LoopTickController> consumer;
 	private boolean isRunning;
 	private long deltaTimeNanos;
 	private long lastTimestamp;
 	
 	/**
-	 * Creates a new {@link LoopController} with the {@link Consumer}, which
-	 * will be called every iteration.
+	 * Creates a new {@link LoopTickController} with the {@link Consumer}, which
+	 * will be called every iteration. One iteration is called a tick.
 	 * 
 	 * @param Consumer the consumer, which will be called every iteration
 	 */
-	public LoopController(Consumer<LoopController> consumer) {
+	public LoopTickController(Consumer<LoopTickController> consumer) {
 		this.consumer = consumer;
 		isRunning = false;
 		deltaTimeNanos = 0;
@@ -39,13 +41,15 @@ public class LoopController {
 			long time = System.nanoTime();
 			deltaTimeNanos = time - lastTimestamp;
 			lastTimestamp = time;
+			final TickEvent event = new TickEvent(deltaTimeNanos);
+			EventController.getGlobalEventController().callListeners(event);
 			consumer.accept(this);
 		}
 	}
 	
 	/**
-	 * Starts the {@link LoopController}, so that it keeps calling the
-	 * {@link Consumer} and measures the time between the calls.
+	 * Starts the {@link LoopTickController}, so that it keeps calling the
+	 * {@link Consumer} and measures the time between the calls one iteration is called a tick.
 	 */
 	public void start() {
 		if (!isRunning) {
@@ -56,7 +60,7 @@ public class LoopController {
 	}
 	
 	/**
-	 * Stops the {@link LoopController}. It can be restarted with
+	 * Stops the {@link LoopTickController}. It can be restarted with
 	 * {@link #start()}.
 	 */
 	public void stop() {
@@ -67,7 +71,7 @@ public class LoopController {
 	}
 	
 	/**
-	 * Returns if the {@link LoopController} is running.
+	 * Returns if the {@link LoopTickController} is running.
 	 * 
 	 * @return if the controller is running
 	 */
@@ -76,39 +80,39 @@ public class LoopController {
 	}
 	
 	/**
-	 * Returns the time between the {@link Consumer} calls in nanoseconds.
+	 * Returns the time between the ticks in nanoseconds.
 	 * 
-	 * @return the time between the consumer calls in nanoseconds
-	 */
-	public int getTicksPerSecond() {
-		return (int) (1000000000 / (double) deltaTimeNanos);
-	}
-	
-	/**
-	 * Returns the time between the {@link Consumer} calls in microseconds.
-	 * 
-	 * @return the time between the consumer calls in microseconds
+	 * @return the time between the ticks in nanoseconds
 	 */
 	public long getDeltaTimeNanos() {
 		return deltaTimeNanos;
 	}
 	
 	/**
-	 * Returns the time between the {@link Consumer} calls in milliseconds.
+	 * Returns the time between the ticks in microseconds.
 	 * 
-	 * @return the time between the consumer calls in milliseconds
+	 * @return the time between the ticks in microseconds
 	 */
-	public long getDeltaTimeMycros() {
+	public long getDeltaTimeMicros() {
 		return deltaTimeNanos / 1000;
 	}
 	
 	/**
-	 * Returns how many times the {@link Consumer} was called in the last second.
+	 * Returns the time between the ticks in milliseconds.
 	 * 
-	 * @return how many times the consumer was called in the last second
+	 * @return the time between the ticks in milliseconds
 	 */
 	public long getDeltaTimeMillis() {
 		return deltaTimeNanos / 1000000;
+	}
+	
+	/**
+	 * Returns how many times the tick was called in the last second.
+	 * 
+	 * @return how many times the tick was called in the last second
+	 */
+	public int getTicksPerSecond() {
+		return (int) (1000000000 / (double) deltaTimeNanos);
 	}
 	
 }

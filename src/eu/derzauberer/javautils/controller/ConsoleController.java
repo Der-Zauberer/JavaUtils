@@ -122,6 +122,7 @@ public class ConsoleController implements Sender {
 				System.out.print(inputPrefix);
 				input = scanner.nextLine();
 				final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
+				EventController.getGlobalEventController().callListeners(event);
 				if (inputAction != null && !event.isCancelled()) {
 					inputAction.accept(event);
 				}
@@ -136,6 +137,7 @@ public class ConsoleController implements Sender {
 	@Override
 	public void sendOutput(String message, MessageType type) {
 		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
+		EventController.getGlobalEventController().callListeners(event);
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));

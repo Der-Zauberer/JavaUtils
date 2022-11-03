@@ -43,6 +43,17 @@ public class EventListener<T extends Event> implements Comparable<EventListener<
 	/**
 	 * Creates a new listener, which when registered in the {@link EventController},
 	 * waits for incoming events and executes the action {@link Consumer}.
+	 *
+	 * @param eventType the class of the event to filter the {@link EventController}
+	 * @param action    the consumer that executes when an event occurs
+	 */
+	public EventListener(Class<T> eventType, Consumer<T> action) {
+		this(EventPriority.NORMAL, eventType, action);
+	}
+	
+	/**
+	 * Creates a new listener, which when registered in the {@link EventController},
+	 * waits for incoming events and executes the action {@link Consumer}.
 	 * 
 	 * @param priority  when the action should be executed
 	 * @param eventType the class of the event to filter the {@link EventController}

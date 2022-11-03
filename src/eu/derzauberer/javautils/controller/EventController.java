@@ -61,7 +61,7 @@ public class EventController {
 	 * 
 	 * @return the global event controller that handles all events
 	 */
-	public static EventController getGlobaleventcontroller() {
+	public static EventController getGlobalEventController() {
 		return globalEventController;
 	}
 
