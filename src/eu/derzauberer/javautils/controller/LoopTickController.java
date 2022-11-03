@@ -13,7 +13,7 @@ import eu.derzauberer.javautils.events.TickEvent;
 public class LoopTickController {
 	
 	private Thread thread;
-	private Consumer<LoopTickController> consumer;
+	private final Consumer<TickEvent> action;
 	private boolean isRunning;
 	private long deltaTimeNanos;
 	private long lastTimestamp;
@@ -24,8 +24,8 @@ public class LoopTickController {
 	 * 
 	 * @param Consumer the consumer, which will be called every iteration
 	 */
-	public LoopTickController(Consumer<LoopTickController> consumer) {
-		this.consumer = consumer;
+	public LoopTickController(Consumer<TickEvent> action) {
+		this.action = action;
 		isRunning = false;
 		deltaTimeNanos = 0;
 		lastTimestamp = 0;
@@ -43,7 +43,7 @@ public class LoopTickController {
 			lastTimestamp = time;
 			final TickEvent event = new TickEvent(deltaTimeNanos);
 			EventController.getGlobalEventController().callListeners(event);
-			consumer.accept(this);
+			action.accept(event);
 		}
 	}
 	
