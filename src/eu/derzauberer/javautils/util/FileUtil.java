@@ -34,7 +34,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to create the file or
 	 *                           folder
 	 */
-	public static void createFile(final File file) throws IOException {
+	public static void createFile(File file) throws IOException {
 		if (!file.exists()) {
 			if (file.getParentFile() != null) {
 				file.getParentFile().mkdirs();
@@ -51,7 +51,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to create the file or
 	 *                           folder
 	 */
-	public static void deleteFile(final File file) throws IOException {
+	public static void deleteFile(File file) throws IOException {
 		if (file.exists()) {
 			final Stream<Path> stream = Files.walk(Paths.get(file.toURI()));
 			stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
@@ -68,7 +68,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to copy the file or
 	 *                           folder
 	 */
-	public static void copyDirectory(final File original, final File copy) throws IOException {
+	public static void copyDirectory(File original, File copy) throws IOException {
 		if (original.isDirectory()) {
 			if (!copy.exists()) {
 				copy.mkdir();
@@ -98,7 +98,7 @@ public class FileUtil {
 	 * @throws IOException       if an I/O exception occurs
 	 * @throws SecurityException if java has no permission to read the file
 	 */
-	public static String readString(final File file) throws IOException {
+	public static String readString(File file) throws IOException {
 		return new String(Files.readAllBytes(Paths.get(file.toURI())));
 	}
 
@@ -110,7 +110,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static void writeString(final File file, final String string) throws IOException {
+	public static void writeString(File file, String string) throws IOException {
 		createFile(file);
 		Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	}
@@ -123,7 +123,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to append to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static void appendString(final File file, final String string) throws IOException {
+	public static void appendString(File file, String string) throws IOException {
 		createFile(file);
 		Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.APPEND);
 	}
@@ -135,7 +135,7 @@ public class FileUtil {
 	 * @return the content of the website as string
 	 * @throws IOException if an I/O exception occurs
 	 */
-	public static String getStringFromWebsite(final URL url) throws IOException {
+	public static String getStringFromWebsite(URL url) throws IOException {
 		return getStringFromWebsite(url, false);
 	}
 	
@@ -147,7 +147,7 @@ public class FileUtil {
 	 * @return the content of the website as string
 	 * @throws IOException if an I/O exception occurs
 	 */
-	public static String getStringFromWebsite(final URL url, final boolean removeHtmlTags) throws IOException {
+	public static String getStringFromWebsite(URL url, boolean removeHtmlTags) throws IOException {
 		final Scanner scanner = new Scanner(url.openStream());
 		final StringBuilder builder = new StringBuilder();
 		while (scanner.hasNext()) {
@@ -172,7 +172,7 @@ public class FileUtil {
 	 *                           create a new one
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static void downloadFileFromWebsite(final URL url, final File file) throws IOException {
+	public static void downloadFileFromWebsite(URL url, File file) throws IOException {
 		final ReadableByteChannel readChannel = Channels.newChannel(url.openStream());
 		final FileOutputStream output = new FileOutputStream(file.getPath());
 		output.getChannel().transferFrom(readChannel, 0, Long.MAX_VALUE);
@@ -185,7 +185,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to open the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static void openFile(final File file) throws IOException {
+	public static void openFile(File file) throws IOException {
 		Desktop.getDesktop().open(file);
 	}
 	
@@ -196,7 +196,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to open the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static void openFileInBrowser(final File file) throws IOException {
+	public static void openFileInBrowser(File file) throws IOException {
 		Desktop.getDesktop().browse(file.toURI());
 	}
 
@@ -207,7 +207,7 @@ public class FileUtil {
 	 * @throws SecurityException if java has no permission to open the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static void openFileDirectory(final File file) {
+	public static void openFileDirectory(File file) {
 		Desktop.getDesktop().browseFileDirectory(file);
 	}
 	
@@ -219,7 +219,7 @@ public class FileUtil {
 	 *                            to RFC2396 and cannot be converted to a URI
 	 * @throws IOException        if an I/O exception occurs
 	 */
-	public static void openUrlInBrowser(final URL url) throws IOException, URISyntaxException {
+	public static void openUrlInBrowser(URL url) throws IOException, URISyntaxException {
 		Desktop.getDesktop().browse(url.toURI());
 	}
 	
@@ -232,7 +232,7 @@ public class FileUtil {
 	 *                           trash
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public static boolean moveFileToTrash(final File file) {
+	public static boolean moveFileToTrash(File file) {
 		return Desktop.getDesktop().moveToTrash(file);
 	}
 	

@@ -49,7 +49,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * 
 	 * @param input the input for the parser
 	 */
-	public KeyValueParser(final String input) {
+	public KeyValueParser(String input) {
 		parseIn(input);
 	}
 	
@@ -61,7 +61,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public KeyValueParser(final File file) throws IOException {
+	public KeyValueParser(File file) throws IOException {
 		parseFromFile(file);
 	}
 
@@ -70,7 +70,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * 
 	 * @param map the map for the parser
 	 */
-	public KeyValueParser(final Map<String, ?> map) {
+	public KeyValueParser(Map<String, ?> map) {
 		map.forEach(this::setObject);
 	}
 
@@ -98,7 +98,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @throws NullPointerException if the key is null
 	 */
 	@SuppressWarnings("unchecked")
-	public P set(final String key, final Object value) {
+	public P set(String key, Object value) {
 		setObject(key, value);
 		return (P) this;
 	}
@@ -112,7 +112,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @throws NullPointerException if the key is null
 	 */
 	@SuppressWarnings("unchecked")
-	public P remove(final String key) {
+	public P remove(String key) {
 		structrue.remove(key == null || key.equals("null") ? "null" : key);
 		entries.remove(key == null || key.equals("null") ? "null" : key);
 		return (P) this;
@@ -126,7 +126,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return the value represented by it's key
 	 */
-	public Object get(final String key) {
+	public Object get(String key) {
 		return getObject(key);
 	}
 
@@ -142,7 +142,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @see {@link DataUtil}
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T get(final String key, final Class<T> type) {
+	public <T> T get(String key, Class<T> type) {
 		if (type.isArray())
 			return (T) getArray(key, type);
 		return DataUtil.convert(getObject(key), type);
@@ -162,7 +162,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @see {@link DataUtil}
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T get(final String key, final Class<T> type, final T standard) {
+	public <T> T get(String key, Class<T> type, T standard) {
 		if (!isPresent(key)) return standard;
 		if (type.isArray()) return (T) getArray(key, type);
 		return DataUtil.convert(getObject(key), type);
@@ -181,7 +181,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @see {@link DataUtil}, {@link Optional}
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> Optional<T> getOptional(final String key, final Class<T> type) {
+	public <T> Optional<T> getOptional(String key, Class<T> type) {
 		if (!isPresent(key)) return Optional.empty();
 		if (type.isArray()) return Optional.of((T) getArray(key, type));
 		return Optional.of(DataUtil.convert(getObject(key), type));
@@ -198,7 +198,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return collection as value represented by it's key
 	 * @see {@link Collection}
 	 */
-	public Collection<?> getCollection(final String key) {
+	public Collection<?> getCollection(String key) {
 		if (!isCollection(key) && !isArray(key)) return null;
 		final Collection<Object> collection = new ArrayList<>();
 		for (Object object : isArray(key) ? Arrays.asList(get(key)) : (Collection<?>) getObject(key)) {
@@ -220,7 +220,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return the collection as value represented by it's key
 	 * @see {@link DataUtil}, {@link Collection}
 	 */
-	public <T, C extends Collection<T>> C getCollection(final String key, final C collection, final Class<T> type) {
+	public <T, C extends Collection<T>> C getCollection(String key, C collection, Class<T> type) {
 		if (!isCollection(key) && !isArray(key)) return null;
 		for (Object object : isArray(key) ? Arrays.asList(get(key)) : (Collection<?>) getObject(key)) {
 			collection.add(DataUtil.convert(object, type));
@@ -238,7 +238,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return the array as value represented by it's key
 	 */
-	public Object[] getArray(final String key) {
+	public Object[] getArray(String key) {
 		if (!isCollection(key) && !isArray(key)) return null;
 		final int size = isArray(key) ? ((Object[]) get(key)).length : ((Collection<?>) get(key)).size();
 		final Object[] array = new Object[size];
@@ -264,7 +264,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @see {@link DataUtil}
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T[] getArray(final String key, final Class<T> type) {
+	public <T> T[] getArray(String key, Class<T> type) {
 		if (!isCollection(key) && !isArray(key)) return null;
 		final int size = isArray(key) ? ((Object[]) get(key)).length : ((Collection<?>) get(key)).size();
 		final T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, size);
@@ -285,7 +285,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return if the value represented by it's key is primitive
 	 */
-	public boolean isPrimitive(final String key) {
+	public boolean isPrimitive(String key) {
 		if (!isPresent(key)) return false;
 		return !isCollection(key) && !isArray(key) && !isObject(key);
 	}
@@ -297,7 +297,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return if the value represented by it's key is a {@link Collection}
 	 */
-	public boolean isCollection(final String key) {
+	public boolean isCollection(String key) {
 		if (!isPresent(key)) return false;
 		return get(key) instanceof Collection<?>;
 	}
@@ -309,7 +309,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return if the value represented by it's key is an array
 	 */
-	public boolean isArray(final String key) {
+	public boolean isArray(String key) {
 		if (!isPresent(key)) return false;
 		return get(key).getClass().isArray();
 	}
@@ -322,7 +322,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return if the value represented by it's key is an object
 	 *         ({@link KeyValueParser})
 	 */
-	public boolean isObject(final String key) {
+	public boolean isObject(String key) {
 		if (!isPresent(key)) return false;
 		return get(key) instanceof KeyValueParser;
 	}
@@ -335,7 +335,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return if the value is present
 	 */
-	public boolean isPresent(final String key) {
+	public boolean isPresent(String key) {
 		return entries.get(key == null || key.equals("null") ? "null" : key) != null;
 	}
 
@@ -348,7 +348,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return if the value exist
 	 */
-	public boolean containsKey(final String key) {
+	public boolean containsKey(String key) {
 		return entries.containsKey(key == null || key.equals("null") ? "null" : key);
 	}
 
@@ -388,7 +388,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param the path that contains the keys
 	 * @return the amount of entries
 	 */
-	public List<String> getKeys(final String key) {
+	public List<String> getKeys(String key) {
 		return getKeys().stream().filter(string -> string.startsWith(Objects.requireNonNull(key)))
 				.collect(Collectors.toList());
 	}
@@ -415,7 +415,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param value any object
 	 * @throws NullPointerException if the key is null
 	 */
-	protected void setObject(final String key, final Object value) {
+	protected void setObject(String key, Object value) {
 		if ((key == null || key.equals("null")) && (value instanceof Collection<?> || value.getClass().isArray())) {
 			structrue.clear();
 			entries.clear();
@@ -467,7 +467,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key the path represented by the value
 	 * @return the value represented by it's key
 	 */
-	protected Object getObject(final String key) {
+	protected Object getObject(String key) {
 		if (key == null || key.equals("null")) {
 			return entries.get("null");
 		}

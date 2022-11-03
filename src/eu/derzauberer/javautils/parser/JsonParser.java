@@ -47,7 +47,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * 
 	 * @param input the input for the parser
 	 */
-	public JsonParser(final String string) {
+	public JsonParser(String string) {
 		super(string);
 	}
 	
@@ -59,7 +59,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public JsonParser(final File file) throws IOException {
+	public JsonParser(File file) throws IOException {
 		super(file);
 	}
 	
@@ -68,7 +68,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * 
 	 * @param map the map for the parser
 	 */
-	public JsonParser(final Map<String, ?> map) {
+	public JsonParser(Map<String, ?> map) {
 		super(map);
 	}
 
@@ -76,7 +76,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public JsonParser parseIn(final String input) {
+	public JsonParser parseIn(String input) {
 		final StringBuilder key = new StringBuilder();
 		final StringBuilder name = new StringBuilder();
 		final StringBuilder value = new StringBuilder();
@@ -157,7 +157,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void setObject(final String key, final Object value) {
+	protected void setObject(String key, Object value) {
 		if (key == null || !key.contains(".")) {
 			super.setObject(key, value);
 			return;
@@ -188,14 +188,14 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * @param oneliner if the output should be given in a single line
 	 * @return the output of the parser
 	 */
-	public String parseOut(final boolean oneliner) {
+	public String parseOut(boolean oneliner) {
 		return parseOut(oneliner, 0);
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	private String parseOut(final boolean oneliner, final int offset) {
+	private String parseOut(boolean oneliner, int offset) {
 		final StringBuilder string = new StringBuilder();
 		String tab = "";
 		String space = "";

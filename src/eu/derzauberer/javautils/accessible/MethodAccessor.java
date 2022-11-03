@@ -20,7 +20,7 @@ public class MethodAccessor {
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param method the corresponding {@link Method}
 	 */
-	public MethodAccessor(final Accessor parent, final Method method) {
+	public MethodAccessor(Accessor parent, Method method) {
 		this.parent = parent;
 		this.method = method;
 	}

@@ -18,7 +18,7 @@ public class FieldAccessor {
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param field the corresponding {@link Field}
 	 */
-	public FieldAccessor(final Accessor parent, final Field field) {
+	public FieldAccessor(Accessor parent, Field field) {
 		this.parent = parent;
 		this.field = field;
 		

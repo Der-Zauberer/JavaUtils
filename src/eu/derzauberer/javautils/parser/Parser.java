@@ -19,7 +19,7 @@ public interface Parser<P extends Parser<P>> {
 	 * @param input the input for the parser
 	 * @return the own parser object for further customization
 	 */
-	public abstract P parseIn(final String input);
+	public abstract P parseIn(String input);
 	
 	/**
 	 * Reads a file and parse the file content in the {@link #parseIn(String)}.
