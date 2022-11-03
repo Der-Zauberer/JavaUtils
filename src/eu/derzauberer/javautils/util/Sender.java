@@ -13,14 +13,6 @@ public interface Sender {
 	enum MessageType {DEFAULT, DEBUG, INFO, SUCCESS, WARNING, ERROR}
 	
 	/**
-	 * The method gets called, when the sender receives a massage. Please do not
-	 * call this method by yourself, it is reserved for internal usage.
-	 * 
-	 * @param input the raw input that the sender receives
-	 */
-	void sendInput(String input);
-	
-	/**
 	 * The method gets called, when the sender sends a message. Please do not call
 	 * this method by yourself, it is reserved for internal usage. Use
 	 * {@link #sendMessage(String)} instead, which calls implicitly this method.

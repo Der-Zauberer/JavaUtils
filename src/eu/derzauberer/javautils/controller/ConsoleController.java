@@ -121,19 +121,16 @@ public class ConsoleController implements Sender {
 			while (!thread.isInterrupted()) {
 				System.out.print(inputPrefix);
 				input = scanner.nextLine();
-				sendInput(input);
+				final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
+				if (inputAction != null && !event.isCancelled()) {
+					inputAction.accept(event);
+				}
+				if (!event.isCancelled()) {
+					if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
+					if (isLogEnabled) log(inputPrefix + " " + input);
+				}
 			}
 		} catch (NoSuchElementException exception) {}
-	}
-	
-	@Override
-	public void sendInput(String input) {
-		final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
-		if (inputAction != null && !event.isCancelled()) inputAction.accept(event);
-		if (!event.isCancelled()) {
-			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
-			if (isLogEnabled) log(inputPrefix + " " + input);
-		}
 	}
 	
 	@Override

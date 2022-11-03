@@ -90,16 +90,6 @@ public class ServerController implements Sender, Closeable {
 	}
 	
 	/**
-	 * Does nothing, the input must be related to a client!
-	 * 
-	 * @throws UnsupportedOperationException the input must be related to a client
-	 */
-	@Override
-	public void sendInput(String input) {
-		throw new UnsupportedOperationException("The input must be related to a client");
-	}
-	
-	/**
 	 * {@inheritDoc}
 	 */
 	@Override

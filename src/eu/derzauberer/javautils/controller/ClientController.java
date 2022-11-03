@@ -95,7 +95,13 @@ public class ClientController implements Sender, Closeable {
 			while (!isClosed()) {
 				message = input.readLine();
 				if (message.equals("null")) break;
-				sendInput(message);
+				final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, message);
+				if (messageReceiveAction != null && !event.isCancelled()) {
+					messageReceiveAction.accept(event);
+				}
+				if (!event.isCancelled() && isPartOfServer() && server.getMessageReceiveAction() != null) {
+					server.getMessageReceiveAction().accept(event);
+				}
 			}
 		} catch (SocketTimeoutException exception) {
 			cause = DisconnectCause.TIMEOUT;
@@ -109,16 +115,6 @@ public class ClientController implements Sender, Closeable {
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void sendInput(String input) {
-		final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, input);
-		if (messageReceiveAction != null && !event.isCancelled()) messageReceiveAction.accept(event);
-		if (!event.isCancelled() && isPartOfServer() && server.getMessageReceiveAction() != null) server.getMessageReceiveAction().accept(event);
 	}
 	
 	/**
