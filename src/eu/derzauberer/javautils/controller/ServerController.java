@@ -207,7 +207,7 @@ public class ServerController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket receives a message.
 	 * 
-	 * @param messageReceiveAction an action, which is executed when the socket
+	 * @param messageReceiveAction action to execute when the socket
 	 *                             receives a message
 	 */
 	public void setMessageReceiveAction(Consumer<ClientMessageReceiveEvent> messageReceiveAction) {
@@ -226,7 +226,7 @@ public class ServerController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket sends a message.
 	 * 
-	 * @param messageReceiveAction an action to execute when the socket sends a
+	 * @param messageSendAction an action to execute when the socket sends a
 	 *                             message
 	 */
 	public void setMessageSendAction(Consumer<ClientMessageSendEvent> messageSendAction) {
@@ -245,7 +245,7 @@ public class ServerController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket connected to a server.
 	 * 
-	 * @param messageReceiveAction an action to be executed when the socket
+	 * @param connectAction an action to execute when the socket
 	 *                             connected to a server
 	 */
 	public void setConnectAction(Consumer<ClientConnectEvent> connectAction) {
@@ -264,7 +264,7 @@ public class ServerController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket disconnected to a server.
 	 * 
-	 * @param messageReceiveAction an action to execute when the socket disconnected
+	 * @param disconnectAction an action to execute when the socket disconnected
 	 *                             to a server
 	 */
 	public void setDisconnectAction(Consumer<ClientDisconnectEvent> disconnectAction) {

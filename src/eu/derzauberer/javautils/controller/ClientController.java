@@ -260,7 +260,7 @@ public class ClientController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket sends a message.
 	 * 
-	 * @param messageReceiveAction an action to execute when the socket sends a
+	 * @param messageSendAction an action to execute when the socket sends a
 	 *                             message
 	 */
 	public void setMessageSendAction(Consumer<ClientMessageSendEvent> messageSendAction) {
@@ -279,7 +279,7 @@ public class ClientController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket connected to a server.
 	 * 
-	 * @param messageReceiveAction an action to execute when the socket connected to
+	 * @param connectAction an action to execute when the socket connected to
 	 *                             a server
 	 */
 	public void setConnectAction(Consumer<ClientConnectEvent> connectAction) {
@@ -298,7 +298,7 @@ public class ClientController implements Sender, Closeable {
 	/**
 	 * Sets an action to execute when the socket disconnected to a server.
 	 * 
-	 * @param messageReceiveAction an action to execute when the socket disconnected
+	 * @param disconnectAction an action to execute when the socket disconnected
 	 *                             to a server
 	 */
 	public void setDisconnectAction(Consumer<ClientDisconnectEvent> disconnectAction) {
