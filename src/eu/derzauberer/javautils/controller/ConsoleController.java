@@ -1,6 +1,7 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -10,9 +11,10 @@ import java.util.Scanner;
 import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
-import eu.derzauberer.javautils.handler.CommandHandler;
+import eu.derzauberer.javautils.util.FileUtil;
+import eu.derzauberer.javautils.util.Sender;
 
-public class Console implements Sender {
+public class ConsoleController implements Sender {
 	
 	public static final String BLACK = "\u001b[30m";
 	public static final String GRAY = "\u001b[30;1m";
@@ -44,7 +46,7 @@ public class Console implements Sender {
 	public static final String RESET = "\u001b[0m";
 
 	private MessageType defaultMessageType;
-	private CommandHandler commandHandler;
+	private CommandController commandHandler;
 	private boolean isRunning;
 	private boolean areColorCodesEnabled;
 	private boolean isTimestampEnabled;
@@ -58,31 +60,31 @@ public class Console implements Sender {
 	private File logDirectory;
 	private File latestLogFile;
 	
-	public Console() {
+	public ConsoleController() {
 		this(true); 
 	}
 	
-	public Console(boolean start) {
+	public ConsoleController(boolean start) {
 		this("", start);
 	}
 	
-	public Console(CommandHandler handler) {
+	public ConsoleController(CommandController handler) {
 		this("", handler);
 	}
 	
-	public Console(String inputPrefix) {
+	public ConsoleController(String inputPrefix) {
 		this(inputPrefix, true);
 	}
 	
-	public Console(String inputPrefix, CommandHandler commandHandler) {
+	public ConsoleController(String inputPrefix, CommandController commandHandler) {
 		this(inputPrefix, true, commandHandler);
 	}
 	
-	public Console(String inputPrefix, boolean start) {
+	public ConsoleController(String inputPrefix, boolean start) {
 		this(inputPrefix, start, null);
 	}
 	
-	public Console(String inputPrefix, boolean start, CommandHandler commandHandler) {
+	public ConsoleController(String inputPrefix, boolean start, CommandController commandHandler) {
 		defaultMessageType = MessageType.DEFAULT;
 		this.commandHandler = commandHandler;
 		isRunning = false;
@@ -92,8 +94,8 @@ public class Console implements Sender {
 		this.inputPrefix = inputPrefix;
 		if (start) start();
 		scanner = new Scanner(System.in);
-		directory = FileUtil.getJarDirectory();
-		logDirectory = new File(FileUtil.getJarDirectory(), "logs");
+		directory = FileUtil.getExecutionDirectory();
+		logDirectory = new File(FileUtil.getExecutionDirectory(), "logs");
 	}
 	
 	public void start() {
@@ -119,24 +121,23 @@ public class Console implements Sender {
 			while (!thread.isInterrupted()) {
 				System.out.print(inputPrefix);
 				input = scanner.nextLine();
-				sendInput(input);
+				final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
+				EventController.getGlobalEventController().callListeners(event);
+				if (inputAction != null && !event.isCancelled()) {
+					inputAction.accept(event);
+				}
+				if (!event.isCancelled()) {
+					if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
+					if (isLogEnabled) log(inputPrefix + " " + input);
+				}
 			}
 		} catch (NoSuchElementException exception) {}
 	}
 	
 	@Override
-	public void sendInput(String input) {
-		final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
-		if (inputAction != null && !event.isCancelled()) inputAction.accept(event);
-		if (!event.isCancelled()) {
-			if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
-			if (isLogEnabled) log(inputPrefix + " " + input);
-		}
-	}
-	
-	@Override
 	public void sendOutput(String message, MessageType type) {
 		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
+		EventController.getGlobalEventController().callListeners(event);
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
@@ -151,8 +152,8 @@ public class Console implements Sender {
 	public static String removeEscapeCodes(String string) {
 		String output = string;
 		try {
-			for (Field field : Console.class.getFields()) {
-				output = output.replace(field.get(Console.class).toString(), "");
+			for (Field field : ConsoleController.class.getFields()) {
+				output = output.replace(field.get(ConsoleController.class).toString(), "");
 			}
 		} catch (IllegalArgumentException | IllegalAccessException exception) {}
 		while (output.contains("\033[38;5;")) {
@@ -182,7 +183,11 @@ public class Console implements Sender {
 			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
 				latestLogFile = new File(logDirectory, name);
 			}
-			FileUtil.appendString(latestLogFile, (string.endsWith("\n")) ? string : string + "\n");
+			try {
+				FileUtil.appendString(latestLogFile, (string.endsWith("\n")) ? string : string + "\n");
+			} catch (IOException exception) {
+				exception.printStackTrace();
+			}
 		}
 	}
 	
@@ -196,11 +201,11 @@ public class Console implements Sender {
 		return defaultMessageType;
 	}
 	
-	public void setCommandHandler(CommandHandler commandHandler) {
+	public void setCommandHandler(CommandController commandHandler) {
 		this.commandHandler = commandHandler;
 	}
 	
-	public CommandHandler getCommandHandler() {
+	public CommandController getCommandHandler() {
 		return commandHandler;
 	}
 	

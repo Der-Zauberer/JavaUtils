@@ -1,67 +1,152 @@
 package eu.derzauberer.javautils.util;
 
 import java.util.function.Consumer;
+import eu.derzauberer.javautils.controller.TimeTickController;
 
+/**
+ * This is a task for the {@link TimeTickController} that is called in
+ * regular intervals.
+ */
 public class TickTask {
-	
-	private final Consumer<TickTask> action;
+
+	private final Consumer<TickTask> consumer;
 	private final int ticks;
 	private final int repeats;
 	private final boolean endless;
-	private boolean removed;
+	private boolean stopped;
 	private int ticksLeft;
 	private int repeatsLetft;
-	private long repeatCounter;
-	
-	public TickTask(Consumer<TickTask> action, int ticks) {
-		this(action, ticks, 0, false);
+
+	/**
+	 * Creates a new task with a consumer that is called ever tick.
+	 * 
+	 * @param consumer the consumer that is called ever tick
+	 * @param repeats  amount of repeats before the task stops executing
+	 */
+	public TickTask(Consumer<TickTask> consumer, int repeats) {
+		this(consumer, repeats, false, 0);
 	}
-	
-	public TickTask(Consumer<TickTask> action, int ticks, int repeats) {
-		this(action, ticks, repeats, false);
+
+	/**
+	 * Creates a new task with a consumer that is called ever tick.
+	 * 
+	 * @param consumer the consumer that is called ever tick
+	 * @param endless  if the task will repeat endless
+	 */
+	public TickTask(Consumer<TickTask> consumer, boolean endless) {
+		this(consumer, 0, endless, 0);
 	}
-	
-	public TickTask(Consumer<TickTask> action, int ticks, boolean endless) {
-		this(action, ticks, 0, endless);
+
+	/**
+	 * Creates a new task with a consumer that is called every few
+	 * ticks.
+	 * 
+	 * @param consumer the consumer that is called ever tick
+	 * @param repeats  amount of repeats before the task stops executing
+	 * @param ticks    pause the task for that amount of ticks
+	 */
+	public TickTask(Consumer<TickTask> consumer, int repeats, int ticks) {
+		this(consumer, repeats, false, ticks);
 	}
-	
-	private TickTask(Consumer<TickTask> action, int ticks, int repeats, boolean endless) {
-		this.action = action;
+
+	/**
+	 * Creates a new task with a consumer that is called every few
+	 * ticks.
+	 * 
+	 * @param consumer the consumer that is called ever tick
+	 * @param endless  if the task will repeat endless
+	 * @param ticks    pause the task for that amount of ticks
+	 */
+	public TickTask(Consumer<TickTask> consumer, boolean endless, int ticks) {
+		this(consumer, 0, endless, ticks);
+	}
+
+	/**
+	 * Creates a new task with a consumer that is called every few
+	 * ticks.
+	 * 
+	 * @param consumer the consumer that is called ever tick
+	 * @param repeats  amount of repeats before the task stops executing
+	 * @param endless  if the task will repeat endless
+	 * @param ticks    pause the task for that amount of ticks
+	 */
+	private TickTask(Consumer<TickTask> consumer, int repeats, boolean endless, int ticks) {
+		this.consumer = consumer;
 		this.ticks = ticks;
 		this.repeats = repeats;
 		this.endless = endless;
-		this.removed = false;
-		this.ticksLeft = this.ticks;
-		this.repeatsLetft = this.repeats;
-		this.repeatCounter = 0;
+		this.stopped = false;
+		this.ticksLeft = this.ticks - 1;
+		this.repeatsLetft = this.repeats - 1;
 	}
-	
-	public Consumer<TickTask> getAction() {
-		return action;
+
+	/**
+	 * Returns the {@link Consumer}, which is called in regular intervals
+	 * by the {@link TimeTickController}.
+	 * 
+	 * @return the consumer which is called in regular intervals
+	 */
+	public Consumer<TickTask> getConsumer() {
+		return consumer;
 	}
-	
+
+	/**
+	 * Returns the amount of ticks between the actions
+	 * 
+	 * @return the amount of ticks between the actions
+	 * @see {@link #getTicksLeft()} {@link #getTickCount()}
+	 */
 	public int getTicks() {
 		return ticks;
 	}
-	
+
+	/**
+	 * Returns the amount repeats for the task. It defines how many times
+	 * the consumer gets called in total. Please use
+	 * {@link #getTicksLeft()} if you want to know how many times are left
+	 * or {@link #getRepeatCounter()} if you want to now how many times
+	 * the consumer was called.
+	 * 
+	 * @return the amount of ticks between the actions
+	 * @see {@link #getTicksLeft()}, {@link #getRepeatCounter()}
+	 */
 	public int getRepeats() {
 		return repeats;
 	}
-	
+
+	/**
+	 * Returns if the task repeats endless.
+	 * 
+	 * @return if the task repeats endless
+	 */
 	public boolean isEndless() {
 		return endless;
 	}
-	
-	public void remove() {
-		removed = true;
+
+	/**
+	 * Removes the task event if repeats are left.
+	 */
+	public void stop() {
+		stopped = true;
 	}
-	
-	public boolean isRemoved() {
-		return removed;
+
+	/**
+	 * Returns if the task is removed even if repeats are left.
+	 * 
+	 * @return if the task is removed even if repeats are left
+	 */
+	public boolean isStopped() {
+		return stopped;
 	}
-	
+
+	/**
+	 * Decrements the amount of ticks before the consumer will be called
+	 * again.
+	 * 
+	 * @return if ticks are left
+	 */
 	public boolean decrementTicks() {
-		if(ticksLeft > 1) {
+		if (ticksLeft > 0) {
 			ticksLeft--;
 			return false;
 		} else {
@@ -69,34 +154,57 @@ public class TickTask {
 			return true;
 		}
 	}
-	
-	public int getTicksLetft() {
+
+	/**
+	 * Returns the amount of ticks left before the consumer will be
+	 * called.
+	 * 
+	 * @return the amount of ticks left before the consumer will be called
+	 */
+	public int getTicksLeft() {
 		return ticksLeft;
 	}
-	
+
+	/**
+	 * Returns the amount of ticks passed since the last execution
+	 * of the {@link Consumer}.
+	 * 
+	 * @return the amount of ticks passed since the last execution
+	 */
+	public int getTickCount() {
+		return ticks - ticksLeft;
+	}
+
+	/**
+	 * Decrements the amount of repeats the consumer will be called again.
+	 * 
+	 * @return if repeats are left
+	 */
 	public boolean decrementRepeats() {
-		if(repeatsLetft > 1) {
+		if (repeatsLetft > 0) {
 			repeatsLetft--;
 			return false;
 		} else {
 			return true;
 		}
 	}
-	
-	public int getRepeatsLetft() {
+
+	/**
+	 * Returns the amount of repeats the consumer will be called.
+	 * 
+	 * @return the amount of repeats the consumer will be called
+	 */
+	public int getRepeatsLeft() {
 		return repeatsLetft;
 	}
-	
-	public void incrementRepeatCounter() {
-		if (repeatCounter < Long.MAX_VALUE) {
-			repeatCounter++;
-		} else {
-			repeatCounter = 0;
-		}
-	}
-	
+
+	/**
+	 * Returns the amount of repeats since the start of the task.
+	 * 
+	 * @return the amount of repeats since the start of the task
+	 */
 	public long getRepeatCounter() {
-		return repeatCounter;
+		return repeats - repeatsLetft;
 	}
 	
 }

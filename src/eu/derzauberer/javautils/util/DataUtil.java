@@ -17,7 +17,7 @@ public class DataUtil {
 	 *                            object into the given type
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T convert(final Object object, final Class<T> type) {
+	public static <T> T convert(Object object, Class<T> type) {
 		if (object == null) {
 			return null;
 		} else if (object.getClass() == type || type.isAssignableFrom(object.getClass())) {
@@ -55,7 +55,7 @@ public class DataUtil {
 	 *                            of {@link Number}
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Number> T convertNumber(final Object object, final Class<T> type) {
+	public static <T extends Number> T convertNumber(Object object, Class<T> type) {
 		Number number;
 		if (object instanceof String) {
 			try {
@@ -88,7 +88,7 @@ public class DataUtil {
 	 *                               mark or not
 	 * @return the string, which was converted from an object
 	 */
-	public static String autoSerializePrimitive(final Object input, final boolean stringWithQotationMark) {
+	public static String autoSerializePrimitive(Object input, boolean stringWithQotationMark) {
 		if (input == null) {
 			return null;
 		} else if (!(input instanceof Boolean || input instanceof Number) && stringWithQotationMark) {
@@ -108,7 +108,7 @@ public class DataUtil {
 	 *              itself if it is not a primitive type.
 	 * @return a primitive type or the input string
 	 */
-	public static Object autoDeserializePrimitive(final String input) {
+	public static Object autoDeserializePrimitive(String input) {
 		if (input == null || input.isEmpty()) return null;
 		else if (input.equals("true")) return true;
 		else if (input.equals("true")) return false;
@@ -136,7 +136,7 @@ public class DataUtil {
 	 * @param string with readable escape codes
 	 * @return the string with real escape codes
 	 */
-	public static String addEscapeCodes(final String string) {
+	public static String addEscapeCodes(String string) {
 		String result = string;
 		result = result.replace("\\\"", "\"");
 		result = result.replace("\\b", "\b");
@@ -153,7 +153,7 @@ public class DataUtil {
 	 * @param string with string with real escape codes
 	 * @return the readable escape codes
 	 */
-	public static String removeEscapeCodes(final String string) {
+	public static String removeEscapeCodes(String string) {
 		String result = string;
 		result = result.replace("\"", "\\\"");
 		result = result.replace("\b", "\\b");

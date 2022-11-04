@@ -1,8 +1,11 @@
-package eu.derzauberer.javautils.handler;
+package eu.derzauberer.javautils.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent.ExecutionFailCause;
@@ -12,19 +15,35 @@ import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.DataUtil;
 import eu.derzauberer.javautils.util.Sender;
 
-public class CommandHandler {
+/**
+ * This controller can process commands based on the given inputs.
+ */
+public class CommandController {
 
-	private final HashMap<String, Command> commands = new HashMap<>();
-	private final ArrayList<String> history = new ArrayList<>();
+	private final Map<String, Command> commands = new HashMap<>();
+	private final List<String> history = new ArrayList<>();
 	
 	private Consumer<CommandPreProcessingEvent> preProcessingAction;
 	private Consumer<CommandExecutionFailedEvent> executionFailedAction;
 	private Consumer<CommandNotFoundEvent> notFoundAction;
 	
+	/**
+	 * Register a new command with it's label.
+	 * 
+	 * @param label the name of the command
+	 * @param command the command interface to execute when called
+	 */
 	public void registerCommand(String label, Command command) {
 		commands.put(label, command);
 	}
 
+	/**
+	 * Execute a command based on a given {@link String}.
+	 * 
+	 * @param sender the sender, which got the input for the command
+	 * @param string the command as string input
+	 * @return if the execution of the command was successful
+	 */
 	public boolean executeCommand(Sender sender, String string) {
 		history.add(string);
 		final String command[] = getSplitedCommand(string);
@@ -34,10 +53,27 @@ public class CommandHandler {
 		return executeCommand(sender, string, label, args);
 	}
 
+	/**
+	 * Execute a command based on the label and the arguments. Arguments can be an
+	 * empty string array.
+	 * 
+	 * <pre>
+	 * test arg1 args2 args3
+	 * ^^^^ ^^^^^^^^^^^^^^^^
+	 * label arguments
+	 * </pre>
+	 * 
+	 * @param sender  the sender, which got the input for the command
+	 * @param command the command interface to execute
+	 * @param label   the name of the command
+	 * @param args    the argument of the command
+	 * @return if the execution of the command was successful
+	 */
 	private boolean executeCommand(Sender sender, String command, String label, String args[]) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				final CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
+				EventController.getGlobalEventController().callListeners(event);
 				if (preProcessingAction != null && !event.isCancelled()) preProcessingAction.accept(event);
 				if (!event.isCancelled()) {
 					boolean success;
@@ -51,7 +87,8 @@ public class CommandHandler {
 						cause = ExecutionFailCause.EXCEPTION;
 					}
 					if (!success) {
-						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getString(), event.getLabel(), event.getArgs());
+						final CommandExecutionFailedEvent commandExecutionFailedEvent = new CommandExecutionFailedEvent(event.getSender(), event.getCommand(), cause, exception, event.getInput(), event.getLabel(), event.getArgs());
+						EventController.getGlobalEventController().callListeners(event);
 						if (executionFailedAction != null && !commandExecutionFailedEvent.isCancelled()) executionFailedAction.accept(commandExecutionFailedEvent);
 						if (!commandExecutionFailedEvent.isCancelled() && exception != null) exception.printStackTrace();
 					}
@@ -60,62 +97,109 @@ public class CommandHandler {
 			}
 		}
 		final CommandNotFoundEvent commandNotFoundEvent = new CommandNotFoundEvent(sender, command, label, args);
+		EventController.getGlobalEventController().callListeners(commandNotFoundEvent);
 		if (notFoundAction != null) notFoundAction.accept(commandNotFoundEvent);
 		return false;
 	}
 
-	public HashMap<String, Command> getCommands() {
-		return commands;
+	/**
+	 * Returns an unmodifiable map of the commands based on their names.
+	 * 
+	 * @return an unmodifiable map of the commands based on their names
+	 */
+	public Map<String, Command> getCommands() {
+		return Collections.unmodifiableMap(commands);
 	}
 
-	public Command getCommand(String string) {
-		if (commands.containsKey(string)) return commands.get(string);
-		return null;
+	/**
+	 * Returns the command based on it's name.
+	 * 
+	 * @param label the name of the command
+	 * @return the command by it's name and null if not found
+	 */
+	public Command getCommand(String label) {
+		return commands.get(label);
 	}
 
-	public String[] getHistory() {
-		final String string[] = new String[history.size()];
-		for (int i = 0; i < history.size(); i++) {
-			string[i] = history.get(i);
-		}
-		return string;
+	/**
+	 * Returns an unmodifiable list of the last inputs.
+	 * 
+	 * @return an unmodifiable list of the last inputs
+	 */
+	public List<String> getInputHistory() {
+		return Collections.unmodifiableList(history);
 	}
-	
+
+	/**
+	 * Sets an action to execute before the command gets executed.
+	 * 
+	 * @param preProcessingAction an action to execute when before the command gets
+	 *                            executed
+	 */
 	public void setPreProcessingAction(Consumer<CommandPreProcessingEvent> preProcessingAction) {
 		this.preProcessingAction = preProcessingAction;
 	}
-	
+
+	/**
+	 * Returns an action to execute before the command gets executed.
+	 * 
+	 * @return an action to execute before the command gets executed
+	 */
 	public Consumer<CommandPreProcessingEvent> getPreProcessingAction() {
 		return preProcessingAction;
 	}
-	
+
+	/**
+	 * Sets an action to execute when the command execution failed.
+	 * 
+	 * @param executionFailedAction an action to execut when the command execution
+	 *                              failed
+	 */
 	public void setExecutionFailedAction(Consumer<CommandExecutionFailedEvent> executionFailedAction) {
 		this.executionFailedAction = executionFailedAction;
 	}
-	
+
+	/**
+	 * Returns an action to execute when the command execution failed.
+	 * 
+	 * @return an action to execute when the command execution failed
+	 */
 	public Consumer<CommandExecutionFailedEvent> getExecutionFailedAction() {
 		return executionFailedAction;
 	}
-	
+
+	/**
+	 * Sets an action to execute when no command was found for execution.
+	 * 
+	 * @param notFoundAction an action to execute when no command was found for
+	 *                       execution
+	 */
 	public void setNotFoundAction(Consumer<CommandNotFoundEvent> notFoundAction) {
 		this.notFoundAction = notFoundAction;
 	}
-	
+
+	/**
+	 * Returns an action to execute when no command was found for execution.
+	 * 
+	 * @return an action to execute when no command was found for execution
+	 */
 	public Consumer<CommandNotFoundEvent> getNotFoundAction() {
 		return notFoundAction;
 	}
-	
-	public static boolean getCondition(String args[], String condition, int position) {
-		return args.length - 1 >= position && args[position] != null && args[position].equalsIgnoreCase(condition);
-	}
 
-	public static boolean hasCondition(String args[], String condition) {
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].equalsIgnoreCase(condition)) return true;
-		}
-		return false;
-	}
-
+	/**
+	 * Splits the string in words except for words in quotation marks and returns
+	 * them as array.
+	 * 
+	 * <pre>
+	 * test test test    ->   ["test", "test", "test"]
+	 * 
+	 * "test test" test "test \"test\""    ->   ["test test", "test", "test \"test\""]
+	 * </pre>
+	 * 
+	 * @param string the input string
+	 * @return the splitted string as array
+	 */
 	private static String[] getSplitedCommand(String string) {
 		final ArrayList<String> strings = new ArrayList<>();
 		final StringBuilder builder = new StringBuilder();

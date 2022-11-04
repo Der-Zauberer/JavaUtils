@@ -1,6 +1,8 @@
 package eu.derzauberer.javautils.accessible;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,30 +11,79 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * The class takes an object and loads it's content with reflections to make
+ The class takes an object and loads it's content with reflections to make
  * fields, methods and their annotations accessible. The object class can use
  * the following annotations {@link AccessibleVisibility},
  * {@link AccessibleWhitelist} and {@link AccessibleBlacklist} to define which
  * fields and methods should be accessible.
+ *
+ * @param <T> the type of the object inside the accessor
  */
-public class Accessor {
+public class Accessor<T> {
 
-	private final Object object;
+	private final T object;
 	private final List<Class<?>> classes;
-	private final List<FieldAccessor> fields;
-	private final List<MethodAccessor> methods;
+	private final List<FieldAccessor<?, ?>> fields;
+	private final List<MethodAccessor<?>> methods;
 	private final List<String> whitelist;
 	private final List<String> blacklist;
 	private Visibility fieldVisibility;
 	private Visibility methodVisibility;
 
 	/**
+	 * Tries to create an instance of the type. This instantiation does only work if
+	 * the class has a standard constructor.
+	 * 
+	 * @param type the type of the class to in instantiate
+	 * @return the instantiated object
+	 * @throws NoSuchMethodException     if there is no standard constructor in the
+	 *                                   class
+	 * @throws InstantiationException    if the class is an interface or abstract
+	 *                                   class
+	 * @throws IllegalAccessException    if this C constructor object is enforcing
+	 *                                   Java language access control and the
+	 *                                   underlying constructor is inaccessible
+	 * @throws InvocationTargetException if the constructor throws an exception
+	 */
+	public Accessor(Class<T> type) 
+			throws NoSuchMethodException, InstantiationException, 
+			IllegalAccessException, InvocationTargetException {
+		this(instantiate(type));
+	}
+
+	/**
+	 * Tries to create an instance of the type. This instantiation does only work if
+	 * the class constructor with the exact same parameters.
+	 * 
+	 * @param type             type the type of the class to in instantiate
+	 * @param constructurTypes the types of the constructor arguments to identify
+	 *                         the constructor
+	 * @param constructerArgs  the constructor arguments
+	 * @return the instantiated object
+	 * @throws NoSuchMethodException     if there is no constructor with the given
+	 *                                   argument types in the class
+	 * @throws InstantiationException    if the class is an interface or abstract
+	 *                                   class
+	 * @throws IllegalAccessException    if this C constructor object is enforcing
+	 *                                   Java language access control and the
+	 *                                   underlying constructor is inaccessible
+	 * @throws IllegalArgumentException  if the wrong arguments where given to the
+	 *                                   constructor
+	 * @throws InvocationTargetException if the constructor throws an exception
+	 */
+	public Accessor(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
+			throws NoSuchMethodException, InstantiationException, 
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		this(instantiate(type, constructurTypes, constructerArgs));
+	}
+	
+	/**
 	 * Wraps the object in the {@link Accessor} to gain access to fields and
 	 * methods.
 	 * 
 	 * @param object the object to wrap
 	 */
-	public Accessor(Object object) {
+	public Accessor(T object) {
 		this.object = object;
 		fields = new ArrayList<>();
 		methods = new ArrayList<>();
@@ -58,6 +109,9 @@ public class Accessor {
 		loadContents();
 	}
 
+	/**
+	 * Loads all fields and methods, which are accessible in this class.
+	 */
 	private void loadContents() {
 		final Predicate<Field> fieldPredicate = field -> 
 			(fieldVisibility == Visibility.ANY || 
@@ -87,14 +141,14 @@ public class Accessor {
 					.filter(fieldPredicate)
 					.forEach(field -> {
 				field.setAccessible(true);
-				fields.add(new FieldAccessor(this, field));
+				fields.add(new FieldAccessor<>(this, field, field.getType()));
 			});
 			Arrays.asList(clazz.getDeclaredMethods())
 					.stream()
 					.filter(methodPredicate)
 					.forEach(method -> {
 				method.setAccessible(true);
-				methods.add(new MethodAccessor(this, method));
+				methods.add(new MethodAccessor<>(this, method));
 			});
 		}
 	}
@@ -113,7 +167,7 @@ public class Accessor {
 	 * 
 	 * @return the wrapped object of the {@link Accessor}
 	 */
-	public Object getObject() {
+	public T getObject() {
 		return object;
 	}
 
@@ -146,7 +200,7 @@ public class Accessor {
 	 * @return a {@link List} of all {@link FieldAccessor}, which are usable for
 	 *         this class
 	 */
-	public List<FieldAccessor> getFields() {
+	public List<FieldAccessor<?, ?>> getFields() {
 		return new ArrayList<>(fields);
 	}
 
@@ -157,8 +211,63 @@ public class Accessor {
 	 * @return a {@link List} of all {@link MethodAccessor}, which are usable for
 	 *         this class
 	 */
-	public List<MethodAccessor> getMethods() {
+	public List<MethodAccessor<?>> getMethods() {
 		return new ArrayList<>(methods);
+	}
+	
+	/**
+	 * Tries to create an instance of the type. This instantiation does only work if
+	 * the class has a standard constructor.
+	 *
+	 * @param <T>  the type of the object inside the accessor
+	 * @param type the type of the class to in instantiate
+	 * @return the instantiated object
+	 * @throws NoSuchMethodException     if there is no standard constructor in the
+	 *                                   class
+	 * @throws SecurityException         if the accessor has no permission to access
+	 *                                   the standard constructor
+	 * @throws InstantiationException    if the class is an interface or abstract
+	 *                                   class
+	 * @throws IllegalAccessException    if this C constructor object is enforcing
+	 *                                   Java language access control and the
+	 *                                   underlying constructor is inaccessible
+	 * @throws InvocationTargetException if the constructor throws an exception
+	 */
+	@SuppressWarnings("unchecked")
+	private static <T> T instantiate(Class<T> type) 
+			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+		final Constructor<?> constructor = type.getDeclaredConstructor();
+		constructor.setAccessible(true);
+		return (T) constructor.newInstance();
+	}
+	
+	/**
+	 * Tries to create an instance of the type. This instantiation does only work if
+	 * the class constructor with the exact same parameters.
+	 * 
+	 * @param <T>              the type of the object inside the accessor
+	 * @param type             type the type of the class to in instantiate
+	 * @param constructurTypes the types of the constructor arguments to identify
+	 *                         the constructor
+	 * @param constructerArgs  the constructor arguments
+	 * @return the instantiated object
+	 * @throws NoSuchMethodException     if there is no constructor with the given
+	 *                                   argument types in the class
+	 * @throws InstantiationException    if the class is an interface or abstract
+	 *                                   class
+	 * @throws IllegalAccessException    if this C constructor object is enforcing
+	 *                                   Java language access control and the
+	 *                                   underlying constructor is inaccessible
+	 * @throws IllegalArgumentException  if the wrong arguments where given to the
+	 *                                   constructor
+	 * @throws InvocationTargetException if the constructor throws an exception
+	 */
+	@SuppressWarnings("unchecked")
+	private static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
+			throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		final Constructor<?> constructor = type.getDeclaredConstructor();
+		constructor.setAccessible(true);
+		return (T) constructor.newInstance(constructerArgs);
 	}
 
 }
