@@ -3,6 +3,7 @@ package eu.derzauberer.javautils.parser;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import eu.derzauberer.javautils.accessible.AccessibleVisibility;
+import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -274,6 +277,93 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 			i++;
 		}
 		return t;
+	}
+	
+	/**
+	 * Serializes an object into the parser with all fields defined by the
+	 * {@link AccessibleVisibility}, which should be an annotation in the class to
+	 * serialize.
+	 * 
+	 * @param object the object to serialize
+	 * @return the own parser object for further customization
+	 */
+	@SuppressWarnings("unchecked")
+	public P serialize(Object object) {
+		serialize("", object);
+		return (P) this;
+	}
+	
+	/**
+	 * Serializes an object into the parser with all fields defined by the
+	 * {@link AccessibleVisibility}, which should be an annotation in the class to
+	 * serialize.
+	 * 
+	 * @param key    the path represented by the value
+	 * @param object the object to serialize
+	 * @return the own parser object for further customization
+	 */
+	@SuppressWarnings("unchecked")
+	public P serialize(String key, Object object) {
+		final String objectkey = key == null || key.equals("null") ? "null" : key;
+		new Accessor<>(object).getFields().forEach(field -> {
+			if (field.getClassType().isPrimitive() || 
+					field.getValue() == null ||
+					String.class.isAssignableFrom(field.getClassType()) ||
+					Character.class.isAssignableFrom(field.getClassType()) ||
+					Boolean.class.isAssignableFrom(field.getClassType()) ||
+					Number.class.isAssignableFrom(field.getClassType()) ||
+					Collection.class.isAssignableFrom(field.getClassType()) ||
+					field.getClassType().isArray()) {
+				set(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), field.getValue());
+			} else {
+				serialize(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), field.getValue());
+			}
+		});
+		return (P) this;
+	}
+	
+	public <T> T deserialize(T object) {
+		return null;
+	}
+	
+	public <T> T deserialize(Class<T> type) {
+		return deserialize("", type);
+	}
+	
+	public <T> T deserialize(String key, Class<T> type) {
+		final String objectkey = key == null || key.equals("null") ? "null" : key;
+		try {
+			final Accessor<T> accessor = new Accessor<>(type);
+			accessor.getFields().forEach(field -> {
+				if (field.getClassType().isPrimitive() || 
+						field.getValue() == null ||
+						String.class.isAssignableFrom(field.getClassType()) ||
+						Character.class.isAssignableFrom(field.getClassType()) ||
+						Boolean.class.isAssignableFrom(field.getClassType()) ||
+						Number.class.isAssignableFrom(field.getClassType()) ||
+						field.getClassType().isArray()) {
+					field.setObjectValue(get(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), field.getClassType()));
+				} else if (Collection.class.isAssignableFrom(field.getClassType())) {
+					try {
+						String name = field.getClassType().getTypeName();
+						name = name.substring(name.indexOf("<") + 1, name.length() - 1);
+						Class.forName(name);
+						//TODO Collection instaciation
+						//field.setObjectValue(getCollection(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), new ArrayList<>(), Class.forName(name)));
+					} catch (ClassNotFoundException exception) {
+						field.setObjectValue(null);
+					}
+				} else if (field.getClassType().isArray()) {
+					field.setObjectValue(getArray(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), field.getClassType().getComponentType()));
+				} else {
+					field.setObjectValue(deserialize(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), field.getClassType()));
+				}
+			});
+			return accessor.getObject();
+		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
+			exception.printStackTrace();
+			return null;
+		}
 	}
 
 	/**
