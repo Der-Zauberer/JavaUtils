@@ -8,10 +8,12 @@ import java.lang.reflect.Type;
 
 /**
  * The class wraps the {@link Method} and make its usage easer to use.
+ * 
+ * @param <A> the type of the parent accessor
  */
-public class MethodAccessor {
+public class MethodAccessor<A> {
 	
-	private final Accessor parent;
+	private final Accessor<A> parent;
 	private final Method method;
 	
 	/**
@@ -20,7 +22,7 @@ public class MethodAccessor {
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param method the corresponding {@link Method}
 	 */
-	public MethodAccessor(Accessor parent, Method method) {
+	public MethodAccessor(Accessor<A> parent, Method method) {
 		this.parent = parent;
 		this.method = method;
 	}

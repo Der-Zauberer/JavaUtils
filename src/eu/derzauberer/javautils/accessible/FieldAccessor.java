@@ -6,10 +6,13 @@ import java.lang.reflect.Type;
 
 /**
  * The class wraps the {@link Field} and make its usage easer to use.
+ *
+ * @param <A> the type of the parent accessor
+ * @param <F> the type of the fields value
  */
-public class FieldAccessor {
+public class FieldAccessor<A extends Accessor<?>, F> {
 	
-	private final Accessor parent;
+	private final A parent;
 	private final Field field;
 	
 	/**
@@ -18,10 +21,9 @@ public class FieldAccessor {
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param field the corresponding {@link Field}
 	 */
-	public FieldAccessor(Accessor parent, Field field) {
+	public FieldAccessor(A parent, Field field, Class<F> fieldtype) {
 		this.parent = parent;
 		this.field = field;
-		
 	}
 	
 	/**
@@ -31,7 +33,22 @@ public class FieldAccessor {
 	 * @throws IllegalArgumentException if the object is not assignable to the field
 	 *                                  due to a wrong type
 	 */
-	public void setValue(Object value) throws IllegalArgumentException {
+	public void setValue(F value) throws IllegalArgumentException {
+		try {
+			field.set(parent.getObject(), value);
+		} catch (IllegalAccessException exception) {
+			throw new AccessorException(exception.getMessage());
+		}
+	}
+	
+	/**
+	 * Sets the value of the {@link FieldAccessor}
+	 * 
+	 * @param value the new value of the field
+	 * @throws IllegalArgumentException if the object is not assignable to the field
+	 *                                  due to a wrong type
+	 */
+	public void setObjectValue(Object value) throws IllegalArgumentException {
 		try {
 			field.set(parent.getObject(), value);
 		} catch (IllegalAccessException exception) {
@@ -44,9 +61,10 @@ public class FieldAccessor {
 	 * 
 	 * @return the value of the {@link FieldAccessor}
 	 */
-	public Object getValue() {
+	@SuppressWarnings("unchecked")
+	public F getValue() {
 		try {
-			return field.get(parent.getObject());
+			return (F) field.get(parent.getObject());
 		} catch (IllegalAccessException | IllegalArgumentException exception) {
 			throw new AccessorException(exception.getMessage());
 		}
@@ -93,7 +111,7 @@ public class FieldAccessor {
 	 * 
 	 * @return the {@link Accessor} parent of this {@link FieldAccessor}
 	 */
-	public Accessor getParent() {
+	public Accessor<?> getParent() {
 		return parent;
 	}
 
