@@ -141,7 +141,7 @@ public class Accessor<T> {
 					.filter(fieldPredicate)
 					.forEach(field -> {
 				field.setAccessible(true);
-				fields.add(new FieldAccessor<>(this, field, field.getType()));
+				fields.add(new FieldAccessor<>(this, field));
 			});
 			Arrays.asList(clazz.getDeclaredMethods())
 					.stream()
@@ -265,7 +265,7 @@ public class Accessor<T> {
 	@SuppressWarnings("unchecked")
 	private static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		final Constructor<?> constructor = type.getDeclaredConstructor();
+		final Constructor<?> constructor = type.getDeclaredConstructor(constructurTypes);
 		constructor.setAccessible(true);
 		return (T) constructor.newInstance(constructerArgs);
 	}

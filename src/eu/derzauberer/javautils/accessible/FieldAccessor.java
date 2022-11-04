@@ -21,7 +21,7 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param field the corresponding {@link Field}
 	 */
-	public FieldAccessor(A parent, Field field, Class<F> fieldtype) {
+	public FieldAccessor(A parent, Field field) {
 		this.parent = parent;
 		this.field = field;
 	}
