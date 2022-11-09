@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -213,6 +214,24 @@ public class Accessor<T> {
 	 */
 	public List<MethodAccessor<?>> getMethods() {
 		return new ArrayList<>(methods);
+	}
+	
+	/**
+	 * Returns if the class is an interface an can not be instantiated.
+	 * 
+	 * @return if the class is an interface
+	 */
+	public boolean isInterface() {
+		return object.getClass().isInterface();
+	}
+
+	/**
+	 * Returns if the class is abstract an can not be instantiated.
+	 * 
+	 * @return if the class is abstract
+	 */
+	public boolean isAbstract() {
+		return Modifier.isAbstract(object.getClass().getModifiers());
 	}
 	
 	/**

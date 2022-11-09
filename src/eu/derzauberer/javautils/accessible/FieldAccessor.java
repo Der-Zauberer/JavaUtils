@@ -70,6 +70,15 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 		}
 	}
 	
+	/**
+	 * Returns if the value of the field is present and not null.
+	 * 
+	 * @return if the value of the field is present and not null
+	 */
+	public boolean isPresent() {
+		return getValue() != null;
+	}
+	
 	/**.
 	 * Returns the name of the field
 	 * 
