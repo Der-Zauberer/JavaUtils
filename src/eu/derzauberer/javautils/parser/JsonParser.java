@@ -209,7 +209,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			tab = "\t";
 			space = " ";
 			newLine = "\n";
-			if (!getEntries().containsKey("null")) tabs = tab;
+			if (!containsKey("null")) tabs = tab;
 			for (int i = 0; i < offset; i++) tabs += tab; 
 		}
 		if (getEntries().containsKey("null") && (isCollection("null") || isArray("null"))) {

@@ -297,50 +297,77 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 	
 	/**
-	 * Serializes an object into the parser with all fields defined by the
+	 * Serializes an object from the {@link Accessor} into the parser with all fields defined by the
 	 * {@link AccessibleVisibility}, which should be an annotation in the class to
 	 * serialize.
 	 * 
 	 * @param key    the path represented by the value
-	 * @param object the object to serialize
+	 * @param accessor the accessor with the object to serialize
 	 * @return the own parser object for further customization
 	 */
 	@SuppressWarnings("unchecked")
 	public P serialize(String key, Accessor<?> accessor) {
 		final String objectkey = key == null || key.equals("null") ? "null" : key;
 		accessor.getFields().forEach(field -> {
+			final String fieldKey = objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName();
 			if (field.getClassType().isPrimitive() || 
 					field.getValue() == null ||
 					String.class.isAssignableFrom(field.getClassType()) ||
 					Character.class.isAssignableFrom(field.getClassType()) ||
 					Boolean.class.isAssignableFrom(field.getClassType()) ||
-					Number.class.isAssignableFrom(field.getClassType()) ||
-					Collection.class.isAssignableFrom(field.getClassType()) ||
-					field.getClassType().isArray()) {
-				set(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), field.getValue());
+					Number.class.isAssignableFrom(field.getClassType())) {
+				set(fieldKey, field.getValue());
+			} else if (Collection.class.isAssignableFrom(field.getClassType()) || field.getClassType().isArray()) {
+				final Collection<Object> collection = new ArrayList<>();
+				for (Object object : field.getClassType().isArray() ? Arrays.asList((Object[]) field.getValue()) : (Collection<?>) field.getValue()) {
+					if (object == null || object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) {
+						collection.add(object);
+					} else {
+						collection.add(serialize(new Accessor<>(object)));
+					}
+				}
+				set(fieldKey, collection);
 			} else if (Map.class.isAssignableFrom(field.getClassType())) {
 				((Map<?, ?>) field.getValue()).forEach((mapkey, mapValue) -> {
 					//TODO
 				});
 			} else {
-				serialize(objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName(), new Accessor<>(field.getValue()));
+				serialize(fieldKey, new Accessor<>(field.getValue()));
 			}
 		});
 		return (P) this;
 	}
 	
-	
+	/**
+	 * Deserializes an object in the {@link Accessor} from the parser with all
+	 * fields defined by the {@link AccessibleVisibility}, which should be an
+	 * annotation in the class to serialize.
+	 * 
+	 * @param <T>      the type of the deserialized object
+	 * @param accessor the accessor with the object to serialize
+	 * @return the deserialized object
+	 */
 	public <T> T deserialize(Accessor<T> accessor) {
 		return deserialize("", accessor);
 	}
 	
-	@SuppressWarnings("unchecked")
+	/**
+	 * Deserializes an object in the {@link Accessor} from the parser with all
+	 * fields defined by the {@link AccessibleVisibility}, which should be an
+	 * annotation in the class to serialize.
+	 * 
+	 * @param <T>      the type of the deserialized object
+	 * @param key      the path represented by the value
+	 * @param accessor the accessor with the object to serialize
+	 * @return the deserialized object
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> T deserialize(String key, Accessor<T> accessor) {
 		final String objectkey = key == null || key.equals("null") ? "null" : key;
 		accessor.getFields().forEach(field -> {
 			final String fieldKey = objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName();
-			if (field.getClassType().isPrimitive() || 
-					field.getValue() == null ||
+			if (field.getValue() == null ||
+					field.getClassType().isPrimitive() || 
 					String.class.isAssignableFrom(field.getClassType()) ||
 					Character.class.isAssignableFrom(field.getClassType()) ||
 					Boolean.class.isAssignableFrom(field.getClassType()) ||
@@ -365,52 +392,60 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	            } else if (classType == null) {
 	            	new AccessorException("Can't extract class from generic wildcard <" + type + ">!").printStackTrace();
 	            } else {
-	            	if (field.isPresent()) {
-	            		@SuppressWarnings("rawtypes")
-						final Collection collection = (Collection) field.getValue();
-	            		if (String.class.isAssignableFrom(field.getClassType()) ||
-	            				Character.class.isAssignableFrom(field.getClassType()) ||
-	            				Boolean.class.isAssignableFrom(field.getClassType()) ||
-	            				Number.class.isAssignableFrom(field.getClassType()) ||
-	            				field.getClassType().isArray()) {
-	            			for (Object object : getCollection(fieldKey)) {
-	            				collection.add(DataUtil.convert(object, classType));
-	            			}
-	            		} else if (get(fieldKey) instanceof KeyValueParser<?>) {
-	            			for (KeyValueParser<?> parser : getCollection(fieldKey, new ArrayList<>(), KeyValueParser.class)) {
-		            			try {
-									collection.add(parser.deserialize(new Accessor<>(classType)));
-								} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-									new AccessorException("Can't instanciate the an " + field.getGenericType() + " object, please instanciate it in the constructor!").printStackTrace();
-								}
+	            	final Class<?> collectionType = field.isPresent() ? field.getValue().getClass() : field.getClassType();
+	            	if (collectionType.isInterface() && Modifier.isAbstract(collectionType.getModifiers())) {
+	            		new AccessorException("Can't instanciate abstract or interface object " + collectionType + ", please instanciate it in the constructor!").printStackTrace();
+	            	} else {
+	            		Collection collection = null;
+	            		try {
+							collection = (Collection) new Accessor<>(collectionType).getObject();
+							if (String.class.isAssignableFrom(classType) ||
+		            				Character.class.isAssignableFrom(classType) ||
+		            				Boolean.class.isAssignableFrom(classType) ||
+		            				Number.class.isAssignableFrom(classType)) {
+		            			for (Object object : getCollection(fieldKey)) {
+		            				collection.add(DataUtil.convert(object, classType));
+		            			}
+							} else {
+								for (KeyValueParser<?> parser : getCollection(fieldKey, new ArrayList<>(), KeyValueParser.class)) {
+			            			try {
+										collection.add(parser.deserialize(new Accessor<>(classType)));
+									} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+										new AccessorException("Can't instanciate an " + collectionType + " object, please instanciate it in the constructor!").printStackTrace();
+									}
+			            		}
+//		            		} else if (KeyValueParser.class.isAssignableFrom(classType)) {
+//		            			for (KeyValueParser<?> parser : getCollection(fieldKey, new ArrayList<>(), KeyValueParser.class)) {
+//			            			try {
+//										collection.add(parser.deserialize(new Accessor<>(classType)));
+//									} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+//										new AccessorException("Can't instanciate an " + collectionType + " object, please instanciate it in the constructor!").printStackTrace();
+//									}
+//			            		}
 		            		}
-	            		}
-						field.setObjectValue(collection);
-					} else if (!field.getClass().isInterface() && !Modifier.isAbstract(field.getClass().getModifiers())) {
-						try {
-							field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
-						} catch (IllegalArgumentException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
-							new AccessorException("Can't instanciate the an " + field.getGenericType() + " object, please instanciate it in the constructor!").printStackTrace();
+							field.setObjectValue(collection);
+						} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+							exception.printStackTrace();
+							new AccessorException("Can't instanciate the " + collectionType + " object, please instanciate it in the constructor!").printStackTrace();
 						}
-					} else {
-						new AccessorException("Can't instanciate the abstract or interface object " + field.getGenericType() + ", please instanciate it in the constructor!").printStackTrace();
-					}
+	            	}
 	            }
 			} else if (field.getClassType().isArray()) {
 				field.setObjectValue(getArray(fieldKey, field.getClassType().getComponentType()));
+				//TODO
 			} else if (Map.class.isAssignableFrom(field.getClassType())) {
-				
+				//TODO
 			} else {
 				if (field.isPresent()) {
-					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
-				} else if (!field.getClass().isInterface() && !Modifier.isAbstract(field.getClass().getModifiers())) {
 					try {
 						field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
 					} catch (IllegalArgumentException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
-						new AccessorException("Can't instanciate the an " + field.getGenericType() + " object, please instanciate it in the constructor!").printStackTrace();
+						new AccessorException("Can't instanciate the " + field.getGenericType() + " object, please instanciate it in the constructor!").printStackTrace();
 					}
+				} else if (field.getClass().isInterface() && Modifier.isAbstract(field.getClass().getModifiers())) {
+					new AccessorException("Can't instanciate the abstract or interface object " + field.getClassType() + ", please instanciate it in the constructor!").printStackTrace();
 				} else {
-					new AccessorException("Can't instanciate the abstract or interface object " + field.getGenericType() + ", please instanciate it in the constructor!").printStackTrace();
+					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
 				}
 			}
 		});
