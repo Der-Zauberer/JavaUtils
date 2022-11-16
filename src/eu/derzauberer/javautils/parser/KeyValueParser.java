@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -323,7 +324,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 					if (object == null || object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) {
 						collection.add(object);
 					} else {
-						collection.add(serialize(new Accessor<>(object)));
+						collection.add(getImplementationInstance().serialize((new Accessor<>(object))));
 					}
 				}
 				set(fieldKey, collection);
@@ -371,65 +372,37 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 					String.class.isAssignableFrom(field.getClassType()) ||
 					Character.class.isAssignableFrom(field.getClassType()) ||
 					Boolean.class.isAssignableFrom(field.getClassType()) ||
-					Number.class.isAssignableFrom(field.getClassType()) ||
-					field.getClassType().isArray()) {
+					Number.class.isAssignableFrom(field.getClassType())) {
 				field.setObjectValue(get(fieldKey, field.getClassType()));
 			} else if (Collection.class.isAssignableFrom(field.getClassType())) {
-				Class<?> classType = null;
-				String type = null;
-	            if (field.getGenericType() instanceof ParameterizedType) {
-	            	type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0].getTypeName();
-	            	if (type.equals("?")) {
-	            		classType = Object.class;
-	            	} else if (!type.contains(" ")) {
-	            		try {
-	            			classType = Class.forName(type);
-	    				} catch (ClassNotFoundException exception) {}
-	            	}
-	            }
-	            if (type == null) {
-	            	new AccessorException("Can't extract a generic type in " + field.getGenericType() + "!").printStackTrace();
-	            } else if (classType == null) {
-	            	new AccessorException("Can't extract class from generic wildcard <" + type + ">!").printStackTrace();
-	            } else {
-	            	final Class<?> collectionType = field.isPresent() ? field.getValue().getClass() : field.getClassType();
+				try {
+					final Class<?> classType = extractGenericClass(field.getGenericType(), 0);
+					final Class<?> collectionType = field.isPresent() ? field.getValue().getClass() : field.getClassType();
 	            	if (collectionType.isInterface() && Modifier.isAbstract(collectionType.getModifiers())) {
-	            		new AccessorException("Can't instanciate abstract or interface object " + collectionType + ", please instanciate it in the constructor!").printStackTrace();
+	            		new SerializationException("Can't instanciate abstract or interface object " + collectionType + ", please instanciate it in the constructor!").printStackTrace();
 	            	} else {
 	            		Collection collection = null;
 	            		try {
 							collection = (Collection) new Accessor<>(collectionType).getObject();
-							if (String.class.isAssignableFrom(classType) ||
-		            				Character.class.isAssignableFrom(classType) ||
-		            				Boolean.class.isAssignableFrom(classType) ||
-		            				Number.class.isAssignableFrom(classType)) {
-		            			for (Object object : getCollection(fieldKey)) {
-		            				collection.add(DataUtil.convert(object, classType));
-		            			}
-							} else {
-								for (KeyValueParser<?> parser : getCollection(fieldKey, new ArrayList<>(), KeyValueParser.class)) {
-			            			try {
-										collection.add(parser.deserialize(new Accessor<>(classType)));
+							for (Object object : getCollection(fieldKey)) {
+								if (object == null || object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) {
+									collection.add(DataUtil.convert(object, classType));
+								} else if (object instanceof KeyValueParser<?>) {
+									try {
+										collection.add(((KeyValueParser<?>) object).deserialize(new Accessor<>(classType)));
 									} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-										new AccessorException("Can't instanciate an " + collectionType + " object, please instanciate it in the constructor!").printStackTrace();
+										new SerializationException("Can't instanciate an " + collectionType + " object, please instanciate it in the constructor!", exception).printStackTrace();
 									}
-			            		}
-//		            		} else if (KeyValueParser.class.isAssignableFrom(classType)) {
-//		            			for (KeyValueParser<?> parser : getCollection(fieldKey, new ArrayList<>(), KeyValueParser.class)) {
-//			            			try {
-//										collection.add(parser.deserialize(new Accessor<>(classType)));
-//									} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-//										new AccessorException("Can't instanciate an " + collectionType + " object, please instanciate it in the constructor!").printStackTrace();
-//									}
-//			            		}
-		            		}
+								}
+							}
 							field.setObjectValue(collection);
 						} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-							exception.printStackTrace();
-							new AccessorException("Can't instanciate the " + collectionType + " object, please instanciate it in the constructor!").printStackTrace();
+							new SerializationException("Can't instanciate the " + collectionType + " object, please instanciate it in the constructor!", exception).printStackTrace();
 						}
 	            	}
-	            }
+				} catch (SerializationException exception) {
+					exception.printStackTrace();
+				}
 			} else if (field.getClassType().isArray()) {
 				field.setObjectValue(getArray(fieldKey, field.getClassType().getComponentType()));
 				//TODO
@@ -437,21 +410,83 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				//TODO
 			} else {
 				if (field.isPresent()) {
+					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
+				} else if (field.getClass().isInterface() && Modifier.isAbstract(field.getClass().getModifiers())) {
+					new SerializationException("Can't instanciate the abstract or interface object " + field.getClassType() + ", please instanciate it in the constructor!").printStackTrace();
+				} else {
 					try {
 						field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
 					} catch (IllegalArgumentException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
-						new AccessorException("Can't instanciate the " + field.getGenericType() + " object, please instanciate it in the constructor!").printStackTrace();
+						new SerializationException("Can't instanciate the " + field.getGenericType() + " object, please instanciate it in the constructor!", exception).printStackTrace();
 					}
-				} else if (field.getClass().isInterface() && Modifier.isAbstract(field.getClass().getModifiers())) {
-					new AccessorException("Can't instanciate the abstract or interface object " + field.getClassType() + ", please instanciate it in the constructor!").printStackTrace();
-				} else {
-					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
 				}
 			}
 		});
 		return accessor.getObject();
 	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Collection<?> deserializeCollection(Collection<?> parserCollection, Class<?> classType) {
+		Collection collection = null;
+		try {
+			collection = (Collection) new Accessor<>(classType).getObject();
+			for (Object object : parserCollection) {
+				if (object == null) {
+					collection.add(null);
+				} else if ((object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) && (
+						classType.isPrimitive() || 
+						String.class.isAssignableFrom(classType) ||
+						Character.class.isAssignableFrom(classType) ||
+						Boolean.class.isAssignableFrom(classType) ||
+						Number.class.isAssignableFrom(classType))) {
+					collection.add(DataUtil.convert(object, classType));
+				} else if (object instanceof Collection<?>) {
+					collection.add(deserializeCollection((Collection<?>) object, classType));
+				} else if (object instanceof KeyValueParser<?>) {
+					try {
+						collection.add(((KeyValueParser<?>) object).deserialize(new Accessor<>(classType)));
+					} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+						new AccessorException("Can't instanciate an " + classType + " object, please instanciate it in the constructor!", exception).printStackTrace();
+					}
+				}
+			}
+			return collection;
+		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+			new SerializationException("Can't instanciate the " + classType + " object, please instanciate it in the constructor!", exception).printStackTrace();
+			return null;
+		}
+	}
 
+	/**
+	 * Returns the class from a generic parameter.
+	 * 
+	 * @param type     the type with the parameter
+	 * @param position the position of the requested class
+	 * @return the class of the generic parameter
+	 * @throws SerializationException if the class can't be extracted
+	 */
+	private Class<?> extractGenericClass(Type type, int position) throws SerializationException {
+		if (!(type instanceof ParameterizedType)) {
+			throw new SerializationException("Can't extract generic types in " + type + "!");
+		}
+		if (position < 0 || position >= ((ParameterizedType) type).getActualTypeArguments().length) {
+			throw new SerializationException("Can't extract generic types in " + type + "!", new IndexOutOfBoundsException(position));
+		}
+		final String name = ((ParameterizedType) type).getActualTypeArguments()[position].getTypeName();
+		if (name.equals("?")) {
+			return Object.class;
+		} else if (!name.contains(" ")) {
+    		try {
+    			return Class.forName(name);
+			} catch (ClassNotFoundException exception) {
+				throw new SerializationException("Can't extract generic types in " + type + "!", exception);
+			}
+    	} else if (name.contains(" ")) {
+    		throw new SerializationException("Can't extract class from generic wildcard <" + type + ">!");
+    	}
+		return null;
+	}
+	
 	/**
 	 * Gets the array as value by it's key and check if it is primitive. The key null
 	 * or "null" represents the root list. A primitive type is what isn't a

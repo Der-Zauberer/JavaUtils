@@ -14,10 +14,22 @@ public class AccessorException extends RuntimeException {
 	 * was thrown inside the functions of the {@link Accessor},
 	 * {@link FieldAccessor} or {@link MethodAccessor}.
 	 * 
-	 * @param string the exception message
+	 * @param message the exception message
 	 */
-	public AccessorException(String string) {
-		super(string);
+	public AccessorException(String message) {
+		super(message);
 	}
 
+	/**
+	 * Creates a new exception, which is typically thrown, when another exception
+	 * was thrown inside the functions of the {@link Accessor},
+	 * {@link FieldAccessor} or {@link MethodAccessor}.
+	 * 
+	 * @param message the exception message
+	 * @param cause the exception cause
+	 */
+	public AccessorException(String message, Exception cause) {
+		super(message, cause);
+	}
+	
 }
