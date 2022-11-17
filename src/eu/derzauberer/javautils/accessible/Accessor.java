@@ -1,5 +1,6 @@
 package eu.derzauberer.javautils.accessible;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -253,7 +254,7 @@ public class Accessor<T> {
 	 * @throws InvocationTargetException if the constructor throws an exception
 	 */
 	@SuppressWarnings("unchecked")
-	private static <T> T instantiate(Class<T> type) 
+	public static <T> T instantiate(Class<T> type) 
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Constructor<?> constructor = type.getDeclaredConstructor();
 		constructor.setAccessible(true);
@@ -282,11 +283,24 @@ public class Accessor<T> {
 	 * @throws InvocationTargetException if the constructor throws an exception
 	 */
 	@SuppressWarnings("unchecked")
-	private static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
+	public static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		final Constructor<?> constructor = type.getDeclaredConstructor(constructurTypes);
 		constructor.setAccessible(true);
 		return (T) constructor.newInstance(constructerArgs);
+	}
+	
+	/**
+	 * Creates a new array by instantiating it.
+	 * 
+	 * @param <T>  the type of the array
+	 * @param type the type of the array
+	 * @param size the size of the array
+	 * @return the array
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T[] instanciateArray(Class<T> type, int size) {
+		return (T[]) Array.newInstance(type, size);
 	}
 
 }

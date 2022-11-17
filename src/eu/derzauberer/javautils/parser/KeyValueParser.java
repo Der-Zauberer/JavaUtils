@@ -19,7 +19,6 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
 import eu.derzauberer.javautils.accessible.Accessor;
-import eu.derzauberer.javautils.accessible.AccessorException;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -290,6 +289,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * 
 	 * @param object the object to serialize
 	 * @return the own parser object for further customization
+	 * 
+	 * @see {@link Accessor}
 	 */
 	@SuppressWarnings("unchecked")
 	public P serialize(Accessor<?> accessor) {
@@ -305,6 +306,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key    the path represented by the value
 	 * @param accessor the accessor with the object to serialize
 	 * @return the own parser object for further customization
+	 * 
+	 * @see {@link Accessor}
 	 */
 	@SuppressWarnings("unchecked")
 	public P serialize(String key, Accessor<?> accessor) {
@@ -347,6 +350,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param <T>      the type of the deserialized object
 	 * @param accessor the accessor with the object to serialize
 	 * @return the deserialized object
+	 * 
+	 * @see {@link Accessor} {@link DataUtil}
 	 */
 	public <T> T deserialize(Accessor<T> accessor) {
 		return deserialize("", accessor);
@@ -361,6 +366,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key      the path represented by the value
 	 * @param accessor the accessor with the object to serialize
 	 * @return the deserialized object
+	 * 
+	 * @see {@link Accessor} {@link DataUtil}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> T deserialize(String key, Accessor<T> accessor) {
@@ -381,31 +388,15 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	            	if (collectionType.isInterface() && Modifier.isAbstract(collectionType.getModifiers())) {
 	            		new SerializationException("Can't instanciate abstract or interface object " + collectionType + ", please instanciate it in the constructor!").printStackTrace();
 	            	} else {
-	            		Collection collection = null;
-	            		try {
-							collection = (Collection) new Accessor<>(collectionType).getObject();
-							for (Object object : getCollection(fieldKey)) {
-								if (object == null || object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) {
-									collection.add(DataUtil.convert(object, classType));
-								} else if (object instanceof KeyValueParser<?>) {
-									try {
-										collection.add(((KeyValueParser<?>) object).deserialize(new Accessor<>(classType)));
-									} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-										new SerializationException("Can't instanciate an " + collectionType + " object, please instanciate it in the constructor!", exception).printStackTrace();
-									}
-								}
-							}
-							field.setObjectValue(collection);
-						} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-							new SerializationException("Can't instanciate the " + collectionType + " object, please instanciate it in the constructor!", exception).printStackTrace();
-						}
+	            		field.setObjectValue(deserializeCollection(getCollection(fieldKey), collectionType, classType));
 	            	}
 				} catch (SerializationException exception) {
 					exception.printStackTrace();
 				}
 			} else if (field.getClassType().isArray()) {
 				field.setObjectValue(getArray(fieldKey, field.getClassType().getComponentType()));
-				//TODO
+				final Collection collection = deserializeCollection(getCollection(fieldKey), ArrayList.class, field.getClassType().getComponentType());
+				field.setObjectValue(collection.toArray(Accessor.instanciateArray(field.getClassType().getComponentType(), collection.size())));				
 			} else if (Map.class.isAssignableFrom(field.getClassType())) {
 				//TODO
 			} else {
@@ -417,7 +408,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 					try {
 						field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
 					} catch (IllegalArgumentException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
-						new SerializationException("Can't instanciate the " + field.getGenericType() + " object, please instanciate it in the constructor!", exception).printStackTrace();
+						new SerializationException("Can't instanciate the " + field.getClassType() + " object, please instanciate it in the constructor!", exception).printStackTrace();
 					}
 				}
 			}
@@ -425,11 +416,21 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		return accessor.getObject();
 	}
 	
+	/**
+	 * Deserializes a collection of primitive types and complex objects using the
+	 * {@link Accessor} and the {@link DataUtil} to convert the values.
+	 * 
+	 * @param parserCollection the collection to deserialize
+	 * @param collectionType   the type of the collection, when serializes
+	 * @param classType        the type of the collections entities
+	 * @return the deserialized collection
+	 * 
+	 * @see {@link Accessor} {@link DataUtil}
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Collection<?> deserializeCollection(Collection<?> parserCollection, Class<?> classType) {
-		Collection collection = null;
+	private Collection<?> deserializeCollection(Collection<?> parserCollection, Class<?> collectionType, Class<?> classType) {
 		try {
-			collection = (Collection) new Accessor<>(classType).getObject();
+			Collection collection = (Collection) Accessor.instantiate(collectionType);
 			for (Object object : parserCollection) {
 				if (object == null) {
 					collection.add(null);
@@ -441,12 +442,12 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 						Number.class.isAssignableFrom(classType))) {
 					collection.add(DataUtil.convert(object, classType));
 				} else if (object instanceof Collection<?>) {
-					collection.add(deserializeCollection((Collection<?>) object, classType));
+					collection.add(deserializeCollection((Collection<?>) object, object.getClass(), classType));
 				} else if (object instanceof KeyValueParser<?>) {
 					try {
 						collection.add(((KeyValueParser<?>) object).deserialize(new Accessor<>(classType)));
 					} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
-						new AccessorException("Can't instanciate an " + classType + " object, please instanciate it in the constructor!", exception).printStackTrace();
+						new SerializationException("Can't instanciate an " + classType + " object, please instanciate it in the constructor!", exception).printStackTrace();
 					}
 				}
 			}
@@ -464,6 +465,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param position the position of the requested class
 	 * @return the class of the generic parameter
 	 * @throws SerializationException if the class can't be extracted
+	 * 
+	 * @see {@link ParameterizedType}
 	 */
 	private Class<?> extractGenericClass(Type type, int position) throws SerializationException {
 		if (!(type instanceof ParameterizedType)) {
