@@ -3,6 +3,10 @@ package eu.derzauberer.javautils.parser;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,6 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import eu.derzauberer.javautils.accessible.AccessibleVisibility;
+import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -275,7 +281,215 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		}
 		return t;
 	}
+	
+	/**
+	 * Serializes an object into the parser with all fields defined by the
+	 * {@link AccessibleVisibility}, which should be an annotation in the class to
+	 * serialize.
+	 * 
+	 * @param object the object to serialize
+	 * @return the own parser object for further customization
+	 * 
+	 * @see {@link Accessor}
+	 */
+	@SuppressWarnings("unchecked")
+	public P serialize(Accessor<?> accessor) {
+		serialize("", accessor);
+		return (P) this;
+	}
+	
+	/**
+	 * Serializes an object from the {@link Accessor} into the parser with all fields defined by the
+	 * {@link AccessibleVisibility}, which should be an annotation in the class to
+	 * serialize.
+	 * 
+	 * @param key    the path represented by the value
+	 * @param accessor the accessor with the object to serialize
+	 * @return the own parser object for further customization
+	 * 
+	 * @see {@link Accessor}
+	 */
+	@SuppressWarnings("unchecked")
+	public P serialize(String key, Accessor<?> accessor) {
+		final String objectkey = key == null || key.equals("null") ? "null" : key;
+		accessor.getFields().forEach(field -> {
+			final String fieldKey = objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName();
+			if (field.getClassType().isPrimitive() || 
+					field.getValue() == null ||
+					String.class.isAssignableFrom(field.getClassType()) ||
+					Character.class.isAssignableFrom(field.getClassType()) ||
+					Boolean.class.isAssignableFrom(field.getClassType()) ||
+					Number.class.isAssignableFrom(field.getClassType())) {
+				set(fieldKey, field.getValue());
+			} else if (Collection.class.isAssignableFrom(field.getClassType()) || field.getClassType().isArray()) {
+				final Collection<Object> collection = new ArrayList<>();
+				for (Object object : field.getClassType().isArray() ? Arrays.asList((Object[]) field.getValue()) : (Collection<?>) field.getValue()) {
+					if (object == null || object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) {
+						collection.add(object);
+					} else {
+						collection.add(getImplementationInstance().serialize((new Accessor<>(object))));
+					}
+				}
+				set(fieldKey, collection);
+			} else if (Map.class.isAssignableFrom(field.getClassType())) {
+				((Map<?, ?>) field.getValue()).forEach((mapkey, mapValue) -> {
+					//TODO
+				});
+			} else {
+				serialize(fieldKey, new Accessor<>(field.getValue()));
+			}
+		});
+		return (P) this;
+	}
+	
+	/**
+	 * Deserializes an object in the {@link Accessor} from the parser with all
+	 * fields defined by the {@link AccessibleVisibility}, which should be an
+	 * annotation in the class to serialize.
+	 * 
+	 * @param <T>      the type of the deserialized object
+	 * @param accessor the accessor with the object to serialize
+	 * @return the deserialized object
+	 * 
+	 * @see {@link Accessor} {@link DataUtil}
+	 */
+	public <T> T deserialize(Accessor<T> accessor) {
+		return deserialize("", accessor);
+	}
+	
+	/**
+	 * Deserializes an object in the {@link Accessor} from the parser with all
+	 * fields defined by the {@link AccessibleVisibility}, which should be an
+	 * annotation in the class to serialize.
+	 * 
+	 * @param <T>      the type of the deserialized object
+	 * @param key      the path represented by the value
+	 * @param accessor the accessor with the object to serialize
+	 * @return the deserialized object
+	 * 
+	 * @see {@link Accessor} {@link DataUtil}
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public <T> T deserialize(String key, Accessor<T> accessor) {
+		final String objectkey = key == null || key.equals("null") ? "null" : key;
+		accessor.getFields().forEach(field -> {
+			final String fieldKey = objectkey.trim().isEmpty() ? field.getName() : objectkey + "." + field.getName();
+			if (field.getValue() == null ||
+					field.getClassType().isPrimitive() || 
+					String.class.isAssignableFrom(field.getClassType()) ||
+					Character.class.isAssignableFrom(field.getClassType()) ||
+					Boolean.class.isAssignableFrom(field.getClassType()) ||
+					Number.class.isAssignableFrom(field.getClassType())) {
+				field.setObjectValue(get(fieldKey, field.getClassType()));
+			} else if (Collection.class.isAssignableFrom(field.getClassType())) {
+				try {
+					final Class<?> classType = extractGenericClass(field.getGenericType(), 0);
+					final Class<?> collectionType = field.isPresent() ? field.getValue().getClass() : field.getClassType();
+	            	if (collectionType.isInterface() && Modifier.isAbstract(collectionType.getModifiers())) {
+	            		new SerializationException("Can't instanciate abstract or interface object " + collectionType + ", please instanciate it in the constructor!").printStackTrace();
+	            	} else {
+	            		field.setObjectValue(deserializeCollection(getCollection(fieldKey), collectionType, classType));
+	            	}
+				} catch (SerializationException exception) {
+					exception.printStackTrace();
+				}
+			} else if (field.getClassType().isArray()) {
+				field.setObjectValue(getArray(fieldKey, field.getClassType().getComponentType()));
+				final Collection collection = deserializeCollection(getCollection(fieldKey), ArrayList.class, field.getClassType().getComponentType());
+				field.setObjectValue(collection.toArray(Accessor.instanciateArray(field.getClassType().getComponentType(), collection.size())));				
+			} else if (Map.class.isAssignableFrom(field.getClassType())) {
+				//TODO
+			} else {
+				if (field.isPresent()) {
+					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
+				} else if (field.getClass().isInterface() && Modifier.isAbstract(field.getClass().getModifiers())) {
+					new SerializationException("Can't instanciate the abstract or interface object " + field.getClassType() + ", please instanciate it in the constructor!").printStackTrace();
+				} else {
+					try {
+						field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
+					} catch (IllegalArgumentException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
+						new SerializationException("Can't instanciate the " + field.getClassType() + " object, please instanciate it in the constructor!", exception).printStackTrace();
+					}
+				}
+			}
+		});
+		return accessor.getObject();
+	}
+	
+	/**
+	 * Deserializes a collection of primitive types and complex objects using the
+	 * {@link Accessor} and the {@link DataUtil} to convert the values.
+	 * 
+	 * @param parserCollection the collection to deserialize
+	 * @param collectionType   the type of the collection, when serializes
+	 * @param classType        the type of the collections entities
+	 * @return the deserialized collection
+	 * 
+	 * @see {@link Accessor} {@link DataUtil}
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Collection<?> deserializeCollection(Collection<?> parserCollection, Class<?> collectionType, Class<?> classType) {
+		try {
+			Collection collection = (Collection) Accessor.instantiate(collectionType);
+			for (Object object : parserCollection) {
+				if (object == null) {
+					collection.add(null);
+				} else if ((object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) && (
+						classType.isPrimitive() || 
+						String.class.isAssignableFrom(classType) ||
+						Character.class.isAssignableFrom(classType) ||
+						Boolean.class.isAssignableFrom(classType) ||
+						Number.class.isAssignableFrom(classType))) {
+					collection.add(DataUtil.convert(object, classType));
+				} else if (object instanceof Collection<?>) {
+					collection.add(deserializeCollection((Collection<?>) object, object.getClass(), classType));
+				} else if (object instanceof KeyValueParser<?>) {
+					try {
+						collection.add(((KeyValueParser<?>) object).deserialize(new Accessor<>(classType)));
+					} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+						new SerializationException("Can't instanciate an " + classType + " object, please instanciate it in the constructor!", exception).printStackTrace();
+					}
+				}
+			}
+			return collection;
+		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+			new SerializationException("Can't instanciate the " + classType + " object, please instanciate it in the constructor!", exception).printStackTrace();
+			return null;
+		}
+	}
 
+	/**
+	 * Returns the class from a generic parameter.
+	 * 
+	 * @param type     the type with the parameter
+	 * @param position the position of the requested class
+	 * @return the class of the generic parameter
+	 * @throws SerializationException if the class can't be extracted
+	 * 
+	 * @see {@link ParameterizedType}
+	 */
+	private Class<?> extractGenericClass(Type type, int position) throws SerializationException {
+		if (!(type instanceof ParameterizedType)) {
+			throw new SerializationException("Can't extract generic types in " + type + "!");
+		}
+		if (position < 0 || position >= ((ParameterizedType) type).getActualTypeArguments().length) {
+			throw new SerializationException("Can't extract generic types in " + type + "!", new IndexOutOfBoundsException(position));
+		}
+		final String name = ((ParameterizedType) type).getActualTypeArguments()[position].getTypeName();
+		if (name.equals("?")) {
+			return Object.class;
+		} else if (!name.contains(" ")) {
+    		try {
+    			return Class.forName(name);
+			} catch (ClassNotFoundException exception) {
+				throw new SerializationException("Can't extract generic types in " + type + "!", exception);
+			}
+    	} else if (name.contains(" ")) {
+    		throw new SerializationException("Can't extract class from generic wildcard <" + type + ">!");
+    	}
+		return null;
+	}
+	
 	/**
 	 * Gets the array as value by it's key and check if it is primitive. The key null
 	 * or "null" represents the root list. A primitive type is what isn't a

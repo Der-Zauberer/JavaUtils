@@ -1,9 +1,11 @@
 package eu.derzauberer.javautils.accessible;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -141,7 +143,7 @@ public class Accessor<T> {
 					.filter(fieldPredicate)
 					.forEach(field -> {
 				field.setAccessible(true);
-				fields.add(new FieldAccessor<>(this, field, field.getType()));
+				fields.add(new FieldAccessor<>(this, field));
 			});
 			Arrays.asList(clazz.getDeclaredMethods())
 					.stream()
@@ -216,6 +218,24 @@ public class Accessor<T> {
 	}
 	
 	/**
+	 * Returns if the class is an interface an can not be instantiated.
+	 * 
+	 * @return if the class is an interface
+	 */
+	public boolean isInterface() {
+		return object.getClass().isInterface();
+	}
+
+	/**
+	 * Returns if the class is abstract an can not be instantiated.
+	 * 
+	 * @return if the class is abstract
+	 */
+	public boolean isAbstract() {
+		return Modifier.isAbstract(object.getClass().getModifiers());
+	}
+	
+	/**
 	 * Tries to create an instance of the type. This instantiation does only work if
 	 * the class has a standard constructor.
 	 *
@@ -234,7 +254,7 @@ public class Accessor<T> {
 	 * @throws InvocationTargetException if the constructor throws an exception
 	 */
 	@SuppressWarnings("unchecked")
-	private static <T> T instantiate(Class<T> type) 
+	public static <T> T instantiate(Class<T> type) 
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Constructor<?> constructor = type.getDeclaredConstructor();
 		constructor.setAccessible(true);
@@ -263,11 +283,24 @@ public class Accessor<T> {
 	 * @throws InvocationTargetException if the constructor throws an exception
 	 */
 	@SuppressWarnings("unchecked")
-	private static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
+	public static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		final Constructor<?> constructor = type.getDeclaredConstructor();
+		final Constructor<?> constructor = type.getDeclaredConstructor(constructurTypes);
 		constructor.setAccessible(true);
 		return (T) constructor.newInstance(constructerArgs);
+	}
+	
+	/**
+	 * Creates a new array by instantiating it.
+	 * 
+	 * @param <T>  the type of the array
+	 * @param type the type of the array
+	 * @param size the size of the array
+	 * @return the array
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T[] instanciateArray(Class<T> type, int size) {
+		return (T[]) Array.newInstance(type, size);
 	}
 
 }

@@ -21,7 +21,7 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param field the corresponding {@link Field}
 	 */
-	public FieldAccessor(A parent, Field field, Class<F> fieldtype) {
+	public FieldAccessor(A parent, Field field) {
 		this.parent = parent;
 		this.field = field;
 	}
@@ -68,6 +68,15 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 		} catch (IllegalAccessException | IllegalArgumentException exception) {
 			throw new AccessorException(exception.getMessage());
 		}
+	}
+	
+	/**
+	 * Returns if the value of the field is present and not null.
+	 * 
+	 * @return if the value of the field is present and not null
+	 */
+	public boolean isPresent() {
+		return getValue() != null;
 	}
 	
 	/**.
