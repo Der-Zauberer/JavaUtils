@@ -25,7 +25,7 @@ public interface Parser<P extends Parser<P>> {
 	 * Reads a file and parse the file content in the {@link #parseIn(String)}.
 	 * method. This call will override the existing content of the parser!
 	 * 
-	 * @param file file the file to read
+	 * @param file the file to read
 	 * @return the own parser object for further customization
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
