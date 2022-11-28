@@ -91,7 +91,7 @@ public class FileUtil {
 	}
 
 	/**
-	 * Reads a file and returns the content as {@link String}.
+	 * Reads a file and returns the content as string.
 	 * 
 	 * @param file the file to read
 	 * @return the content of the file as string
@@ -101,12 +101,25 @@ public class FileUtil {
 	public static String readString(File file) throws IOException {
 		return new String(Files.readAllBytes(Paths.get(file.toURI())));
 	}
+	
+	/**
+	 * Reads a file and returns the content as byte array.
+	 * 
+	 * @param file the file to read
+	 * @return the content of the file as byte array
+	 * @throws IOException       if an I/O exception occurs
+	 * @throws SecurityException if java has no permission to read the file
+	 */
+	public static byte[] readBytes(File file) throws IOException {
+		return Files.readAllBytes(Paths.get(file.toURI()));
+	}
 
 	/**
-	 * Writes a {@link String} to a file and create the file before writing if the file
+	 * Writes a string to a file and create the file before writing if the file
 	 * didn't exist.
 	 * 
-	 * @param file the file to write
+	 * @param file   the file to write
+	 * @param string the string to write to the file
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
@@ -114,12 +127,27 @@ public class FileUtil {
 		createFile(file);
 		Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	}
+	
+	/**
+	 * Writes an byte array to a file and create the file before writing if the file
+	 * didn't exist.
+	 * 
+	 * @param file  the file to write
+	 * @param bytes the byte array to write to the file
+	 * @throws SecurityException if java has no permission to write to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public static void writeString(File file, byte[] bytes) throws IOException {
+		createFile(file);
+		Files.write(Paths.get(file.toURI()), bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+	}
 
 	/**
-	 * Appends a {@link String} to a file and create the file before writing if the
-	 * file didn't exist.
+	 * Appends a string to a file and create the file before writing if the file
+	 * didn't exist.
 	 * 
-	 * @param file the file to append
+	 * @param file   the file to append
+	 * @param string the string to write to the file
 	 * @throws SecurityException if java has no permission to append to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
@@ -129,7 +157,21 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Connects to a website and returns it's content as {@link String}.
+	 * Appends an byte array to a file and create the file before writing if the
+	 * file didn't exist.
+	 * 
+	 * @param file  the file to append
+	 * @param bytes the byte array to write to the file
+	 * @throws SecurityException if java has no permission to append to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public static void appendString(File file, byte[] bytes) throws IOException {
+		createFile(file);
+		Files.write(Paths.get(file.toURI()), bytes, StandardOpenOption.APPEND);
+	}
+	
+	/**
+	 * Connects to a website and returns it's content as string.
 	 * 
 	 * @param url the url of the website
 	 * @return the content of the website as string
@@ -140,7 +182,7 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Connects to a website and returns it's content as {@link String}.
+	 * Connects to a website and returns it's content as string.
 	 * 
 	 * @param url            the url of the website
 	 * @param removeHtmlTags if the returned string should not contain html tags
@@ -248,7 +290,7 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Returns the operating system default temp directory as {@link File}.
+	 * Returns the operating system default temp directory as file.
 	 * 
 	 * @return the operating system default temp directory as file
 	 */
