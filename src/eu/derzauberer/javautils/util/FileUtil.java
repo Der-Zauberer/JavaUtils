@@ -80,10 +80,10 @@ public class FileUtil {
 		} else {
 			final InputStream input = new FileInputStream(original);
 			final OutputStream output = new FileOutputStream(copy);
-			final byte[] buffer = new byte[1024];
-			int lennght = 0;
-			while ((lennght = input.read(buffer)) > 0) {
-				output.write(buffer, 0, lennght);
+			final byte[] bytes = new byte[1024];
+			int length = 0;
+			while ((length = input.read(bytes)) > 0) {
+				output.write(bytes, 0, length);
 			}
 			input.close();
 			output.close();
