@@ -2,7 +2,6 @@ package eu.derzauberer.javautils.events;
 
 import eu.derzauberer.javautils.controller.CommandController;
 import eu.derzauberer.javautils.controller.ConsoleController;
-import eu.derzauberer.javautils.util.Sender.MessageType;
 
 /**
  * This event gets called when the
@@ -12,7 +11,6 @@ public class ConsoleOutputEvent extends CancellableEvent {
 	
 	private final ConsoleController console;
 	private String output;
-	private final MessageType type;
 	
 	/**
 	 * Creates a new event that gets called when the {@link CommandController} sends
@@ -20,12 +18,10 @@ public class ConsoleOutputEvent extends CancellableEvent {
 	 * 
 	 * @param console the console sending the output
 	 * @param output  the output, which the console will print
-	 * @param type    the type of the message
 	 */
-	public ConsoleOutputEvent(ConsoleController console, String output, MessageType type) {
+	public ConsoleOutputEvent(ConsoleController console, String output) {
 		this.console = console;
 		this.output = output;
-		this.type = type;
 	}
 
 	/**
@@ -53,15 +49,6 @@ public class ConsoleOutputEvent extends CancellableEvent {
 	 */
 	public String getOutput() {
 		return output;
-	}
-	
-	/**
-	 * Returns which type the message should be.
-	 * 
-	 * @return which type the message should be
-	 */
-	public MessageType getType() {
-		return type;
 	}
 
 }

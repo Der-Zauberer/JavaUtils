@@ -10,7 +10,7 @@ import eu.derzauberer.javautils.util.FileUtil;
 
 /**
  * The logger collects messages from the {@link #log(String)} methods and send
- * the output with timestamp, type and message to the console and writes it in a
+ * the output with date, type and message to the console and writes it in a
  * logging file if enabled. You can enable the options with
  * {@link #setSystemOutput(boolean)} and {@link #setFileOutput(boolean)}. The
  * use of one of the {@link #log(String)} functions triggers a
@@ -30,10 +30,11 @@ public class LoggingController {
 	
 	private final String prefix;
 	
-	private static boolean systemOutput = true;
-	private static boolean fileOutput = true;
-	private static File fileDirectory = new File("logs");
-	private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+	private boolean systemOutput = true;
+	private boolean fileOutput = true;
+	private boolean enableOutputInformations = true;
+	private File fileDirectory = new File("logs");
+	private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	/**
 	 *  Creates a new logging controller without a prefix.
@@ -99,14 +100,14 @@ public class LoggingController {
 	 */
 	public void log(LogType type, String message) {
 		if (type == LogType.DEBUG && !isDebugEnabled()) return;
-		final LocalDateTime timeStapm = LocalDateTime.now();
-		final String output = "[" + timeStapm.format(dateTimeFormatter) + " " + type + "] " + prefix + message;
-		final LoggingEvent event = new LoggingEvent(this, type, message, timeStapm, output);
+		final LocalDateTime timeStamp = LocalDateTime.now();
+		final String output = enableOutputInformations ?  "[" + timeStamp.format(dateTimeFormatter) + " " + type + "] " + prefix + message: message;
+		final LoggingEvent event = new LoggingEvent(this, type, message, timeStamp, output);
 		EventController.getGlobalEventController().callListeners(event);
 		if (systemOutput) System.out.println(output);
 		if (fileOutput) {
 			try {
-				FileUtil.appendString(new File(fileDirectory, "log-" + timeStapm.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), output + "\n");
+				FileUtil.appendString(new File(fileDirectory, "log-" + timeStamp.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), output + "\n");
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
@@ -142,8 +143,8 @@ public class LoggingController {
 	 * @param systemOutput if the logging output should be printed to the standard
 	 *                     output
 	 */
-	public static void setSystemOutput(boolean systemOutput) {
-		LoggingController.systemOutput = systemOutput;
+	public void setSystemOutput(boolean systemOutput) {
+		this.systemOutput = systemOutput;
 	}
 	
 	/**
@@ -151,7 +152,7 @@ public class LoggingController {
 	 * 
 	 * return if the logging output should be printed to the standard output
 	 */
-	public static boolean isSystemOutput() {
+	public boolean isSystemOutput() {
 		return systemOutput;
 	}
 	
@@ -161,8 +162,8 @@ public class LoggingController {
 	 * 
 	 * @param fileOutput if the logging output should be printed to a file
 	 */
-	public static void setFileOutput(boolean fileOutput) {
-		LoggingController.fileOutput = fileOutput;
+	public void setFileOutput(boolean fileOutput) {
+		this.fileOutput = fileOutput;
 	}
 	
 	/**
@@ -171,8 +172,27 @@ public class LoggingController {
 	 * 
 	 * return if the logging output should be printed to a file
 	 */
-	public static boolean isFileOutput() {
+	public boolean isFileOutput() {
 		return fileOutput;
+	}
+	
+	/**
+	 * Defines whether or not the date, type and prefix should be printed in front of the debug output.
+	 * 
+	 * @param enableOutputInformations if the date, type and prefix should be printed in front of the debug output
+	 */
+	public void enableOutputInformations(boolean enableOutputInformations) {
+		this.enableOutputInformations = enableOutputInformations;
+	}
+	
+	
+	/**
+	 * Returns whether or not the date, type and prefix should be printed in front of the debug output.
+	 * 
+	 * @return if the date, type and prefix should be printed in front of the debug output
+	 */
+	public boolean isOutputInformationsEnabled() {
+		return enableOutputInformations;
 	}
 	
 	/**
@@ -181,8 +201,8 @@ public class LoggingController {
 	 * @param fileDirectory the directory in which the files for the logging output
 	 *                      should be in
 	 */
-	public static void setFileDirectory(File fileDirectory) {
-		LoggingController.fileDirectory = fileDirectory;
+	public void setFileDirectory(File fileDirectory) {
+		this.fileDirectory = fileDirectory;
 	}
 	
 	/**
@@ -190,29 +210,29 @@ public class LoggingController {
 	 * 
 	 * @return the directory in which the files for the logging output should be in
 	 */
-	public static File getFileDirectory() {
+	public File getFileDirectory() {
 		return fileDirectory;
 	}
 	
 	/**
-	 * Sets the format in which the timestamp should be in front of the logging
+	 * Sets the format in which the date should be in front of the logging
 	 * messages.
 	 * 
-	 * @param dateTimeFormatter the format in which the timestamp should be in front
+	 * @param dateTimeFormatter the format in which the date should be in front
 	 *                          of the logging messages
 	 */
-	public static void setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
-		LoggingController.dateTimeFormatter = dateTimeFormatter;
+	public void setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
+		this.dateTimeFormatter = dateTimeFormatter;
 	}
 	
 	/**
-	 * Returns the format in which the timestamp should be in front of the logging
+	 * Returns the format in which the date should be in front of the logging
 	 * messages.
 	 * 
-	 * @return the format in which the timestamp should be in front of the logging
+	 * @return the format in which the date should be in front of the logging
 	 *         messages
 	 */
-	public static DateTimeFormatter getDateTimeFormatter() {
+	public DateTimeFormatter getDateTimeFormatter() {
 		return dateTimeFormatter;
 	}
 	

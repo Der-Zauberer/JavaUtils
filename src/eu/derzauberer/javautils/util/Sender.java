@@ -1,96 +1,153 @@
 package eu.derzauberer.javautils.util;
 
-import java.lang.management.ManagementFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 /**
  * Represents an object that can send and receive messages.
  */
 public interface Sender {
-	
+
 	/**
-	 * Represents the type of the message.
-	 */
-	enum MessageType {DEFAULT, DEBUG, INFO, SUCCESS, WARNING, ERROR}
-	
-	/**
-	 * The method gets called, when the sender sends a message. Please do not call
-	 * this method by yourself, it is reserved for internal usage. Use
-	 * {@link #sendMessage(String)} instead, which calls implicitly this method.
+	 * Reads the an amount of bytes and returns the byte array. The method
+	 * blocks until the length of the bytes where read, the end of the
+	 * stream is reached or an exception occurred. The function only calls
+	 * the {@link InputStream#readNBytes(int)} method.
 	 * 
-	 * @param input the raw input that the sender receives
+	 * @param lenght the length of the byte array to read
+	 * @return the byte array
+	 * @throws IOException if an I/O exception occurs
+	 * @see {@link InputStream#readNBytes(int)}
 	 */
-	void sendOutput(String message, MessageType type);
+	byte[] readBytes(int lenght) throws IOException;
+
+	/**
+	 * Reads the an amount of bytes and returns the byte array. The method
+	 * blocks until the end of the stream is reached or an exception
+	 * occurred. The function only calls the
+	 * {@link InputStream#read(byte[])} method.
+	 * 
+	 * @param bytes the byte array
+	 * @return the number of bytes that where read
+	 * @throws IOException if an I/O exception occurs
+	 * @see {@link InputStream#read(byte[])}
+	 */
+	int readBytes(byte[] bytes) throws IOException;
 	
 	/**
-	 * Sends a simple message to the sender.
+	 * Blocks until a line break is recognized and returns the byte array
+	 * as string. The bytes are converted with the {@link Charset} to a
+	 * string.
 	 * 
-	 * @param message the message to send
+	 * @return the line as string
+	 * @throws IOException if an I/O exception occurs
 	 */
-	default void sendMessage(String message) {
-		sendMessage(getDefaultMessageType(), message);
+	String readLine() throws IOException;
+
+	/**
+	 * Blocks until all lines are read and no one are remaining and returns the byte array
+	 * as string. The bytes are converted with the {@link Charset} to a
+	 * string.
+	 * 
+	 * @return the line as string
+	 * @throws IOException if an I/O exception occurs
+	 */
+	default String readAll() throws IOException {
+		final StringBuilder string = new StringBuilder();
+		String line;
+		while ((line = readLine()) == null) string.append(line);
+		return string.toString();
 	}
 	
 	/**
-	 * Sends a simple message to the sender.
+	 * Sends an byte array to the stream. It does nothing if the stream is
+	 * already closed.
 	 * 
-	 * @param message the message to send
-	 * @param args    arguments to insert in the message with the
-	 *                build in {@link String#format(String, Object...)} method
+	 * @param bytes the byte array to send
 	 */
-	default void sendMessage(String message, String... args) {
-		sendMessage(getDefaultMessageType(), message, args);
+	void sendBytes(byte[] bytes);
+
+	/**
+	 * Sends a string to the stream. It does nothing if the stream is
+	 * already closed.
+	 * 
+	 * @param string the string to send to the stream
+	 */
+	default void send(String string) {
+		sendBytes(string.getBytes(getCharset()));
 	}
 
 	/**
-	 * Sends a simple message to the sender.
+	 * Sends a formatted string with object arguments by they
+	 * {@link #toString()} method to the stream. The arguments uses the
+	 * {@link String#format(String, Object...)} method. After processing
+	 * the string the function calls the {@link #send(String)} method. It
+	 * does nothing if the stream is already closed.
 	 * 
-	 * @param type    which type the message should be
-	 * @param message the message to send
+	 * @param string the formatted string to send to the stream
+	 * @param args   the arguments that are passed in the string
 	 */
-	default void sendMessage(MessageType type, String message) {
-		if (type != MessageType.DEBUG || isDebugEnabled()) {
-			String output;
-			if (type == MessageType.DEFAULT)
-				output = message;
-			else
-				output = "[" + type.toString() + "] " + message;
-			sendOutput(output, type);
-		}
+	default void send(String string, Object... args) {
+		send(String.format(string, args));
 	}
 
 	/**
-	 * Sends a simple message to the sender.
+	 * Sends an object by it's {@link #toString()} method to the stream.
+	 * After processing the string the function calls the
+	 * {@link #send(String)} method. It does nothing if the stream is
+	 * already closed.
 	 * 
-	 * @param type    which type the message should be
-	 * @param message the message to send
-	 * @param args    arguments to insert in the message with the
-	 *                build in {@link String#format(String, Object...)} method
+	 * @param object the object to send to the stream
 	 */
-	default void sendMessage(MessageType type, String message, String... args) {
-		sendMessage(type, String.format(message, (Object[]) args));
+	default void send(Object object) {
+		send(object.toString());
 	}
-	
+
 	/**
-	 * Returns if java is currently running in debug mode.
+	 * Sends a string to the stream with a new line at the end. After
+	 * processing the string the function calls the {@link #send(String)}
+	 * method. It does nothing if the stream is already closed.
 	 * 
-	 * @return if java is currently running in debug mode
+	 * @param string the string to send to the stream
 	 */
-	default boolean isDebugEnabled() {
-		return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+	default void sendLine(String string) {
+		send(string + "\n");
 	}
-	
+
 	/**
-	 * Sets the default message type of the sender.
+	 * Sends a formatted string with object arguments by they
+	 * {@link #toString()} method to the stream with a new line at the
+	 * end. The arguments uses the
+	 * {@link String#format(String, Object...)} method. After processing
+	 * the string the function calls the {@link #send(String)} method. It
+	 * does nothing if the stream is already closed.
 	 * 
-	 * @param type the default message type of the sender
+	 * @param string the formatted string to send to the stream
+	 * @param args   the arguments that are passed in the string
 	 */
-	void setDefaultMessageType(MessageType type);
-	
+	default void sendLine(String string, Object... args) {
+		send(String.format(string, args) + "\n");
+	}
+
 	/**
-	 * Returns the default message type of the sender.
+	 * Sends an object by it's {@link #toString()} method to the stream
+	 * with a new line at the end. After processing the string the
+	 * function calls the {@link #send(String)} method. It does nothing if
+	 * the stream is already closed.
 	 * 
-	 * @return the default message type of the sender
+	 * @param object the object to send to the stream
 	 */
-	MessageType getDefaultMessageType();
+	default void sendLine(Object object) {
+		send(object.toString() + "\n");
+	}
+
+	/**
+	 * Returns the charset for the streams that is in use when converting
+	 * bytes to strings.
+	 * 
+	 * @return the charset for the streams
+	 */
+	Charset getCharset();
 
 }

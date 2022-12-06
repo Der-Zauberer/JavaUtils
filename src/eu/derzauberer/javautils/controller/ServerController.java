@@ -18,18 +18,16 @@ import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
 import eu.derzauberer.javautils.events.ClientMessageReceiveEvent;
 import eu.derzauberer.javautils.events.ClientMessageSendEvent;
-import eu.derzauberer.javautils.util.Sender;
 
 /**
  * This server socket can be used to send and receive messages from
  * multiple client sockets, for example the {@link ClientController}.
  */
-public class ServerController implements Sender, Closeable {
+public class ServerController implements Closeable {
 	
 	private final ServerSocket server;
 	private final ExecutorService service;
 	private int clientTimeout;
-	private MessageType defaultMessageType;
 	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
 	private Consumer<ClientMessageSendEvent> messageSendAction;
 	private Consumer<ClientConnectEvent> connectAction;
@@ -58,7 +56,6 @@ public class ServerController implements Sender, Closeable {
 		service = Executors.newCachedThreadPool();
 		final Thread thread = new Thread(this::inputLoop);
 		clientTimeout = 0;
-		defaultMessageType = MessageType.DEFAULT;
 		thread.start();
 	}
 	
@@ -90,12 +87,95 @@ public class ServerController implements Sender, Closeable {
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Broadcasts an byte array to all connected clients.
+	 * 
+	 * @param bytes the byte array to send
 	 */
-	@Override
-	public void sendOutput(String message, MessageType type) {
+	public synchronized void broadcastBytes(byte[] bytes) {
 		for (ClientController client : clients) {
-			client.sendOutput(message, type);
+			client.sendBytes(bytes);
+		}
+	}
+
+	/**
+	 * Broadcasts a string to all connected clients.
+	 * 
+	 * @param string the string to send to the stream
+	 */
+	public synchronized void broadcast(String string) {
+		for (ClientController client : clients) {
+			client.send(string);
+		}
+	}
+	
+	/**
+	 * Broadcasts a formatted string with object arguments by they
+	 * {@link #toString()} method to all connected clients. The arguments
+	 * uses the {@link String#format(String, Object...)} method. After
+	 * processing the string the function calls the {@link #send(String)}
+	 * method.
+	 * 
+	 * @param string the formatted string to send to the stream
+	 * @param args   the arguments that are passed in the string
+	 */
+	public synchronized void broadcast(String string, Object... args) {
+		for (ClientController client : clients) {
+			client.send(string, args);
+		}
+	}
+
+	/**
+	 * Broadcasts an object by it's {@link #toString()} to all connected
+	 * clients. After processing the string the function calls the
+	 * {@link #send(String)} method.
+	 * 
+	 * @param object the object to send to the stream
+	 */
+	public synchronized void broadcast(Object object) {
+		for (ClientController client : clients) {
+			client.send(object);
+		}
+	}
+	
+	/**
+	 * Broadcasts a string to all connected clients with a new line at the
+	 * end. After processing the string the function calls the
+	 * {@link #send(String)} method.
+	 * 
+	 * @param string the string to send to the stream
+	 */
+	public synchronized void broadcastLine(String string) {
+		for (ClientController client : clients) {
+			client.sendLine(string);
+		}
+	}
+	
+	/**
+	 * Broadcasts a formatted string with object arguments by they
+	 * {@link #toString()} method to all connected clients with a new line
+	 * at the end. The arguments uses the
+	 * {@link String#format(String, Object...)} method. After processing
+	 * the string the function calls the {@link #send(String)} method.
+	 * 
+	 * @param string the formatted string to send to the stream
+	 * @param args   the arguments that are passed in the string
+	 */
+	public synchronized void broadcastLine(String string, Object... args) {
+		for (ClientController client : clients) {
+			client.sendLine(string, args);
+		}
+	}
+
+	/**
+	 * Broadcasts an object by it's {@link #toString()} method to all
+	 * connected clients with a new line at the end. After processing the
+	 * string the function calls the {@link #send(String)} method.
+	 * 
+	 * @param object the object to send to the stream
+	 */
+	public synchronized void broadcastLine(Object object) {
+		for (ClientController client : clients) {
+			client.sendLine(object);
 		}
 	}
 	
@@ -126,8 +206,7 @@ public class ServerController implements Sender, Closeable {
 	public void setServerTimeout(int timeout) {
 		try {
 			server.setSoTimeout(timeout);
-		} catch (SocketException exception) {
-		}
+		} catch (SocketException exception) {}
 	}
 
 	/**
@@ -278,22 +357,6 @@ public class ServerController implements Sender, Closeable {
 	 */
 	public Consumer<ClientDisconnectEvent> getDisconnectAction() {
 		return disconnectAction;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void setDefaultMessageType(MessageType type) {
-		defaultMessageType = type;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public MessageType getDefaultMessageType() {
-		return defaultMessageType;
 	}
 
 }

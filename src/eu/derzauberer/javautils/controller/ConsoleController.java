@@ -1,10 +1,11 @@
 package eu.derzauberer.javautils.controller;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -14,7 +15,7 @@ import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.util.FileUtil;
 import eu.derzauberer.javautils.util.Sender;
 
-public class ConsoleController implements Sender {
+public class ConsoleController implements Sender, Closeable {
 	
 	public static final String BLACK = "\u001b[30m";
 	public static final String GRAY = "\u001b[30;1m";
@@ -45,20 +46,17 @@ public class ConsoleController implements Sender {
 	public static final String RESET_BACKGROUND_COLOR = "\u001b[49m";
 	public static final String RESET = "\u001b[0m";
 
-	private MessageType defaultMessageType;
+	private final Thread thread;
+	private final Scanner scanner;
 	private CommandController commandHandler;
-	private boolean isRunning;
 	private boolean areColorCodesEnabled;
-	private boolean isTimestampEnabled;
+	private String inputPrefix;
+	private File directory;
 	private boolean isLogEnabled;
+	private File logDirectory;
+	private boolean closed;
 	private Consumer<ConsoleInputEvent> inputAction;
 	private Consumer<ConsoleOutputEvent> outputAction;
-	private String inputPrefix;
-	private Thread thread;
-	private Scanner scanner;
-	private File directory;
-	private File logDirectory;
-	private File latestLogFile;
 	
 	public ConsoleController() {
 		this(true); 
@@ -85,38 +83,19 @@ public class ConsoleController implements Sender {
 	}
 	
 	public ConsoleController(String inputPrefix, boolean start, CommandController commandHandler) {
-		defaultMessageType = MessageType.DEFAULT;
+		thread = new Thread(this::inputLoop);
+		scanner = new Scanner(System.in);
 		this.commandHandler = commandHandler;
-		isRunning = false;
 		areColorCodesEnabled = areColorCodesSupportedBySystem();
-		isTimestampEnabled = false;
 		isLogEnabled = false;
 		this.inputPrefix = inputPrefix;
-		if (start) start();
-		scanner = new Scanner(System.in);
 		directory = FileUtil.getExecutionDirectory();
-		logDirectory = new File(FileUtil.getExecutionDirectory(), "logs");
+		logDirectory = new File("logs");
+		closed = false;
 	}
 	
-	public void start() {
-		if (!isRunning) {
-			isRunning = true;
-			thread = new Thread(this::inputLoop);
-			thread.start();
-		}
-		
-	}
-
-	public void stop() {
-		if (isRunning) {
-			isRunning = false;
-			thread.interrupt();
-		}
-	}
-	
-	private void inputLoop() {
+	protected void inputLoop() {
 		try {
-			scanner = new Scanner(System.in);
 			String input;
 			while (!thread.isInterrupted()) {
 				System.out.print(inputPrefix);
@@ -135,18 +114,38 @@ public class ConsoleController implements Sender {
 	}
 	
 	@Override
-	public void sendOutput(String message, MessageType type) {
-		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, message, type);
+	public byte[] readBytes(int lenght) throws IOException {
+		return System.in.readNBytes(lenght);
+	}
+
+	@Override
+	public int readBytes(byte[] bytes) throws IOException {
+		return System.in.read(bytes);
+	}
+
+	@Override
+	public String readLine() throws IOException {
+		return scanner.nextLine();
+	}
+	
+	@Override
+	public void sendBytes(byte[] bytes) {
+		System.out.print(new String(bytes, getCharset()));
+	}
+	
+	@Override
+	public void sendLine(String string) {
+		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, string);
 		EventController.getGlobalEventController().callListeners(event);
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
-			if (isTimestampEnabled) event.setOutput("[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] " + event.getOutput());
 			System.out.println(event.getOutput());
 			if (isLogEnabled) {
 				log(removeEscapeCodes(event.getOutput()));
 			}
 		}
+		Sender.super.sendLine(string);
 	}
 	
 	public static String removeEscapeCodes(String string) {
@@ -178,27 +177,11 @@ public class ConsoleController implements Sender {
 	}
 	
 	private void log(String string) {
-		if (isLogEnabled() && logDirectory != null) {
-			final String name = "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt";
-			if (latestLogFile == null || !latestLogFile.exists() || !latestLogFile.getName().equals(name)) {
-				latestLogFile = new File(logDirectory, name);
-			}
-			try {
-				FileUtil.appendString(latestLogFile, (string.endsWith("\n")) ? string : string + "\n");
-			} catch (IOException exception) {
-				exception.printStackTrace();
-			}
+		try {
+			FileUtil.appendString(new File(logDirectory, "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), string + "\n");
+		} catch (IOException exception) {
+			exception.printStackTrace();
 		}
-	}
-	
-	@Override
-	public void setDefaultMessageType(MessageType defaultType) {
-		this.defaultMessageType = defaultType;
-	}
-	
-	@Override
-	public MessageType getDefaultMessageType() {
-		return defaultMessageType;
 	}
 	
 	public void setCommandHandler(CommandController commandHandler) {
@@ -209,9 +192,6 @@ public class ConsoleController implements Sender {
 		return commandHandler;
 	}
 	
-	public boolean isRunning() {
-		return isRunning;
-	}
 	
 	public void setColorCodesEnabled(boolean colorCodesEnabled) {
 		this.areColorCodesEnabled = colorCodesEnabled;
@@ -225,12 +205,20 @@ public class ConsoleController implements Sender {
 		return areColorCodesEnabled || (System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null);
 	}
 	
-	public void setTimestampEnabled(boolean logTimestampEnabled) {
-		this.isTimestampEnabled = logTimestampEnabled;
+	public void setInputPrefix(String inputPrefix) {
+		this.inputPrefix = inputPrefix;
+	}
+
+	public String getInputPrefix() {
+		return inputPrefix;
+	}
+
+	public void setDirectory(File directory) {
+		this.directory = directory;
 	}
 	
-	public boolean isTimestampEnabled() {
-		return isTimestampEnabled;
+	public File getDirectory() {
+		return directory;
 	}
 	
 	public void setLogEnabled(boolean logEnabled) {
@@ -239,6 +227,24 @@ public class ConsoleController implements Sender {
 	
 	public boolean isLogEnabled() {
 		return isLogEnabled;
+	}
+	
+	public void setLogDirectory(File logDirectory) {
+		this.logDirectory = logDirectory;
+	}
+	
+	public File getLogDirectory() {
+		return logDirectory;
+	}
+	
+	@Override
+	public void close() throws IOException {
+		thread.interrupt();
+		scanner.close();
+	}
+	
+	public boolean isClosed() {
+		return closed;
 	}
 	
 	public void setInputAction(Consumer<ConsoleInputEvent> inputAction) {
@@ -257,28 +263,9 @@ public class ConsoleController implements Sender {
 		return outputAction;
 	}
 
-	public  void setInputPrefix(String inputPrefix) {
-		this.inputPrefix = inputPrefix;
-	}
-
-	public String getInputPrefix() {
-		return inputPrefix;
-	}
-
-	public void setDirectory(File directory) {
-		this.directory = directory;
-	}
-	
-	public File getDirectory() {
-		return directory;
-	}
-	
-	public void setLogDirectory(File logDirectory) {
-		this.logDirectory = logDirectory;
-	}
-	
-	public File getLogDirectory() {
-		return logDirectory;
+	@Override
+	public Charset getCharset() {
+		return Charset.defaultCharset();
 	}
 
 }

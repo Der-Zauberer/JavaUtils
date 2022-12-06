@@ -3,13 +3,15 @@ package eu.derzauberer.javautils.controller;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.ClientConnectEvent;
 import eu.derzauberer.javautils.events.ClientDisconnectEvent;
@@ -27,15 +29,16 @@ public class ClientController implements Sender, Closeable {
 	private final Socket socket;
 	private final ServerController server;
 	private final Thread thread;
-	private final PrintStream output;
-	private final BufferedReader input;
+	private final InputStream input;
+	private final OutputStream output;
+	private final BufferedReader reader;
 	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
 	private Consumer<ClientMessageSendEvent> messageSendAction;
 	private Consumer<ClientConnectEvent> connectAction;
 	private Consumer<ClientDisconnectEvent> disconnectAction;
 	private boolean isDisconnected;
-	private MessageType defaultMessageType;
 	private DisconnectCause cause;
+	private Charset charset;
 
 	/**
 	 * Creates a new client based on a host address and port.
@@ -71,10 +74,11 @@ public class ClientController implements Sender, Closeable {
 	protected ClientController(Socket socket, ServerController server) throws IOException {
 		this.server = server;
 		this.socket = socket;
-		output = new PrintStream(socket.getOutputStream(), true);
-		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		input = socket.getInputStream();
+		output = socket.getOutputStream();
+		reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		charset = Charset.defaultCharset();
 		isDisconnected = false;
-		defaultMessageType = MessageType.DEFAULT;
 		final ClientConnectEvent event = new ClientConnectEvent(this);
 		EventController.getGlobalEventController().callListeners(event);
 		if (connectAction != null) connectAction.accept(event);
@@ -94,7 +98,7 @@ public class ClientController implements Sender, Closeable {
 		String message;
 		try {
 			while (!isClosed()) {
-				message = input.readLine();
+				message = readLine();
 				if (message.equals("null")) break;
 				final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, message);
 				EventController.getGlobalEventController().callListeners(event);
@@ -123,12 +127,50 @@ public class ClientController implements Sender, Closeable {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void sendOutput(String message, MessageType type) {
-		final ClientMessageSendEvent event = new ClientMessageSendEvent(this, message);
+	public synchronized int readBytes(byte[] bytes) throws IOException {
+		return input.read(bytes);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public synchronized byte[] readBytes(int lenght) throws IOException {
+		return input.readNBytes(lenght);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String readLine() throws IOException {
+		String input = reader.readLine();
+		if (!charset.equals(Charset.defaultCharset())) {
+			input = new String(input.getBytes(), charset);
+		}
+		return input;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void sendBytes(byte[] bytes) {
+		try {
+			output.write(bytes);
+		} catch (IOException exception) {}
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void send(String string) {
+		final ClientMessageSendEvent event = new ClientMessageSendEvent(this, string);
 		EventController.getGlobalEventController().callListeners(event);
 		if (messageSendAction != null && !event.isCancelled()) messageSendAction.accept(event);
 		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().accept(event);
-		if (!event.isCancelled()) output.println(event.getMessage());
+		if (!event.isCancelled()) Sender.super.send(string);
 	}
 	
 	/**
@@ -240,6 +282,24 @@ public class ClientController implements Sender, Closeable {
 	public boolean isClosed() {
 		return socket.isClosed();
 	}
+	
+	/**
+	 * Sets the charset for the streams that is in use when converting
+	 * bytes to strings.
+	 * 
+	 * @param charset the charset for the streams
+	 */
+	public void setCharset(Charset charset) {
+		this.charset = charset;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Charset getCharset() {
+		return charset;
+	}
 
 	/**
 	 * Sets an action to execute when the socket receives a message.
@@ -315,22 +375,6 @@ public class ClientController implements Sender, Closeable {
 	 */
 	public Consumer<ClientDisconnectEvent> getDisconnectAction() {
 		return disconnectAction;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void setDefaultMessageType(MessageType defaultMessageType) {
-		this.defaultMessageType = defaultMessageType;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public MessageType getDefaultMessageType() {
-		return defaultMessageType;
 	}
 
 }
