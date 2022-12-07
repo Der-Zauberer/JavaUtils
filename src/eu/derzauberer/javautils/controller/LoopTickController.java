@@ -22,7 +22,7 @@ public class LoopTickController {
 	 * Creates a new {@link LoopTickController} with the {@link Consumer}, which
 	 * will be called every iteration. One iteration is called a tick.
 	 * 
-	 * @param Consumer the consumer, which will be called every iteration
+	 * @param action the consumer, which will be called every iteration
 	 */
 	public LoopTickController(Consumer<TickEvent> action) {
 		this.action = action;

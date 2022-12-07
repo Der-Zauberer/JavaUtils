@@ -16,7 +16,7 @@ public class EventController {
 	private static final EventController globalEventController = new EventController();
 	
 	/**
-	 * Adds a listener to the controller. The listener will be called when a event
+	 * Adds a listener to the controller. The listener will be called when an event
 	 * occurs.
 	 * 
 	 * @param listener the listener to add

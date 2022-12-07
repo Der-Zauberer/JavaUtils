@@ -45,7 +45,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * Creates a new parser and parses the string into the parser
 	 * object structure.
 	 * 
-	 * @param input the input for the parser
+	 * @param string input the input for the parser
 	 */
 	public JsonParser(String string) {
 		super(string);
@@ -104,7 +104,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 						isArray = false;
 						isValue = false;
 						if (name.length() == 0) name.append("null");
-						getStructrue().add(key.toString() + name.toString());
+						getStructure().add(key + name.toString());
 						getEntries().put(key.toString() + name.toString(), array.clone());
 						name.setLength(0);
 						value.setLength(0);
@@ -126,14 +126,14 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 				isValue = true;
 			} else if (character == '{') {
 				isValue = false;
-				if (name.length() > 0) key.append(name.toString() + ".");
+				if (name.length() > 0) key.append(name + ".");
 				name.setLength(0);
 				value.setLength(0);
 			} else if (character == '}' || character == ',') {
 				if (isValue) {
 					isValue = false;
-					getStructrue().add(key.toString() + name.toString());
-					getEntries().put(key.toString() + name.toString(), DataUtil.autoDeserializePrimitive(value.toString()));
+					getStructure().add(key.toString() + name);
+					getEntries().put(key.toString() + name, DataUtil.autoDeserializePrimitive(value.toString()));
 					name.setLength(0);
 					value.setLength(0);
 				}
@@ -161,15 +161,15 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		if (key == null || !key.contains(".")) {
 			super.setObject(key, value);
 			return;
-		};
-		String keys[] = key.split("\\.");
+		}
+		String[] keys = key.split("\\.");
 		String minKey = key.substring(0, key.lastIndexOf("."));
 		if (containsKey(minKey)) remove(minKey);
-		final List<String> oldKeys = getStructrue()
+		final List<String> oldKeys = getStructure()
 				.stream()
 				.filter(maxKey -> maxKey.startsWith(key) && maxKey.split("\\.").length - 1 == keys.length)
 				.collect(Collectors.toList());
-		getStructrue().removeAll(oldKeys);
+		getStructure().removeAll(oldKeys);
 		super.setObject(key, value);
 	}
 	
@@ -197,18 +197,15 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 */
 	private String parseOut(boolean oneliner, int offset) {
 		final StringBuilder string = new StringBuilder();
-		String tab = "";
-		String space = "";
-		String newLine = "";
+		final String tab = oneliner ? "" : "\t";
+		final String space = oneliner ?  "" : " ";
+		final String newLine = oneliner ?"" : "\n";
 		String tabs = "";
-		String keys[] = {};
-		String lastKeys[] = {};
+		String[] keys = {};
+		String[] lastKeys = {};
 		int layer = 1;
 		int lastLayer = 1;
 		if (!oneliner) {
-			tab = "\t";
-			space = " ";
-			newLine = "\n";
 			if (!containsKey("null")) tabs = tab;
 			for (int i = 0; i < offset; i++) tabs += tab; 
 		}
@@ -221,7 +218,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		} else {
 			string.append("{");
 		}
-		for (String key : getStructrue()) {
+		for (String key : getStructure()) {
 			keys = key.split("\\.");
 			final String name = keys[keys.length - 1];
 			layer = keys.length;

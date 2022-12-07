@@ -81,17 +81,17 @@ public class DataUtil {
 	/**
 	 * Try to convert any object into a string using the <code>toString()</code>
 	 * method. If the object is a string, you can decide if the output should be
-	 * with quotation mars or without.
+	 * with quotation marks or without.
 	 * 
-	 * @param input                  which will be converted into a object
-	 * @param stringWithQotationMark decide if you are output strings with quotation
+	 * @param input                  which will be converted into an object
+	 * @param stringWithQuotationMark decide if you are output strings with quotation
 	 *                               mark or not
 	 * @return the string, which was converted from an object
 	 */
-	public static String autoSerializePrimitive(Object input, boolean stringWithQotationMark) {
+	public static String autoSerializePrimitive(Object input, boolean stringWithQuotationMark) {
 		if (input == null) {
 			return null;
-		} else if (!(input instanceof Boolean || input instanceof Number) && stringWithQotationMark) {
+		} else if (!(input instanceof Boolean || input instanceof Number) && stringWithQuotationMark) {
 			return "\"" + removeEscapeCodes(input.toString()) + "\"";
 		} else {
 			return removeEscapeCodes(input.toString());
@@ -101,7 +101,7 @@ public class DataUtil {
 	/**
 	 * Try to convert a string back to an object. This does only work with
 	 * {@link Boolean}, {@link Number} and {@link String} as output. The method will
-	 * return the {@link String}, if there was not type found, in which the string
+	 * return the {@link String}, if there was no type found, in which the string
 	 * could be converted in.
 	 * 
 	 * @param input the string, what will, converted in a primitive type or return
@@ -111,7 +111,7 @@ public class DataUtil {
 	public static Object autoDeserializePrimitive(String input) {
 		if (input == null || input.isEmpty()) return null;
 		else if (input.equals("true")) return true;
-		else if (input.equals("true")) return false;
+		else if (input.equals("false")) return false;
 		else {
 			try {
 				double number = Double.parseDouble(input);

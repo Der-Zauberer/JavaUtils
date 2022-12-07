@@ -3,7 +3,7 @@ package eu.derzauberer.javautils.events;
 import eu.derzauberer.javautils.controller.ClientController;
 
 /**
- * This event gets called when the client sends a massage.
+ * This event gets called when the client sends a message.
  */
 public class ClientMessageSendEvent extends CancellableEvent {
 
@@ -11,7 +11,7 @@ public class ClientMessageSendEvent extends CancellableEvent {
 	private String message;
 
 	/**
-	 * Creates a new event, which gets called when the client sends a massage.
+	 * Creates a new event, which gets called when the client sends a message.
 	 * 
 	 * @param client  the client which sends the message
 	 * @param message the received message
@@ -31,18 +31,18 @@ public class ClientMessageSendEvent extends CancellableEvent {
 	}
 	
 	/**
-	 * Sets the the message that will be send.
+	 * Sets the message that will be sent.
 	 * 
-	 * @param message the message that will be send
+	 * @param message the message that will be sent
 	 */
 	public void setMessage(String message) {
 		this.message = message;
 	}
 	
 	/**
-	 * Returns the message that will be send.
+	 * Returns the message that will be sent.
 	 * 
-	 * @return the message that will be send
+	 * @return the message that will be sent
 	 */
 	public String getMessage() {
 		return message;

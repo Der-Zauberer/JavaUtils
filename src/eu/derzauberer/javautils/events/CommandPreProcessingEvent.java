@@ -12,10 +12,10 @@ public class CommandPreProcessingEvent extends CancellableEvent {
 	private final Command command;
 	private final String input;
 	private String label;
-	private String args[];
+	private String[] args;
 	
 	/**
-	 * Creates a new event that gets calle before the execution of a command.
+	 * Creates a new event that gets called before the execution of a command.
 	 * 
 	 * @param sender  the sender that called the command
 	 * @param command the command to execute
@@ -23,7 +23,7 @@ public class CommandPreProcessingEvent extends CancellableEvent {
 	 * @param label   the label of the command
 	 * @param args    the arguments of the command
 	 */
-	public CommandPreProcessingEvent(Sender sender, Command command, String input, String label, String args[]) {
+	public CommandPreProcessingEvent(Sender sender, Command command, String input, String label, String[] args) {
 		this.sender = sender;
 		this.command = command;
 		this.input = input;
@@ -59,18 +59,18 @@ public class CommandPreProcessingEvent extends CancellableEvent {
 	}
 	
 	/**
-	 * Sets the label the label of the command.
+	 * Sets the label of the command.
 	 * 
-	 * @param label the label the label of the command
+	 * @param label the label of the command
 	 */
 	public void setLabel(String label) {
 		this.label = label;
 	}
 	
 	/**
-	 * Returns the label the label of the command.
+	 * Returns the label of the command.
 	 * 
-	 * @return the label the label of the command
+	 * @return the label of the command
 	 */
 	public String getLabel() {
 		return label;

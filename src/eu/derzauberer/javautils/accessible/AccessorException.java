@@ -1,7 +1,7 @@
 package eu.derzauberer.javautils.accessible;
 
 /**
- * A exception, which is thrown, when another exception was thrown inside the
+ * An exception, which is thrown, when another exception was thrown inside the
  * functions of the {@link Accessor}, {@link FieldAccessor} or
  * {@link MethodAccessor}.
  */

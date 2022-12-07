@@ -114,12 +114,12 @@ public class TimeTickController {
 	 * 
 	 * @param task the new asynchronous task to add
 	 */
-	public void addAsyncTask(TickTask task, int tickspeed) {
-		createAsyncTask(task, tickspeed);
+	public void addAsyncTask(TickTask task, int tickSpeed) {
+		createAsyncTask(task, tickSpeed);
 	}
 	
 	/**
-	 * Removes a asynchronous task to the controller.
+	 * Removes an asynchronous task to the controller.
 	 * 
 	 * @param task the asynchronous task to remove
 	 */
@@ -145,29 +145,29 @@ public class TimeTickController {
 	 * 
 	 * @return the tickSpeed of the controller
 	 */
-	public long getTickspeed() {
+	public long getTickSpeed() {
 		return tickSpeed;
 	}
 	
 	private void onTick() {
-		final ArrayList<TickTask> deletetasks = new ArrayList<>();
+		final ArrayList<TickTask> deleteTasks = new ArrayList<>();
 		for(TickTask task : tasks) {
 			if(task.decrementTicks() && !task.isStopped()) {
 				task.getConsumer().accept(task);
 				if(!task.isEndless() && task.decrementRepeats()) {
-					deletetasks.add(task);
+					deleteTasks.add(task);
 				}
 			} 
-			if(task.isStopped() && !deletetasks.contains(task)) {
-				deletetasks.add(task);
+			if(task.isStopped() && !deleteTasks.contains(task)) {
+				deleteTasks.add(task);
 			}
 		}
-		for (TickTask task : deletetasks) {
+		for (TickTask task : deleteTasks) {
 			tasks.remove(task);
 		}
 	}
 	
-	private void createAsyncTask(TickTask task, int tickspeed) {
+	private void createAsyncTask(TickTask task, int tickSpeed) {
 		final TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
@@ -183,8 +183,8 @@ public class TimeTickController {
 				}
 			}
 		};
-		asyncTasks.put(task, tickspeed);
-		if (isRunning) timer.schedule(timerTask, 0, tickspeed);
+		asyncTasks.put(task, tickSpeed);
+		if (isRunning) timer.schedule(timerTask, 0, tickSpeed);
 	}
 
 }

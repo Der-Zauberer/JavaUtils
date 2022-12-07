@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- The class takes an object and loads it's content with reflections to make
+ The class takes an object and loads its content with reflections to make
  * fields, methods and their annotations accessible. The object class can use
  * the following annotations {@link AccessibleVisibility},
  * {@link AccessibleWhitelist} and {@link AccessibleBlacklist} to define which
@@ -37,7 +37,6 @@ public class Accessor<T> {
 	 * the class has a standard constructor.
 	 * 
 	 * @param type the type of the class to in instantiate
-	 * @return the instantiated object
 	 * @throws NoSuchMethodException     if there is no standard constructor in the
 	 *                                   class
 	 * @throws InstantiationException    if the class is an interface or abstract
@@ -58,10 +57,9 @@ public class Accessor<T> {
 	 * the class constructor with the exact same parameters.
 	 * 
 	 * @param type             type the type of the class to in instantiate
-	 * @param constructurTypes the types of the constructor arguments to identify
+	 * @param constructorTypes the types of the constructor arguments to identify
 	 *                         the constructor
-	 * @param constructerArgs  the constructor arguments
-	 * @return the instantiated object
+	 * @param constructorArgs  the constructor arguments
 	 * @throws NoSuchMethodException     if there is no constructor with the given
 	 *                                   argument types in the class
 	 * @throws InstantiationException    if the class is an interface or abstract
@@ -73,10 +71,10 @@ public class Accessor<T> {
 	 *                                   constructor
 	 * @throws InvocationTargetException if the constructor throws an exception
 	 */
-	public Accessor(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
+	public Accessor(Class<T> type, Class<?> constructorTypes, Object... constructorArgs)
 			throws NoSuchMethodException, InstantiationException, 
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		this(instantiate(type, constructurTypes, constructerArgs));
+		this(instantiate(type, constructorTypes, constructorArgs));
 	}
 	
 	/**
@@ -102,9 +100,7 @@ public class Accessor<T> {
 		Class<?> superclass;
 		while ((superclass = classes.get(classes.size() - 1).getSuperclass()) != null
 				&& !superclass.equals(Object.class)) {
-			for (Class<?> interfaze : superclass.getInterfaces()) {
-				classes.add(interfaze);
-			}
+			classes.addAll(Arrays.asList(superclass.getInterfaces()));
 			classes.add(superclass);
 		}
 		Collections.reverse(classes);
@@ -127,26 +123,22 @@ public class Accessor<T> {
 			&& !blacklist.contains(method.getName());
 		for (Class<?> clazz : classes) {
 			if (clazz.getAnnotation(AccessibleWhitelist.class) != null) {
-				Arrays.asList(clazz.getAnnotation(AccessibleWhitelist.class).value())
-					.stream()
+				Arrays.stream(clazz.getAnnotation(AccessibleWhitelist.class).value())
 					.filter(name -> !whitelist.contains(name))
 					.forEach(whitelist::add);
 			}
 			if (clazz.getAnnotation(AccessibleBlacklist.class) != null) {
-				Arrays.asList(clazz.getAnnotation(AccessibleBlacklist.class).value())
-					.stream()
+				Arrays.stream(clazz.getAnnotation(AccessibleBlacklist.class).value())
 					.filter(name -> !blacklist.contains(name))
 					.forEach(blacklist::add);
 			}
-			Arrays.asList(clazz.getDeclaredFields())
-					.stream()
+			Arrays.stream(clazz.getDeclaredFields())
 					.filter(fieldPredicate)
 					.forEach(field -> {
 				field.setAccessible(true);
 				fields.add(new FieldAccessor<>(this, field));
 			});
-			Arrays.asList(clazz.getDeclaredMethods())
-					.stream()
+			Arrays.stream(clazz.getDeclaredMethods())
 					.filter(methodPredicate)
 					.forEach(method -> {
 				method.setAccessible(true);
@@ -218,7 +210,7 @@ public class Accessor<T> {
 	}
 	
 	/**
-	 * Returns if the class is an interface an can not be instantiated.
+	 * Returns if the class is an interface and can not be instantiated.
 	 * 
 	 * @return if the class is an interface
 	 */
@@ -227,7 +219,7 @@ public class Accessor<T> {
 	}
 
 	/**
-	 * Returns if the class is abstract an can not be instantiated.
+	 * Returns if the class is abstract and can not be instantiated.
 	 * 
 	 * @return if the class is abstract
 	 */
@@ -267,9 +259,9 @@ public class Accessor<T> {
 	 * 
 	 * @param <T>              the type of the object inside the accessor
 	 * @param type             type the type of the class to in instantiate
-	 * @param constructurTypes the types of the constructor arguments to identify
+	 * @param constructorTypes the types of the constructor arguments to identify
 	 *                         the constructor
-	 * @param constructerArgs  the constructor arguments
+	 * @param constructorArgs  the constructor arguments
 	 * @return the instantiated object
 	 * @throws NoSuchMethodException     if there is no constructor with the given
 	 *                                   argument types in the class
@@ -283,11 +275,11 @@ public class Accessor<T> {
 	 * @throws InvocationTargetException if the constructor throws an exception
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T instantiate(Class<T> type, Class<?> constructurTypes, Object... constructerArgs) 
+	public static <T> T instantiate(Class<T> type, Class<?> constructorTypes, Object... constructorArgs)
 			throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		final Constructor<?> constructor = type.getDeclaredConstructor(constructurTypes);
+		final Constructor<?> constructor = type.getDeclaredConstructor(constructorTypes);
 		constructor.setAccessible(true);
-		return (T) constructor.newInstance(constructerArgs);
+		return (T) constructor.newInstance(constructorArgs);
 	}
 	
 	/**
@@ -299,8 +291,9 @@ public class Accessor<T> {
 	 * @return the array
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T[] instanciateArray(Class<T> type, int size) {
+	public static <T> T[] instantiateArray(Class<T> type, int size) {
 		return (T[]) Array.newInstance(type, size);
 	}
 
 }
+

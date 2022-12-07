@@ -135,8 +135,8 @@ public class ClientController implements Sender, Closeable {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized byte[] readBytes(int lenght) throws IOException {
-		return input.readNBytes(lenght);
+	public synchronized byte[] readBytes(int length) throws IOException {
+		return input.readNBytes(length);
 	}
 	
 	/**

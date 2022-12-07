@@ -15,7 +15,7 @@ public class TickTask {
 	private final boolean endless;
 	private boolean stopped;
 	private int ticksLeft;
-	private int repeatsLetft;
+	private int repeatsLeft;
 
 	/**
 	 * Creates a new task with a consumer that is called ever tick.
@@ -77,7 +77,7 @@ public class TickTask {
 		this.endless = endless;
 		this.stopped = false;
 		this.ticksLeft = this.ticks - 1;
-		this.repeatsLetft = this.repeats - 1;
+		this.repeatsLeft = this.repeats - 1;
 	}
 
 	/**
@@ -181,8 +181,8 @@ public class TickTask {
 	 * @return if repeats are left
 	 */
 	public boolean decrementRepeats() {
-		if (repeatsLetft > 0) {
-			repeatsLetft--;
+		if (repeatsLeft > 0) {
+			repeatsLeft--;
 			return false;
 		} else {
 			return true;
@@ -195,7 +195,7 @@ public class TickTask {
 	 * @return the amount of repeats the consumer will be called
 	 */
 	public int getRepeatsLeft() {
-		return repeatsLetft;
+		return repeatsLeft;
 	}
 
 	/**
@@ -204,7 +204,7 @@ public class TickTask {
 	 * @return the amount of repeats since the start of the task
 	 */
 	public long getRepeatCounter() {
-		return repeats - repeatsLetft;
+		return repeats - repeatsLeft;
 	}
 	
 }

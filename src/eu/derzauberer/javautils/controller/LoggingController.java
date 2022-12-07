@@ -32,7 +32,7 @@ public class LoggingController {
 	
 	private boolean systemOutput = true;
 	private boolean fileOutput = true;
-	private boolean enableOutputInformations = true;
+	private boolean enableOutputInformation = true;
 	private File fileDirectory = new File("logs");
 	private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -67,7 +67,7 @@ public class LoggingController {
 	
 	/**
 	 * Sends an information message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does nut run in
+	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not run in
 	 * debug mode. The default type, if no one is given, is {@link LogType#INFO}.
 	 * 
 	 * @param message the message to send
@@ -78,7 +78,7 @@ public class LoggingController {
 	
 	/**
 	 * Sends an information message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does nut
+	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not
 	 * run in debug mode. The default type, if no one is given, is
 	 * {@link LogType#INFO}.
 	 * 
@@ -92,7 +92,7 @@ public class LoggingController {
 	
 	/**
 	 * Sends a message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does nut
+	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not
 	 * run in debug mode.
 	 * 
 	 * @param type    the type of the message
@@ -101,7 +101,7 @@ public class LoggingController {
 	public void log(LogType type, String message) {
 		if (type == LogType.DEBUG && !isDebugEnabled()) return;
 		final LocalDateTime timeStamp = LocalDateTime.now();
-		final String output = enableOutputInformations ?  "[" + timeStamp.format(dateTimeFormatter) + " " + type + "] " + prefix + message: message;
+		final String output = enableOutputInformation ?  "[" + timeStamp.format(dateTimeFormatter) + " " + type + "] " + prefix + message: message;
 		final LoggingEvent event = new LoggingEvent(this, type, message, timeStamp, output);
 		EventController.getGlobalEventController().callListeners(event);
 		if (systemOutput) System.out.println(output);
@@ -116,7 +116,7 @@ public class LoggingController {
 	
 	/**
 	 * Sends a message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does nut
+	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not
 	 * run in debug mode.
 	 * 
 	 * @param type   the type of the message
@@ -150,7 +150,7 @@ public class LoggingController {
 	/**
 	 * Returns if the logging output should be printed to the standard output.
 	 * 
-	 * return if the logging output should be printed to the standard output
+	 * @return if the logging output should be printed to the standard output
 	 */
 	public boolean isSystemOutput() {
 		return systemOutput;
@@ -170,29 +170,28 @@ public class LoggingController {
 	 * Returns if the logging output should be printed to a file. The file directory
 	 * can be requested with {@link #getFileDirectory()}.
 	 * 
-	 * return if the logging output should be printed to a file
+	 * @return if the logging output should be printed to a file
 	 */
 	public boolean isFileOutput() {
 		return fileOutput;
 	}
 	
 	/**
-	 * Defines whether or not the date, type and prefix should be printed in front of the debug output.
+	 * Defines whether the date, type and prefix should be printed in front of the debug output.
 	 * 
-	 * @param enableOutputInformations if the date, type and prefix should be printed in front of the debug output
+	 * @param enableOutputInformation if the date, type and prefix should be printed in front of the debug output
 	 */
-	public void enableOutputInformations(boolean enableOutputInformations) {
-		this.enableOutputInformations = enableOutputInformations;
+	public void setOutputInformationEnabled(boolean enableOutputInformation) {
+		this.enableOutputInformation = enableOutputInformation;
 	}
 	
-	
 	/**
-	 * Returns whether or not the date, type and prefix should be printed in front of the debug output.
+	 * Returns whether the date, type and prefix should be printed in front of the debug output.
 	 * 
 	 * @return if the date, type and prefix should be printed in front of the debug output
 	 */
-	public boolean isOutputInformationsEnabled() {
-		return enableOutputInformations;
+	public boolean isOutputInformationEnabled() {
+		return enableOutputInformation;
 	}
 	
 	/**

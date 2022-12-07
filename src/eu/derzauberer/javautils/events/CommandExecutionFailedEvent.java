@@ -19,7 +19,7 @@ public class CommandExecutionFailedEvent extends CancellableEvent {
 	private final Exception exception;
 	private final String input;
 	private final String label;
-	private final String args[];
+	private final String[] args;
 	
 	/**
 	 * Creates a new event that gets called when an execution of a command fails.
@@ -32,7 +32,7 @@ public class CommandExecutionFailedEvent extends CancellableEvent {
 	 * @param label     the label of the command
 	 * @param args      the arguments of the command
 	 */
-	public CommandExecutionFailedEvent(Sender sender, Command command, ExecutionFailCause cause, Exception exception, String input, String label, String args[]) {
+	public CommandExecutionFailedEvent(Sender sender, Command command, ExecutionFailCause cause, Exception exception, String input, String label, String[] args) {
 		this.sender = sender;
 		this.command = command;
 		this.cause = cause;
@@ -88,9 +88,9 @@ public class CommandExecutionFailedEvent extends CancellableEvent {
 	}
 	
 	/**
-	 * Returns the label the label of the command.
+	 * Returns the label of the command.
 	 * 
-	 * @return the label the label of the command
+	 * @return the label of the command
 	 */
 	public String getLabel() {
 		return label;

@@ -7,7 +7,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 
 /**
- * The class wraps the {@link Method} and make its usage easer to use.
+ * The class wraps the {@link Method} and make its usage easier to use.
  * 
  * @param <A> the type of the parent accessor
  */
@@ -17,7 +17,7 @@ public class MethodAccessor<A> {
 	private final Method method;
 	
 	/**
-	 * Creates a new {@link Accessor} object with it's parent and the corresponding {@link Method}.
+	 * Creates a new {@link Accessor} object with its parent and the corresponding {@link Method}.
 	 * 
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param method the corresponding {@link Method}

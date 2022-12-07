@@ -12,7 +12,7 @@ public class SerializationException extends RuntimeException {
 	/**
 	 *
 	 * Creates an exception, which is thrown, when a problem occurs while trying to
-	 * serialize objects with the {@link Access}.
+	 * serialize objects with the {@link Accessor}.
 	 *
 	 * @param message the exception message
 	 */
@@ -23,7 +23,7 @@ public class SerializationException extends RuntimeException {
 	/**
 	 *
 	 * Creates an exception, which is thrown, when a problem occurs while trying to
-	 * serialize objects with the {@link Access}.
+	 * serialize objects with the {@link Accessor}.
 	 *
 	 * @param message the exception message
 	 * @param cause the exception cause

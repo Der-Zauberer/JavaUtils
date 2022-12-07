@@ -7,7 +7,7 @@ import eu.derzauberer.javautils.controller.LoopTickController;
  */
 public class TickEvent extends Event {
 	
-	private long deltaTimeNanos;
+	private final long deltaTimeNanos;
 	
 	/**
 	 * Creates a new event that gets called every time, the {@link LoopTickController} ticks.

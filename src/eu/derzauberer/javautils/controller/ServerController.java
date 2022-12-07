@@ -27,12 +27,12 @@ public class ServerController implements Closeable {
 	
 	private final ServerSocket server;
 	private final ExecutorService service;
+	private final List<ClientController> clients;
 	private int clientTimeout;
 	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
 	private Consumer<ClientMessageSendEvent> messageSendAction;
 	private Consumer<ClientConnectEvent> connectAction;
 	private Consumer<ClientDisconnectEvent> disconnectAction;
-	private List<ClientController> clients;
 	
 	/**
 	 * Creates a new server socket based on a port.
@@ -87,7 +87,7 @@ public class ServerController implements Closeable {
 	}
 	
 	/**
-	 * Broadcasts an byte array to all connected clients.
+	 * Broadcasts a byte array to all connected clients.
 	 * 
 	 * @param bytes the byte array to send
 	 */
@@ -111,7 +111,7 @@ public class ServerController implements Closeable {
 	/**
 	 * Broadcasts a formatted string with object arguments by they
 	 * {@link #toString()} method to all connected clients. The arguments
-	 * uses the {@link String#format(String, Object...)} method. After
+	 * use the {@link String#format(String, Object...)} method. After
 	 * processing the string the function calls the {@link #send(String)}
 	 * method.
 	 * 
@@ -125,7 +125,7 @@ public class ServerController implements Closeable {
 	}
 
 	/**
-	 * Broadcasts an object by it's {@link #toString()} to all connected
+	 * Broadcasts an object by its {@link #toString()} to all connected
 	 * clients. After processing the string the function calls the
 	 * {@link #send(String)} method.
 	 * 
@@ -153,7 +153,7 @@ public class ServerController implements Closeable {
 	/**
 	 * Broadcasts a formatted string with object arguments by they
 	 * {@link #toString()} method to all connected clients with a new line
-	 * at the end. The arguments uses the
+	 * at the end. The arguments use the
 	 * {@link String#format(String, Object...)} method. After processing
 	 * the string the function calls the {@link #send(String)} method.
 	 * 
@@ -256,8 +256,8 @@ public class ServerController implements Closeable {
 	public void close() throws IOException {
 		if (!server.isClosed()) {
 			server.close();
-			for (int i = 0; i < clients.size(); i++) {
-				clients.get(i).close();
+			for (ClientController client : clients) {
+				client.close();
 			}
 			service.shutdown();
 		}

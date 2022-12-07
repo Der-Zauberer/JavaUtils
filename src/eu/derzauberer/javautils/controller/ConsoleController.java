@@ -54,35 +54,23 @@ public class ConsoleController implements Sender, Closeable {
 	private File directory;
 	private boolean isLogEnabled;
 	private File logDirectory;
-	private boolean closed;
+	private boolean isClosed;
 	private Consumer<ConsoleInputEvent> inputAction;
 	private Consumer<ConsoleOutputEvent> outputAction;
 	
 	public ConsoleController() {
-		this(true); 
-	}
-	
-	public ConsoleController(boolean start) {
-		this("", start);
+		this("", null);
 	}
 	
 	public ConsoleController(CommandController handler) {
 		this("", handler);
 	}
-	
+
 	public ConsoleController(String inputPrefix) {
-		this(inputPrefix, true);
+		this(inputPrefix, null);
 	}
 	
 	public ConsoleController(String inputPrefix, CommandController commandHandler) {
-		this(inputPrefix, true, commandHandler);
-	}
-	
-	public ConsoleController(String inputPrefix, boolean start) {
-		this(inputPrefix, start, null);
-	}
-	
-	public ConsoleController(String inputPrefix, boolean start, CommandController commandHandler) {
 		thread = new Thread(this::inputLoop);
 		scanner = new Scanner(System.in);
 		this.commandHandler = commandHandler;
@@ -91,7 +79,7 @@ public class ConsoleController implements Sender, Closeable {
 		this.inputPrefix = inputPrefix;
 		directory = FileUtil.getExecutionDirectory();
 		logDirectory = new File("logs");
-		closed = false;
+		isClosed = false;
 	}
 	
 	protected void inputLoop() {
@@ -114,8 +102,8 @@ public class ConsoleController implements Sender, Closeable {
 	}
 	
 	@Override
-	public byte[] readBytes(int lenght) throws IOException {
-		return System.in.readNBytes(lenght);
+	public byte[] readBytes(int length) throws IOException {
+		return System.in.readNBytes(length);
 	}
 
 	@Override
@@ -241,10 +229,11 @@ public class ConsoleController implements Sender, Closeable {
 	public void close() throws IOException {
 		thread.interrupt();
 		scanner.close();
+		isClosed = true;
 	}
-	
+
 	public boolean isClosed() {
-		return closed;
+		return isClosed;
 	}
 	
 	public void setInputAction(Consumer<ConsoleInputEvent> inputAction) {

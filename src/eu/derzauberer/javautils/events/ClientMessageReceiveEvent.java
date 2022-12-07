@@ -31,7 +31,7 @@ public class ClientMessageReceiveEvent extends CancellableEvent {
 	}
 
 	/**
-	 * Sets the the message that was received.
+	 * Sets the message that was received.
 	 * 
 	 * @param message the message that was received
 	 */

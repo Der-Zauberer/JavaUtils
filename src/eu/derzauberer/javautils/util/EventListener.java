@@ -26,7 +26,7 @@ public class EventListener<T extends Event> implements Comparable<EventListener<
 		
 		private final int priority;
 		
-		private EventPriority(final int priority) {
+		EventPriority(final int priority) {
 			this.priority = priority;
 		}
 		

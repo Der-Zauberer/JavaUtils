@@ -22,7 +22,7 @@ public class LoggingEvent extends Event {
 	 * 
 	 * @param logger    the logger from which the event was triggered
 	 * @param type      the type of the message
-	 * @param message   the message that was send
+	 * @param message   the message that was sent
 	 * @param timeStamp the timestamp when the logger got the message
 	 * @param output    the final output which contains the timestamp the type and
 	 *                  the message
@@ -54,9 +54,9 @@ public class LoggingEvent extends Event {
 	}
 
 	/**
-	 * Returns the message that was send
+	 * Returns the message that was sent
 	 * 
-	 * @return the message that was send
+	 * @return the message that was sent
 	 */
 	public String getMessage() {
 		return message;

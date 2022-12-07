@@ -5,7 +5,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 
 /**
- * The class wraps the {@link Field} and make its usage easer to use.
+ * The class wraps the {@link Field} and make its usage easier to use.
  *
  * @param <A> the type of the parent accessor
  * @param <F> the type of the fields value
@@ -16,7 +16,7 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 	private final Field field;
 	
 	/**
-	 * Creates a new {@link Accessor} object with it's parent and the corresponding {@link Field}.
+	 * Creates a new {@link Accessor} object with its parent and the corresponding {@link Field}.
 	 * 
 	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param field the corresponding {@link Field}

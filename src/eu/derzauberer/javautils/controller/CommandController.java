@@ -28,7 +28,7 @@ public class CommandController {
 	private Consumer<CommandNotFoundEvent> notFoundAction;
 	
 	/**
-	 * Register a new command with it's label.
+	 * Register a new command with its label.
 	 * 
 	 * @param label the name of the command
 	 * @param command the command interface to execute when called
@@ -46,10 +46,10 @@ public class CommandController {
 	 */
 	public boolean executeCommand(Sender sender, String string) {
 		history.add(string);
-		final String command[] = getSplitedCommand(string);
+		final String[] command = getSplitCommand(string);
 		if (command.length == 0) return false;
 		final String label = command[0];
-		final String args[] = Arrays.copyOfRange(command, 1, command.length);
+		final String[] args = Arrays.copyOfRange(command, 1, command.length);
 		return executeCommand(sender, string, label, args);
 	}
 
@@ -69,7 +69,7 @@ public class CommandController {
 	 * @param args    the argument of the command
 	 * @return if the execution of the command was successful
 	 */
-	private boolean executeCommand(Sender sender, String command, String label, String args[]) {
+	private boolean executeCommand(Sender sender, String command, String label, String[] args) {
 		for (String string : commands.keySet()) {
 			if (string.equalsIgnoreCase(label)) {
 				final CommandPreProcessingEvent event = new CommandPreProcessingEvent(sender, commands.get(string), string, label, args);
@@ -112,10 +112,10 @@ public class CommandController {
 	}
 
 	/**
-	 * Returns the command based on it's name.
+	 * Returns the command based on its name.
 	 * 
 	 * @param label the name of the command
-	 * @return the command by it's name and null if not found
+	 * @return the command by its name and null if not found
 	 */
 	public Command getCommand(String label) {
 		return commands.get(label);
@@ -152,7 +152,7 @@ public class CommandController {
 	/**
 	 * Sets an action to execute when the command execution failed.
 	 * 
-	 * @param executionFailedAction an action to execut when the command execution
+	 * @param executionFailedAction an action to execute when the command execution
 	 *                              failed
 	 */
 	public void setExecutionFailedAction(Consumer<CommandExecutionFailedEvent> executionFailedAction) {
@@ -198,9 +198,9 @@ public class CommandController {
 	 * </pre>
 	 * 
 	 * @param string the input string
-	 * @return the splitted string as array
+	 * @return the split string as array
 	 */
-	private static String[] getSplitedCommand(String string) {
+	private static String[] getSplitCommand(String string) {
 		final ArrayList<String> strings = new ArrayList<>();
 		final StringBuilder builder = new StringBuilder();
 		char lastCharacter = ' ';
@@ -225,7 +225,7 @@ public class CommandController {
 			lastCharacter = character;
 		}
 		if (builder.length() != 0) strings.add(DataUtil.addEscapeCodes(builder.toString()));
-		final String command[] = new String[strings.size()];
+		final String[] command = new String[strings.size()];
 		for (int i = 0; i < command.length; i++) {
 			command[i] = strings.get(i);
 		}

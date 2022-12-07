@@ -70,18 +70,16 @@ public class FileUtil {
 	 */
 	public static void copyDirectory(File original, File copy) throws IOException {
 		if (original.isDirectory()) {
-			if (!copy.exists()) {
-				copy.mkdir();
-			}
+			if (!copy.exists()) copy.mkdir();
 			final String[] children = original.list();
-			for (int i = 0; i < children.length; i++) {
-				copyDirectory(new File(original, children[i]), new File(copy, children[i]));
+			for (String child : children) {
+				copyDirectory(new File(original, child), new File(copy, child));
 			}
 		} else {
 			final InputStream input = new FileInputStream(original);
 			final OutputStream output = new FileOutputStream(copy);
 			final byte[] bytes = new byte[1024];
-			int length = 0;
+			int length;
 			while ((length = input.read(bytes)) > 0) {
 				output.write(bytes, 0, length);
 			}
@@ -129,7 +127,7 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Writes an byte array to a file and create the file before writing if the file
+	 * Writes a byte array to a file and create the file before writing if the file
 	 * didn't exist.
 	 * 
 	 * @param file  the file to write
@@ -157,7 +155,7 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Appends an byte array to a file and create the file before writing if the
+	 * Appends a byte array to a file and create the file before writing if the
 	 * file didn't exist.
 	 * 
 	 * @param file  the file to append
@@ -171,7 +169,7 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Connects to a website and returns it's content as string.
+	 * Connects to a website and returns its content as string.
 	 * 
 	 * @param url the url of the website
 	 * @return the content of the website as string
@@ -182,7 +180,7 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Connects to a website and returns it's content as string.
+	 * Connects to a website and returns its content as string.
 	 * 
 	 * @param url            the url of the website
 	 * @param removeHtmlTags if the returned string should not contain html tags
@@ -196,7 +194,7 @@ public class FileUtil {
 			builder.append(scanner.nextLine());
 			builder.append("\n");
 		}
-		String string = builder.toString().substring(0, builder.length() - 1);
+		String string = builder.substring(0, builder.length() - 1);
 		if (removeHtmlTags) {
 			string = string.replaceAll("<[^>]*>", "");
 		}
@@ -247,7 +245,6 @@ public class FileUtil {
 	 * 
 	 * @param file the file to open
 	 * @throws SecurityException if java has no permission to open the file
-	 * @throws IOException       if an I/O exception occurs
 	 */
 	public static void openFileDirectory(File file) {
 		Desktop.getDesktop().browseFileDirectory(file);
@@ -272,7 +269,6 @@ public class FileUtil {
 	 * @return if the operating was successful
 	 * @throws SecurityException if java has no permission to move the file to
 	 *                           trash
-	 * @throws IOException       if an I/O exception occurs
 	 */
 	public static boolean moveFileToTrash(File file) {
 		return Desktop.getDesktop().moveToTrash(file);
@@ -299,10 +295,10 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Returns the directory in which the jar file is executed in this moment as
+	 * Returns the directory in which the jar file is executed at this moment as
 	 * {@link File}.
 	 * 
-	 * @return the directory in which the jar file is executed in this moment as
+	 * @return the directory in which the jar file is executed at this moment as
 	 *         file
 	 */
 	public static File getExecutionDirectory() {
