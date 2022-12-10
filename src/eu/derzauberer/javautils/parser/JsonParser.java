@@ -157,9 +157,9 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void setObject(String key, Object value) {
+	protected void setValue(String key, Object value) {
 		if (key == null || !key.contains(".")) {
-			super.setObject(key, value);
+			super.setValue(key, value);
 			return;
 		}
 		String[] keys = key.split("\\.");
@@ -170,7 +170,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 				.filter(maxKey -> maxKey.startsWith(key) && maxKey.split("\\.").length - 1 == keys.length)
 				.collect(Collectors.toList());
 		getStructure().removeAll(oldKeys);
-		super.setObject(key, value);
+		super.setValue(key, value);
 	}
 	
 	/**
@@ -255,7 +255,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
 						} else if (object.getClass().isArray() || object instanceof Collection<?>) {
 							final JsonParser parser = new JsonParser();
-							parser.setObject("null", object);
+							parser.setValue("null", object);
 							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
 						} else {
 							string.append(tabs + DataUtil.autoSerializePrimitive(object, true) + "," + newLine);
