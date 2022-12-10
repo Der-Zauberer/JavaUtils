@@ -211,7 +211,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		}
 		if (getEntries().containsKey("null") && (isCollection("null") || isArray("null"))) {
 			string.append("[");
-			if (getCollection("null").isEmpty()) {
+			if (getAsCollection("null").isEmpty()) {
 				string.append("]");
 				return string.toString();
 			}
@@ -242,7 +242,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			if (!isArray(key) && !isCollection(key)) {
 				string.append(tabs + "\"" + name + "\":" + space + DataUtil.autoSerializePrimitive(get(key), true));
 			} else {
-				final Collection<?> list = getCollection(key);
+				final Collection<?> list = getAsCollection(key);
 				if (list.isEmpty()) {
 					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[]");
 				} else {
