@@ -80,7 +80,7 @@ public class CommandController {
 					ExecutionFailCause cause = ExecutionFailCause.BAD_RETURN;
 					Exception exception = null;
 					try {
-						success = commands.get(label).onCommand(event.getSender(), event.getLabel(), event.getArgs());
+						success = commands.get(label).executeCommand(event.getSender(), event.getLabel(), event.getArgs());
 					} catch (Exception e) {
 						exception = e;
 						success = false;
