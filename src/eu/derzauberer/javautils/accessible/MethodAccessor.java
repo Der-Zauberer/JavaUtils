@@ -25,10 +25,12 @@ public class MethodAccessor<A> {
 	public MethodAccessor(Accessor<A> parent, Method method) {
 		this.parent = parent;
 		this.method = method;
+		method.setAccessible(true);
 	}
 	
 	/**
 	 * Invokes the method with the given parameters
+	 * 
 	 * @param args the parameters of the method
 	 * @return an object, that the underlying method does return
 	 * @throws IllegalArgumentException if the method couldn't be invoked due to wrong parameters
@@ -41,7 +43,7 @@ public class MethodAccessor<A> {
 		}
 	}
 	
-	/**.
+	/**
 	 * Returns the name of the field
 	 * 
 	 * @return the name of the field

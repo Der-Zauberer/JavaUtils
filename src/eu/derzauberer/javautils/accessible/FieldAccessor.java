@@ -24,6 +24,7 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 	public FieldAccessor(A parent, Field field) {
 		this.parent = parent;
 		this.field = field;
+		field.setAccessible(true);
 	}
 	
 	/**

@@ -104,13 +104,13 @@ public class Accessor<T> {
 			classes.add(superclass);
 		}
 		Collections.reverse(classes);
-		loadContents();
+		loadContent();
 	}
 
 	/**
 	 * Loads all fields and methods, which are accessible in this class.
 	 */
-	private void loadContents() {
+	private void loadContent() {
 		final Predicate<Field> fieldPredicate = field -> 
 			(fieldVisibility == Visibility.ANY || 
 			fieldVisibility == Visibility.of(field) || 
@@ -135,13 +135,11 @@ public class Accessor<T> {
 			Arrays.stream(clazz.getDeclaredFields())
 					.filter(fieldPredicate)
 					.forEach(field -> {
-				field.setAccessible(true);
 				fields.add(new FieldAccessor<>(this, field));
 			});
 			Arrays.stream(clazz.getDeclaredMethods())
 					.filter(methodPredicate)
 					.forEach(method -> {
-				method.setAccessible(true);
 				methods.add(new MethodAccessor<>(this, method));
 			});
 		}
