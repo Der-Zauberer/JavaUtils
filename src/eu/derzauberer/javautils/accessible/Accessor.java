@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  The class takes an object and loads its content with reflections to make
@@ -29,74 +30,146 @@ public class Accessor<T> {
 	private final List<MethodAccessor<?>> methods;
 	private final List<String> whitelist;
 	private final List<String> blacklist;
-	private Visibility fieldVisibility;
-	private Visibility methodVisibility;
+	private final Visibility fieldVisibility;
+	private final Visibility methodVisibility;
 
 	/**
-	 * Tries to create an instance of the type. This instantiation does only work if
-	 * the class has a standard constructor.
+	 * Creates a new Accessor to gain access to fields and methods. This
+	 * instantiation does only work if the class contains a default private or
+	 * public constructor. It will uses the visibility setting of the object, which
+	 * is set via annotations. If there are no annotations it will use an empty
+	 * whitelist, an empty blacklist an {@link Visibility#PUBLIC} as default parameter
+	 * for fields and methods.
 	 * 
 	 * @param type the type of the class to in instantiate
-	 * @throws NoSuchMethodException     if there is no standard constructor in the
-	 *                                   class
-	 * @throws InstantiationException    if the class is an interface or abstract
-	 *                                   class
-	 * @throws IllegalAccessException    if this C constructor object is enforcing
-	 *                                   Java language access control and the
-	 *                                   underlying constructor is inaccessible
-	 * @throws InvocationTargetException if the constructor throws an exception
+	 * @throws IllegalArgumentException if the wrong arguments where given to the
+	 *                                  constructor
+	 * @throws AccessorException        if the constructor doesn't exist or object
+	 *                                  is an interface or abstract object or an
+	 *                                  exception is thrown
 	 */
-	public Accessor(Class<T> type) 
-			throws NoSuchMethodException, InstantiationException, 
-			IllegalAccessException, InvocationTargetException {
+	public Accessor(Class<T> type) {
 		this(instantiate(type));
 	}
 
 	/**
-	 * Tries to create an instance of the type. This instantiation does only work if
-	 * the class constructor with the exact same parameters.
+	 * Creates a new Accessor to gain access to fields and methods. This
+	 * instantiation does only work if the class constructor with the exact same
+	 * parameters. It will uses the visibility setting of the object, which is set
+	 * via annotations. If there are no annotations it will use an empty whitelist,
+	 * an empty blacklist an {@link Visibility#PUBLIC} as default parameter for fields
+	 * and methods.
 	 * 
 	 * @param type             type the type of the class to in instantiate
 	 * @param constructorTypes the types of the constructor arguments to identify
 	 *                         the constructor
 	 * @param constructorArgs  the constructor arguments
-	 * @throws NoSuchMethodException     if there is no constructor with the given
-	 *                                   argument types in the class
-	 * @throws InstantiationException    if the class is an interface or abstract
-	 *                                   class
-	 * @throws IllegalAccessException    if this C constructor object is enforcing
-	 *                                   Java language access control and the
-	 *                                   underlying constructor is inaccessible
-	 * @throws IllegalArgumentException  if the wrong arguments where given to the
-	 *                                   constructor
-	 * @throws InvocationTargetException if the constructor throws an exception
+	 * @throws IllegalArgumentException if the wrong arguments where given to the
+	 *                                  constructor
+	 * @throws AccessorException        if the constructor doesn't exist or object
+	 *                                  is an interface or abstract object or an
+	 *                                  exception is thrown
 	 */
-	public Accessor(Class<T> type, Class<?> constructorTypes, Object... constructorArgs)
-			throws NoSuchMethodException, InstantiationException, 
-			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public Accessor(Class<T> type, Class<?>[] constructorTypes, Object... constructorArgs) {
 		this(instantiate(type, constructorTypes, constructorArgs));
 	}
-	
+
 	/**
-	 * Wraps the object in the {@link Accessor} to gain access to fields and
-	 * methods.
+	 * Creates a new Accessor to gain access to fields and methods. It will uses the
+	 * visibility setting of the object, which is set via annotations. If there are
+	 * no annotations it will use an empty whitelist, an empty blacklist an
+	 * {@link Visibility#NONE} as default parameter for fields and methods.
 	 * 
 	 * @param object the object to wrap
 	 */
 	public Accessor(T object) {
+		this(object, null, null, null, null);
+		loadContent();
+	}
+
+	/**
+	 * Creates a new Accessor to gain access to fields and methods. All parameters
+	 * except for object are nullable. If a value is null it will uses the setting
+	 * of the object, which is set via annotations. If there are no annotations it
+	 * will use an empty whitelist, an empty blacklist an {@link Visibility#PUBLIC} as
+	 * default parameter for fields and methods.
+	 * 
+	 * @param type             the class to instanciate
+	 * @param whitelist        the names of the fields and methods to only use these
+	 * @param blacklist        the names of the fields and methods to ignore
+	 * @param fieldVisibility  which visibility of the fields should be used
+	 * @param methodVisibility which visibility of the methods should be used
+	 * @throws IllegalArgumentException if the wrong arguments where given to the
+	 *                                  constructor
+	 * @throws AccessorException        if the constructor doesn't exist or object
+	 *                                  is an interface or abstract object or an
+	 *                                  exception is thrown
+	 */
+	public Accessor(Class<T> type, List<String> whitelist, List<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
+		this(instantiate(type), whitelist, blacklist, fieldVisibility, methodVisibility);
+	}
+	
+	/**
+	 * Creates a new Accessor to gain access to fields and methods. This
+	 * instantiation does only work if the class constructor with the exact same
+	 * parameters. All parameters except for object are nullable. If a value is null
+	 * it will uses the setting of the object, which is set via annotations. If
+	 * there are no annotations it will use an empty whitelist, an empty blacklist
+	 * an {@link Visibility#PUBLIC} as default parameter for fields and methods.
+	 * 
+	 * @param type             type the type of the class to in instantiate
+	 * @param constructorTypes the types of the constructor arguments to identify
+	 *                         the constructor
+	 * @param constructorArgs  the constructor arguments
+	 * @throws IllegalArgumentException if the wrong arguments where given to the
+	 *                                  constructor
+	 * @throws AccessorException        if the constructor doesn't exist or object
+	 *                                  is an interface or abstract object or an
+	 *                                  exception is thrown
+	 */
+	public Accessor(Class<T> type, Class<?>[] constructorTypes, Object[] constructorArgs, List<String> whitelist, List<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
+		this(instantiate(type, constructorTypes, constructorArgs), whitelist, blacklist, fieldVisibility, methodVisibility);
+	}
+
+	/**
+	 * Creates a new Accessor to gain access to fields and methods. All parameters
+	 * except for object are nullable. If a value is null it will uses the setting
+	 * of the object, which is set via annotations. If there are no annotations it
+	 * will use an empty whitelist, an empty blacklist an {@link Visibility#PUBLIC} as
+	 * default parameter for fields and methods.
+	 * 
+	 * @param object           the object to wrap
+	 * @param whitelist        the names of the fields and methods to only use these
+	 * @param blacklist        the names of the fields and methods to ignore
+	 * @param fieldVisibility  which visibility of the fields should be used
+	 * @param methodVisibility which visibility of the methods should be used
+	 */
+	public Accessor(T object, List<String> whitelist, List<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
 		this.object = object;
-		fields = new ArrayList<>();
-		methods = new ArrayList<>();
-		classes = new ArrayList<>();
-		classes.add(object.getClass());
-		whitelist = new ArrayList<>();
-		blacklist = new ArrayList<>();
-		fieldVisibility = Visibility.NONE;
-		methodVisibility = Visibility.NONE;
-		if (object.getClass().getAnnotation(AccessibleVisibility.class) != null) {
-			fieldVisibility = object.getClass().getAnnotation(AccessibleVisibility.class).fields();
-			methodVisibility = object.getClass().getAnnotation(AccessibleVisibility.class).methods();
-		}
+		this.fields = new ArrayList<>();
+		this.methods = new ArrayList<>();
+		this.classes = new ArrayList<>();
+		this.classes.add(object.getClass());
+		final AccessibleVisibility visibilityAnnotation = object.getClass().getAnnotation(AccessibleVisibility.class);
+		final AccessibleWhitelist whitelistAnnotation = object.getClass().getAnnotation(AccessibleWhitelist.class);
+		final AccessibleBlacklist blacklistAnnotation = object.getClass().getAnnotation(AccessibleBlacklist.class);
+		
+		if (whitelist != null) this.whitelist = whitelist;
+		else if (whitelistAnnotation != null) this.whitelist = Arrays.asList(whitelistAnnotation.value());
+		else this.whitelist = new ArrayList<>();
+		
+		if (blacklist != null) this.blacklist = blacklist;
+		else if (blacklistAnnotation != null) this.blacklist = Arrays.asList(blacklistAnnotation.value());
+		else this.blacklist = new ArrayList<>();
+		
+		if (fieldVisibility != null) this.fieldVisibility = fieldVisibility;
+		else if (visibilityAnnotation != null) this.fieldVisibility = visibilityAnnotation.fields();
+		else this.fieldVisibility = Visibility.PUBLIC;
+		
+		if (methodVisibility != null) this.methodVisibility = methodVisibility;
+		else if (visibilityAnnotation != null) this.methodVisibility = visibilityAnnotation.methods();
+		else this.methodVisibility = Visibility.PUBLIC;
+		
 		Class<?> superclass;
 		while ((superclass = classes.get(classes.size() - 1).getSuperclass()) != null
 				&& !superclass.equals(Object.class)) {
@@ -104,7 +177,6 @@ public class Accessor<T> {
 			classes.add(superclass);
 		}
 		Collections.reverse(classes);
-		loadContent();
 	}
 
 	/**
@@ -195,7 +267,18 @@ public class Accessor<T> {
 	public List<FieldAccessor<?, ?>> getFields() {
 		return new ArrayList<>(fields);
 	}
-
+	
+	/**
+	 * Returns a {@link List} of all public {@link FieldAccessor}, which are usable for
+	 * this class.
+	 * 
+	 * @return a {@link List} of all public{@link FieldAccessor}, which are usable for
+	 *         this class
+	 */
+	public List<FieldAccessor<?, ?>> getPublicFields() {
+		return fields.stream().filter(field -> field.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
+	}
+	
 	/**
 	 * Returns a {@link List} of all {@link MethodAccessor}, which are usable for
 	 * this class.
@@ -205,6 +288,17 @@ public class Accessor<T> {
 	 */
 	public List<MethodAccessor<?>> getMethods() {
 		return new ArrayList<>(methods);
+	}
+
+	/**
+	 * Returns a {@link List} of all public {@link MethodAccessor}, which are usable for
+	 * this class.
+	 * 
+	 * @return a {@link List} of all public {@link MethodAccessor}, which are usable for
+	 *         this class
+	 */
+	public List<MethodAccessor<?>> getPublicMethods() {
+		return methods.stream().filter(method -> method.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
 	}
 	
 	/**
@@ -232,23 +326,26 @@ public class Accessor<T> {
 	 * @param <T>  the type of the object inside the accessor
 	 * @param type the type of the class to in instantiate
 	 * @return the instantiated object
-	 * @throws NoSuchMethodException     if there is no standard constructor in the
-	 *                                   class
-	 * @throws SecurityException         if the accessor has no permission to access
-	 *                                   the standard constructor
-	 * @throws InstantiationException    if the class is an interface or abstract
-	 *                                   class
-	 * @throws IllegalAccessException    if this C constructor object is enforcing
-	 *                                   Java language access control and the
-	 *                                   underlying constructor is inaccessible
-	 * @throws InvocationTargetException if the constructor throws an exception
+	 * @throws AccessorException if the constructor doesn't exist or object is an
+	 *                           interface or abstract object or an exception is
+	 *                           thrown
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T instantiate(Class<T> type) 
-			throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		final Constructor<?> constructor = type.getDeclaredConstructor();
-		constructor.setAccessible(true);
-		return (T) constructor.newInstance();
+	public static <T> T instantiate(Class<T> type) {
+		Constructor<?> constructor;
+		try {
+			constructor = type.getDeclaredConstructor();
+			constructor.setAccessible(true);
+			return (T) constructor.newInstance();
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException exception) {
+			if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
+				throw new AccessorException("Can't instantiate abstract or interface object " + type.getName() + "!", exception);
+			} else {
+				throw new AccessorException("Can't instantiate the " + type.getName() + " object, it must contain at least a private default constructor!", exception);
+			}
+		} catch (InvocationTargetException exception) {
+			throw new AccessorException("An exception was thrown on the instantiation of " + type.getName() + "!", exception);
+		}
 	}
 	
 	/**
@@ -261,23 +358,28 @@ public class Accessor<T> {
 	 *                         the constructor
 	 * @param constructorArgs  the constructor arguments
 	 * @return the instantiated object
-	 * @throws NoSuchMethodException     if there is no constructor with the given
-	 *                                   argument types in the class
-	 * @throws InstantiationException    if the class is an interface or abstract
-	 *                                   class
-	 * @throws IllegalAccessException    if this C constructor object is enforcing
-	 *                                   Java language access control and the
-	 *                                   underlying constructor is inaccessible
 	 * @throws IllegalArgumentException  if the wrong arguments where given to the
 	 *                                   constructor
-	 * @throws InvocationTargetException if the constructor throws an exception
+	 * @throws AccessorException         if the constructor doesn't exist or object
+	 *                                   is an interface or abstract object or an
+	 *                                   exception is thrown
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T instantiate(Class<T> type, Class<?> constructorTypes, Object... constructorArgs)
-			throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		final Constructor<?> constructor = type.getDeclaredConstructor(constructorTypes);
-		constructor.setAccessible(true);
-		return (T) constructor.newInstance(constructorArgs);
+	public static <T> T instantiate(Class<T> type, Class<?>[] constructorTypes, Object... constructorArgs) {		
+		Constructor<?> constructor;
+		try {
+			constructor = type.getDeclaredConstructor(constructorTypes);
+			constructor.setAccessible(true);
+			return (T) constructor.newInstance(constructorArgs);
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException exception) {
+			if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
+				throw new AccessorException("Can't instantiate abstract or interface object " + type.getName() + "!", exception);
+			} else {
+				throw new AccessorException("Can't instantiate the " + type.getName() + " object, it must contain a constructor with the given arguments!", exception);
+			}
+		} catch (InvocationTargetException exception) {
+			throw new AccessorException("An exception was thrown on the instantiation of " + type.getName() + "!", exception);
+		}
 	}
 	
 	/**

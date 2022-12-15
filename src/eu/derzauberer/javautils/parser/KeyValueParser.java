@@ -3,7 +3,6 @@ package eu.derzauberer.javautils.parser;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -20,6 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
 import eu.derzauberer.javautils.accessible.Accessor;
+import eu.derzauberer.javautils.accessible.AccessorException;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -505,7 +505,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				} else {
 					try {
 						field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
-					} catch (IllegalArgumentException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exception) {
+					} catch (IllegalArgumentException | AccessorException exception) {
 						new SerializationException("Can't instantiate the " + field.getClassType() + " object, please instantiate it in the constructor!", exception).printStackTrace();
 					}
 				}
@@ -544,13 +544,13 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				} else if (object instanceof KeyValueParser<?>) {
 					try {
 						collection.add(((KeyValueParser<?>) object).deserialize(new Accessor<>(classType)));
-					} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+					} catch (AccessorException | IllegalArgumentException exception) {
 						new SerializationException("Can't instantiate an " + classType + " object, please instantiate it in the constructor!", exception).printStackTrace();
 					}
 				}
 			}
 			return collection;
-		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException| InvocationTargetException exception) {
+		} catch (AccessorException | IllegalArgumentException exception) {
 			new SerializationException("Can't instantiate the " + classType + " object, please instantiate it in the constructor!", exception).printStackTrace();
 			return null;
 		}
