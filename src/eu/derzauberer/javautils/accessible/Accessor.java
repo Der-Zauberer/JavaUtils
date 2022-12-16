@@ -1,5 +1,6 @@
 package eu.derzauberer.javautils.accessible;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,7 @@ public class Accessor<T> {
 	private final List<MethodAccessor<?>> methods;
 	private final List<String> whitelist;
 	private final List<String> blacklist;
+	private final List<Annotation> annotations;
 	private final Visibility fieldVisibility;
 	private final Visibility methodVisibility;
 
@@ -150,6 +153,7 @@ public class Accessor<T> {
 		this.methods = new ArrayList<>();
 		this.classes = new ArrayList<>();
 		this.classes.add(object.getClass());
+		this.annotations = new ArrayList<>();
 		final AccessibleVisibility visibilityAnnotation = object.getClass().getAnnotation(AccessibleVisibility.class);
 		final AccessibleWhitelist whitelistAnnotation = object.getClass().getAnnotation(AccessibleWhitelist.class);
 		final AccessibleBlacklist blacklistAnnotation = object.getClass().getAnnotation(AccessibleBlacklist.class);
@@ -194,6 +198,7 @@ public class Accessor<T> {
 			whitelist.contains(method.getName())) 
 			&& !blacklist.contains(method.getName());
 		for (Class<?> clazz : classes) {
+			annotations.addAll(Arrays.asList(clazz.getAnnotations()));
 			if (clazz.getAnnotation(AccessibleWhitelist.class) != null) {
 				Arrays.stream(clazz.getAnnotation(AccessibleWhitelist.class).value())
 					.filter(name -> !whitelist.contains(name))
@@ -317,6 +322,28 @@ public class Accessor<T> {
 	 */
 	public boolean isAbstract() {
 		return Modifier.isAbstract(object.getClass().getModifiers());
+	}
+	
+	/**
+	 * Returns a list of all annotations that are used to describe this field. The
+	 * superclass annotation are stores before the annotations of the host object.
+	 * 
+	 * @return a list of all annotations
+	 */
+	public List<Annotation> getAnnotations() {
+		return new ArrayList<>(annotations);
+	}
+	
+	/**
+	 * Returns the annotation object as optional. The optional is empty if the given
+	 * annotations does not exists. If a superclass an the host defines the same
+	 * annotation the one of the superclass will be used.
+	 * 
+	 * @param annotationn the annotation as class
+	 * @return the annotation object as optional
+	 */
+	public Optional<Annotation> getAnnotation(Class<Annotation> annotation) {
+		return annotations.stream().filter(entity -> entity.getClass().equals(annotation)).findFirst();
 	}
 	
 	/**

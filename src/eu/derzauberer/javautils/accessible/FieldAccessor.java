@@ -1,8 +1,12 @@
 package eu.derzauberer.javautils.accessible;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * The class wraps the {@link Field} and make its usage easier to use.
@@ -146,6 +150,26 @@ public class FieldAccessor<A extends Accessor<?>, F> {
      */
 	public Type getGenericType() {
 		return field.getGenericType();
+	}
+	
+	/**
+	 * Returns a list of all annotations that are used to describe this field.
+	 * 
+	 * @return a list of all annotations
+	 */
+	public List<Annotation> getAnnotations() {
+		return Arrays.asList(field.getAnnotations());
+	}
+	
+	/**
+	 * Returns the annotation object as optional. The optional is empty if the given
+	 * annotations does not exists.
+	 * 
+	 * @param annotationn the annotation as class
+	 * @return the annotation object as optional
+	 */
+	public Optional<Annotation> getAnnotation(Class<Annotation> annotation) {
+		return Optional.of(field.getAnnotation(annotation));
 	}
 
 }
