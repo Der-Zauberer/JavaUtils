@@ -238,10 +238,10 @@ public class ClientController implements Sender, Closeable {
 	}
 	
 	/**
-	 * Sets the charset for the streams that is in use when converting
+	 * Sets the charset for the stream that is in use when converting
 	 * bytes to strings.
 	 * 
-	 * @param charset the charset for the streams
+	 * @param charset the charset for the stream
 	 */
 	public void setCharset(Charset charset) {
 		this.charset = charset;

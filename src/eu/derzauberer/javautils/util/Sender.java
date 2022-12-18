@@ -237,10 +237,10 @@ public interface Sender {
 	OutputStream getOutputStream();
 
 	/**
-	 * Returns the charset for the streams that is in use when converting bytes to
+	 * Returns the charset for the stream that is in use when converting bytes to
 	 * strings.
 	 * 
-	 * @return the charset for the streams
+	 * @return the charset for the stream
 	 */
 	Charset getCharset();
 	
