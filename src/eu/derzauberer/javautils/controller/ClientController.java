@@ -1,10 +1,8 @@
 package eu.derzauberer.javautils.controller;
 
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -31,14 +29,14 @@ public class ClientController implements Sender, Closeable {
 	private final Thread thread;
 	private final InputStream input;
 	private final OutputStream output;
-	private final BufferedReader reader;
+	private boolean isDisconnected;
+	private DisconnectCause cause;
+	private Charset charset;
+	private boolean nextLineIgnored;
 	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
 	private Consumer<ClientMessageSendEvent> messageSendAction;
 	private Consumer<ClientConnectEvent> connectAction;
 	private Consumer<ClientDisconnectEvent> disconnectAction;
-	private boolean isDisconnected;
-	private DisconnectCause cause;
-	private Charset charset;
 
 	/**
 	 * Creates a new client based on a host address and port.
@@ -76,9 +74,9 @@ public class ClientController implements Sender, Closeable {
 		this.socket = socket;
 		input = socket.getInputStream();
 		output = socket.getOutputStream();
-		reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		charset = Charset.defaultCharset();
 		isDisconnected = false;
+		charset = Charset.defaultCharset();
+		nextLineIgnored = false;
 		final ClientConnectEvent event = new ClientConnectEvent(this);
 		EventController.getGlobalEventController().callListeners(event);
 		if (connectAction != null) connectAction.accept(event);
@@ -121,44 +119,6 @@ public class ClientController implements Sender, Closeable {
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public synchronized int readBytes(byte[] bytes) throws IOException {
-		return input.read(bytes);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public synchronized byte[] readBytes(int length) throws IOException {
-		return input.readNBytes(length);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String readLine() throws IOException {
-		String input = reader.readLine();
-		if (!charset.equals(Charset.defaultCharset())) {
-			input = new String(input.getBytes(), charset);
-		}
-		return input;
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void sendBytes(byte[] bytes) {
-		try {
-			output.write(bytes);
-		} catch (IOException exception) {}
 	}
 	
 	/**
@@ -299,6 +259,32 @@ public class ClientController implements Sender, Closeable {
 	@Override
 	public Charset getCharset() {
 		return charset;
+	}
+	
+	@Override
+	public InputStream getInputStream() {
+		return input;
+	}
+	
+	@Override
+	public OutputStream getOutputStream() {
+		return output;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void setNextLineIgnore(boolean nextLineIgnored) {
+		this.nextLineIgnored = nextLineIgnored;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isNextLineIgnored() {
+		return nextLineIgnored;
 	}
 
 	/**

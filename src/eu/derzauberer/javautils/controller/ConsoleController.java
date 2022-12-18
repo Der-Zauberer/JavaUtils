@@ -3,12 +3,13 @@ package eu.derzauberer.javautils.controller;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.NoSuchElementException;
-import java.util.Scanner;
 import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
@@ -47,7 +48,8 @@ public class ConsoleController implements Sender, Closeable {
 	public static final String RESET = "\u001b[0m";
 
 	private final Thread thread;
-	private final Scanner scanner;
+	private final InputStream input;
+	private final OutputStream output;
 	private CommandController commandHandler;
 	private boolean areColorCodesEnabled;
 	private String inputPrefix;
@@ -55,6 +57,7 @@ public class ConsoleController implements Sender, Closeable {
 	private boolean isLogEnabled;
 	private File logDirectory;
 	private boolean isClosed;
+	private boolean nextLineIgnored;
 	private Consumer<ConsoleInputEvent> inputAction;
 	private Consumer<ConsoleOutputEvent> outputAction;
 	
@@ -72,7 +75,8 @@ public class ConsoleController implements Sender, Closeable {
 	
 	public ConsoleController(String inputPrefix, CommandController commandHandler) {
 		thread = new Thread(this::inputLoop);
-		scanner = new Scanner(System.in);
+		input = System.in;
+		output = System.out;
 		this.commandHandler = commandHandler;
 		areColorCodesEnabled = areColorCodesSupportedBySystem();
 		isLogEnabled = false;
@@ -80,6 +84,7 @@ public class ConsoleController implements Sender, Closeable {
 		directory = FileUtil.getExecutionDirectory();
 		logDirectory = new File("logs");
 		isClosed = false;
+		nextLineIgnored = false;
 	}
 	
 	protected void inputLoop() {
@@ -87,7 +92,7 @@ public class ConsoleController implements Sender, Closeable {
 			String input;
 			while (!thread.isInterrupted()) {
 				System.out.print(inputPrefix);
-				input = scanner.nextLine();
+				input = readLine();
 				final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
 				EventController.getGlobalEventController().callListeners(event);
 				if (inputAction != null && !event.isCancelled()) {
@@ -98,27 +103,7 @@ public class ConsoleController implements Sender, Closeable {
 					if (isLogEnabled) log(inputPrefix + " " + input);
 				}
 			}
-		} catch (NoSuchElementException exception) {}
-	}
-	
-	@Override
-	public byte[] readBytes(int length) throws IOException {
-		return System.in.readNBytes(length);
-	}
-
-	@Override
-	public int readBytes(byte[] bytes) throws IOException {
-		return System.in.read(bytes);
-	}
-
-	@Override
-	public String readLine() throws IOException {
-		return scanner.nextLine();
-	}
-	
-	@Override
-	public void sendBytes(byte[] bytes) {
-		System.out.print(new String(bytes, getCharset()));
+		} catch (NoSuchElementException | IOException exception) {}
 	}
 	
 	@Override
@@ -128,12 +113,11 @@ public class ConsoleController implements Sender, Closeable {
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
-			System.out.println(event.getOutput());
+			Sender.super.sendLine(event.getOutput());
 			if (isLogEnabled) {
 				log(removeEscapeCodes(event.getOutput()));
 			}
 		}
-		Sender.super.sendLine(string);
 	}
 	
 	public static String removeEscapeCodes(String string) {
@@ -228,12 +212,51 @@ public class ConsoleController implements Sender, Closeable {
 	@Override
 	public void close() throws IOException {
 		thread.interrupt();
-		scanner.close();
 		isClosed = true;
 	}
 
 	public boolean isClosed() {
 		return isClosed;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public InputStream getInputStream() {
+		return input;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public OutputStream getOutputStream() {
+		return output;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Charset getCharset() {
+		return Charset.defaultCharset();
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void setNextLineIgnore(boolean nextLineIgnored) {
+		this.nextLineIgnored = nextLineIgnored;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isNextLineIgnored() {
+		return nextLineIgnored;
 	}
 	
 	public void setInputAction(Consumer<ConsoleInputEvent> inputAction) {
@@ -250,11 +273,6 @@ public class ConsoleController implements Sender, Closeable {
 	
 	public Consumer<ConsoleOutputEvent> getOutputAction() {
 		return outputAction;
-	}
-
-	@Override
-	public Charset getCharset() {
-		return Charset.defaultCharset();
 	}
 
 }
