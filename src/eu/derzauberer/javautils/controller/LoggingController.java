@@ -29,7 +29,6 @@ public class LoggingController {
 	}
 	
 	private final String prefix;
-	
 	private boolean systemOutput = true;
 	private boolean fileOutput = true;
 	private boolean enableOutputInformation = true;

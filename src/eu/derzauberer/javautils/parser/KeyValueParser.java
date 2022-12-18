@@ -829,7 +829,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Creates an instance of the KeyParser implementation and returns it.
+	 * Creates an instance of the {@link KeyValueParser} implementation and returns it.
 	 * 
 	 * @return the instance of the implementation
 	 */
