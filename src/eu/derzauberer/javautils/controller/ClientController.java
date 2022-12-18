@@ -26,12 +26,11 @@ public class ClientController implements Sender, Closeable {
 
 	private final Socket socket;
 	private final ServerController server;
-	private final Thread thread;
 	private final InputStream input;
 	private final OutputStream output;
-	private boolean isDisconnected;
-	private DisconnectCause cause;
 	private Charset charset;
+	private DisconnectCause cause;
+	private boolean isDisconnected;
 	private boolean nextLineIgnored;
 	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
 	private Consumer<ClientMessageSendEvent> messageSendAction;
@@ -63,30 +62,25 @@ public class ClientController implements Sender, Closeable {
 	}
 
 	/**
-	 * Creates a new client which is part of a {@link ServerController}.
+	 * Creates a new client based on an existing socket and a part of a server.
 	 * 
 	 * @param socket the existing socket
-	 * @param server the server, this socket is a part of
+	 * @param server the server if the socket is a part of a server
 	 * @throws IOException if an I/O exception occurs
 	 */
-	protected ClientController(Socket socket, ServerController server) throws IOException {
+	public ClientController(Socket socket, ServerController server) throws IOException {
 		this.server = server;
 		this.socket = socket;
 		input = socket.getInputStream();
 		output = socket.getOutputStream();
-		isDisconnected = false;
 		charset = Charset.defaultCharset();
+		isDisconnected = false;
 		nextLineIgnored = false;
 		final ClientConnectEvent event = new ClientConnectEvent(this);
 		EventController.getGlobalEventController().callListeners(event);
 		if (connectAction != null) connectAction.accept(event);
 		if (isPartOfServer() && server.getConnectAction() != null) server.getConnectAction().accept(event);
-		if (!isPartOfServer()) {
-			thread = new Thread(this::inputLoop);
-			thread.start();
-		} else {
-			thread = null;
-		}
+		if (!isPartOfServer()) new Thread(this::inputLoop).start();
 	}
 
 	/**
@@ -261,11 +255,17 @@ public class ClientController implements Sender, Closeable {
 		return charset;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public InputStream getInputStream() {
 		return input;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public OutputStream getOutputStream() {
 		return output;

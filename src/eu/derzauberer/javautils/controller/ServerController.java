@@ -67,7 +67,7 @@ public class ServerController implements Closeable {
 			while (!server.isClosed()) {
 				try {
 					final Socket socket = server.accept();
-					final ClientController client = new ClientController(socket, this);
+					final ClientController client = getClientControllerInstance(socket);
 					client.setTimeout(clientTimeout);
 					service.submit(client::inputLoop);
 					clients.add(client);
@@ -85,7 +85,7 @@ public class ServerController implements Closeable {
 			}
 		}
 	}
-	
+
 	/**
 	 * Broadcasts a byte array to all connected clients.
 	 * 
@@ -357,6 +357,17 @@ public class ServerController implements Closeable {
 	 */
 	public Consumer<ClientDisconnectEvent> getDisconnectAction() {
 		return disconnectAction;
+	}
+	
+	/**
+	 * Creates an instance of the {@link ClientController} implementation and returns it.
+	 * 
+	 * @param socket the socket to create a ClientController
+	 * @return the instance of the implementation
+	 * @throws IOException if an I/O exception occurs
+	 */
+	protected ClientController getClientControllerInstance(Socket socket) throws IOException {
+		return new ClientController(socket, this);
 	}
 
 }
