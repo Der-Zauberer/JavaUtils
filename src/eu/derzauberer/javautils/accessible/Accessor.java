@@ -87,7 +87,6 @@ public class Accessor<T> {
 	 */
 	public Accessor(T object) {
 		this(object, null, null, null, null);
-		loadContent();
 	}
 
 	/**
@@ -153,18 +152,18 @@ public class Accessor<T> {
 		this.methods = new ArrayList<>();
 		this.classes = new ArrayList<>();
 		this.classes.add(object.getClass());
+		this.whitelist = new ArrayList<>();
+		this.blacklist = new ArrayList<>();
 		this.annotations = new ArrayList<>();
 		final AccessibleVisibility visibilityAnnotation = object.getClass().getAnnotation(AccessibleVisibility.class);
 		final AccessibleWhitelist whitelistAnnotation = object.getClass().getAnnotation(AccessibleWhitelist.class);
 		final AccessibleBlacklist blacklistAnnotation = object.getClass().getAnnotation(AccessibleBlacklist.class);
 		
-		if (whitelist != null) this.whitelist = whitelist;
-		else if (whitelistAnnotation != null) this.whitelist = Arrays.asList(whitelistAnnotation.value());
-		else this.whitelist = new ArrayList<>();
+		if (whitelist != null) this.whitelist.addAll(whitelist);
+		if (whitelistAnnotation != null) this.whitelist.addAll(Arrays.asList(whitelistAnnotation.value()));
 		
-		if (blacklist != null) this.blacklist = blacklist;
-		else if (blacklistAnnotation != null) this.blacklist = Arrays.asList(blacklistAnnotation.value());
-		else this.blacklist = new ArrayList<>();
+		if (blacklist != null) this.blacklist.addAll(blacklist);
+		if (blacklistAnnotation != null) this.blacklist.addAll(Arrays.asList(blacklistAnnotation.value()));
 		
 		if (fieldVisibility != null) this.fieldVisibility = fieldVisibility;
 		else if (visibilityAnnotation != null) this.fieldVisibility = visibilityAnnotation.fields();
@@ -181,6 +180,7 @@ public class Accessor<T> {
 			classes.add(superclass);
 		}
 		Collections.reverse(classes);
+		loadContent();
 	}
 
 	/**
@@ -199,16 +199,6 @@ public class Accessor<T> {
 			&& !blacklist.contains(method.getName());
 		for (Class<?> clazz : classes) {
 			annotations.addAll(Arrays.asList(clazz.getAnnotations()));
-			if (clazz.getAnnotation(AccessibleWhitelist.class) != null) {
-				Arrays.stream(clazz.getAnnotation(AccessibleWhitelist.class).value())
-					.filter(name -> !whitelist.contains(name))
-					.forEach(whitelist::add);
-			}
-			if (clazz.getAnnotation(AccessibleBlacklist.class) != null) {
-				Arrays.stream(clazz.getAnnotation(AccessibleBlacklist.class).value())
-					.filter(name -> !blacklist.contains(name))
-					.forEach(blacklist::add);
-			}
 			Arrays.stream(clazz.getDeclaredFields())
 					.filter(fieldPredicate)
 					.forEach(field -> {
