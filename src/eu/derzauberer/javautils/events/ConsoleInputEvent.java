@@ -1,6 +1,5 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.CommandController;
 import eu.derzauberer.javautils.controller.ConsoleController;
 
 /**
@@ -14,7 +13,7 @@ public class ConsoleInputEvent extends CancellableEvent {
 	
 	/**
 	 * Creates a new event that gets called when an input was given to the
-	 * {@link ConsoleController}.
+	 * {@link ConsoleControllerOld}.
 	 * 
 	 * @param console the console receiving the input
 	 * @param input   the input that was given from the console

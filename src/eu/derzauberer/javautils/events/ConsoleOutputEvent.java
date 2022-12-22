@@ -1,6 +1,5 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.CommandController;
 import eu.derzauberer.javautils.controller.ConsoleController;
 
 /**

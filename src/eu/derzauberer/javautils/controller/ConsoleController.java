@@ -1,6 +1,5 @@
 package eu.derzauberer.javautils.controller;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,14 +8,18 @@ import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.util.FileUtil;
 import eu.derzauberer.javautils.util.Sender;
 
-public class ConsoleController implements Sender, Closeable {
+/**
+ * A console that contains an input stream and output stream and simplifies the
+ * usage of input and output functionalities. It also automatically removes
+ * color codes on systems that do not support these.
+ */
+public class ConsoleController implements Sender {
 	
 	public static final String BLACK = "\u001b[30m";
 	public static final String GRAY = "\u001b[30;1m";
@@ -46,52 +49,79 @@ public class ConsoleController implements Sender, Closeable {
 	public static final String RESET_COLOR = "\u001b[39m";
 	public static final String RESET_BACKGROUND_COLOR = "\u001b[49m";
 	public static final String RESET = "\u001b[0m";
-
+	
 	private final Thread thread;
 	private final InputStream input;
 	private final OutputStream output;
+	private Charset charset;
 	private CommandController commandHandler;
-	private boolean areColorCodesEnabled;
-	private String inputPrefix;
-	private File directory;
-	private boolean isLogEnabled;
-	private File logDirectory;
+	private String prefix;
+	private boolean hasColorCodesEnabled;
+	private boolean isLoggingEnabled;
+	private File loggingDirectory;
 	private boolean isClosed;
 	private boolean nextLineIgnored;
 	private Consumer<ConsoleInputEvent> inputAction;
 	private Consumer<ConsoleOutputEvent> outputAction;
 	
+	/**
+	 * Creates a new console with input reader and output printer.
+	 */
 	public ConsoleController() {
 		this("", null);
 	}
 	
-	public ConsoleController(CommandController handler) {
-		this("", handler);
+	/**
+	 * Creates a new console with input reader and output printer.
+	 * 
+	 * @param prefix prefix he prefix which should be displayed in front of the
+	 *               input line
+	 */
+	public ConsoleController(String prefix) {
+		this(prefix, null);
 	}
 
-	public ConsoleController(String inputPrefix) {
-		this(inputPrefix, null);
+	/**
+	 * Creates a new console with input reader and output printer.
+	 * 
+	 * @param commandController the command handler, in which the input from the
+	 *                          console should be passed
+	 */
+	public ConsoleController(CommandController commandController) {
+		this("", commandController);
 	}
-	
-	public ConsoleController(String inputPrefix, CommandController commandHandler) {
-		thread = new Thread(this::inputLoop);
+
+	/**
+	 * Creates a new console with input reader and output printer.
+	 * 
+	 * @param prefix            prefix he prefix which should be displayed in front
+	 *                          of the input line
+	 * @param commandController the command handler, in which the input from the
+	 *                          console should be passed
+	 */
+	public ConsoleController(String prefix, CommandController commandController) {
 		input = System.in;
 		output = System.out;
-		this.commandHandler = commandHandler;
-		areColorCodesEnabled = areColorCodesSupportedBySystem();
-		isLogEnabled = false;
-		this.inputPrefix = inputPrefix;
-		directory = FileUtil.getExecutionDirectory();
-		logDirectory = new File("logs");
+		charset = Charset.defaultCharset();
+		this.prefix = prefix;
+		this.commandHandler = commandController;
+		hasColorCodesEnabled = hasSystemColorCodeSupport();
+		isLoggingEnabled = false;
+		loggingDirectory = new File("logs");
 		isClosed = false;
 		nextLineIgnored = false;
+		thread = new Thread(this::inputLoop);
+		thread.start();
 	}
 	
+	/**
+	 * Waits for incoming messages from the server socket.
+	 */
 	protected void inputLoop() {
 		try {
 			String input;
-			while (!thread.isInterrupted()) {
-				System.out.print(inputPrefix);
+			while (!thread.isInterrupted() && !isClosed) {
+				send(prefix);
 				input = readLine();
 				final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
 				EventController.getGlobalEventController().callListeners(event);
@@ -100,26 +130,46 @@ public class ConsoleController implements Sender, Closeable {
 				}
 				if (!event.isCancelled()) {
 					if (commandHandler != null) commandHandler.executeCommand(event.getConsole(), event.getInput());
-					if (isLogEnabled) log(inputPrefix + " " + input);
+					if (isLoggingEnabled) log(prefix + " " + input);
 				}
 			}
-		} catch (NoSuchElementException | IOException exception) {}
+		} catch (IOException exception) {}
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public void sendLine(String string) {
+	public void send(String string) {
 		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, string);
 		EventController.getGlobalEventController().callListeners(event);
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
-			if (!areColorCodesEnabled() && !areColorCodesSupportedBySystem()) event.setOutput(removeEscapeCodes(event.getOutput()));
-			Sender.super.sendLine(event.getOutput());
-			if (isLogEnabled) {
-				log(removeEscapeCodes(event.getOutput()));
-			}
+			if (hasColorCodesEnabled) Sender.super.send(event.getOutput());
+			else Sender.super.send(removeEscapeCodes(event.getOutput()));
+			if(isLoggingEnabled) log(removeEscapeCodes(event.getOutput()));
 		}
 	}
 	
+	/**
+	 * Logs an input or output in the logging file.
+	 * 
+	 * @param string the input or output that should be written
+	 */
+	private void log(String string) {
+		try {
+			FileUtil.appendString(new File(loggingDirectory, "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), string + "\n");
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Removes all color codes from the string.
+	 * 
+	 * @param string the string to remove the color codes
+	 * @return the string without color codes
+	 */
 	public static String removeEscapeCodes(String string) {
 		String output = string;
 		try {
@@ -140,81 +190,122 @@ public class ConsoleController implements Sender, Closeable {
 		return output;
 	}
 	
-	public static String get256BitColor(int number) {
-		return "\033[38;5;" + number + "m";
-	}
-	
-	public static String get256BitBackgroundColor(int number) {
-		return "\033[48;5;" + number + "m";
-	}
-	
-	private void log(String string) {
-		try {
-			FileUtil.appendString(new File(logDirectory, "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), string + "\n");
-		} catch (IOException exception) {
-			exception.printStackTrace();
-		}
-	}
-	
+	/**
+	 * Returns the command handler, in which the input from the console should be
+	 * passed to execute commands. The command controller can be null.
+	 * 
+	 * @param commandHandler the command handler, in which the input from the
+	 *                       console should be passed
+	 */
 	public void setCommandHandler(CommandController commandHandler) {
 		this.commandHandler = commandHandler;
 	}
 	
+	/**
+	 * Returns the command handler, in which the input from the console is passed to
+	 * execute commands. The command controller can be null.
+	 * 
+	 * @return command handler, in which the input from the console is passed
+	 */
 	public CommandController getCommandHandler() {
 		return commandHandler;
 	}
 	
+	/**
+	 * Sets the prefix which should be displayed in front of the input line.
+	 * 
+	 * @param prefix he prefix which should be displayed in front of the input line
+	 */
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+	}
 	
+	/**
+	 * Returns the prefix which is displayed in front of the input line.
+	 * 
+	 * @return the prefix which is displayed in front of the input line
+	 */
+	public String getPrefix() {
+		return prefix;
+	}
+	
+	/**
+	 * Sets if the color codes should be enabled.
+	 * 
+	 * @param colorCodesEnabled if the color codes should be enabled
+	 */
 	public void setColorCodesEnabled(boolean colorCodesEnabled) {
-		this.areColorCodesEnabled = colorCodesEnabled;
+		this.hasColorCodesEnabled = colorCodesEnabled;
 	}
 	
-	public boolean areColorCodesEnabled() {
-		return areColorCodesEnabled;
+	/**
+	 * Returns if the color codes are enabled.
+	 * 
+	 * @return if the color codes are enabled
+	 */
+	public boolean hasColorCodesEnabled() {
+		return hasColorCodesEnabled;
 	}
 	
-	public boolean areColorCodesSupportedBySystem() {
-		return areColorCodesEnabled || (System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null);
+	/**
+	 * Returns if the system supports color codes.
+	 * 
+	 * @return if the system supports color codes
+	 */
+	public boolean hasSystemColorCodeSupport() {
+		return System.console() != null && !System.getProperty("os.name").toLowerCase().contains("windows") && System.getenv().get("TERM") != null;
 	}
 	
-	public void setInputPrefix(String inputPrefix) {
-		this.inputPrefix = inputPrefix;
-	}
-
-	public String getInputPrefix() {
-		return inputPrefix;
-	}
-
-	public void setDirectory(File directory) {
-		this.directory = directory;
+	/**
+	 * Sets if the console input and output should be logged to a file.
+	 *  
+	 * @param logging if the console input and output should be logged
+	 */
+	public void setLoggingEnabled(boolean logging) {
+		this.isLoggingEnabled = logging;
 	}
 	
-	public File getDirectory() {
-		return directory;
+	/**
+	 * Returns if the console input and output is logged to a file.
+	 * 
+	 * @return if the console input and output is logged
+	 */
+	public boolean isLoggingEnabled() {
+		return isLoggingEnabled;
 	}
 	
-	public void setLogEnabled(boolean logEnabled) {
-		this.isLogEnabled = logEnabled;
+	/**
+	 * Sets the directory in which the logging files should be written.
+	 * 
+	 * @param loggingDirectory the directory in which the logging files should be
+	 *                         written
+	 */
+	public void setLoggingDirectory(File loggingDirectory) {
+		this.loggingDirectory = loggingDirectory;
 	}
 	
-	public boolean isLogEnabled() {
-		return isLogEnabled;
+	/**
+	 * Returns the directory in which the logging files are written.
+	 * 
+	 * @return the directory in which the logging files are written
+	 */
+	public File getLoggingDirectory() {
+		return loggingDirectory;
 	}
 	
-	public void setLogDirectory(File logDirectory) {
-		this.logDirectory = logDirectory;
-	}
-	
-	public File getLogDirectory() {
-		return logDirectory;
-	}
-	
-	@Override
-	public void close() throws IOException {
+	/**
+	 * Closes the input reader of the console.
+	 */
+	public void close() {
+		isClosed = false;
 		thread.interrupt();
-		isClosed = true;
 	}
-
+	
+	/**
+	 * Returns if the input reader of the console is closed
+	 * 
+	 * @return if the input reader of the console is closed
+	 */
 	public boolean isClosed() {
 		return isClosed;
 	}
@@ -236,11 +327,21 @@ public class ConsoleController implements Sender, Closeable {
 	}
 	
 	/**
+	 * Sets the charset for the console that is in use when converting
+	 * bytes to strings.
+	 * 
+	 * @param charset the charset for the console
+	 */
+	public void setCharset(Charset charset) {
+		this.charset = charset;
+	}
+	
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public Charset getCharset() {
-		return Charset.defaultCharset();
+		return charset;
 	}
 	
 	/**
@@ -249,28 +350,50 @@ public class ConsoleController implements Sender, Closeable {
 	@Override
 	public void setNextLineIgnore(boolean nextLineIgnored) {
 		this.nextLineIgnored = nextLineIgnored;
+		
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public boolean isNextLineIgnored() {
 		return nextLineIgnored;
 	}
 	
+	/**
+	 * Sets an action to execute when an input was given to the console.
+	 * 
+	 * @param inputAction an action to execute when an input was given to the
+	 *                    console
+	 */
 	public void setInputAction(Consumer<ConsoleInputEvent> inputAction) {
 		this.inputAction = inputAction;
 	}
 	
+	/**
+	 * Returns an action to execute when an input was given to the console.
+	 * 
+	 * @return an action to execute when an input was given to the console
+	 */
 	public Consumer<ConsoleInputEvent> getInputAction() {
 		return inputAction;
 	}
 	
+	/**
+	 * Sets an action to execute when an output was send from the console.
+	 * 
+	 * @param outputAction an action to execute when an output was send from the
+	 *                    console
+	 */
 	public void setOutputAction(Consumer<ConsoleOutputEvent> outputAction) {
 		this.outputAction = outputAction;
 	}
 	
+	/**
+	 * Returns an action to execute when an output was send from the console.
+	 * 
+	 * @return an action to execute when an output was send from the console
+	 */
 	public Consumer<ConsoleOutputEvent> getOutputAction() {
 		return outputAction;
 	}

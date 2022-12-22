@@ -19,7 +19,7 @@ import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 import eu.derzauberer.javautils.util.Sender;
 
 /**
- * This client socket can  send and receive messages from
+ * This client socket can send and receive messages from
  * a server socket, for example the {@link ServerController}.
  */
 public class ClientController implements Sender, Closeable {
