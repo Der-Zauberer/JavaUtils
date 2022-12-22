@@ -124,7 +124,7 @@ public class ClientController implements Sender, Closeable {
 		EventController.getGlobalEventController().callListeners(event);
 		if (messageSendAction != null && !event.isCancelled()) messageSendAction.accept(event);
 		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().accept(event);
-		if (!event.isCancelled()) Sender.super.send(string);
+		if (!event.isCancelled()) Sender.super.send(event.getMessage());
 	}
 	
 	/**
