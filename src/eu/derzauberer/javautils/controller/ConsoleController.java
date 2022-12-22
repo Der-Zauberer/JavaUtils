@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -146,8 +145,8 @@ public class ConsoleController implements Sender {
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (hasColorCodesEnabled) Sender.super.send(event.getOutput());
-			else Sender.super.send(removeEscapeCodes(event.getOutput()));
-			if(isLoggingEnabled) log(removeEscapeCodes(event.getOutput()));
+			else Sender.super.send(removeColorCodes(event.getOutput()));
+			if(isLoggingEnabled) log(removeColorCodes(event.getOutput()));
 		}
 	}
 	
@@ -170,24 +169,28 @@ public class ConsoleController implements Sender {
 	 * @param string the string to remove the color codes
 	 * @return the string without color codes
 	 */
-	public static String removeEscapeCodes(String string) {
-		String output = string;
-		try {
-			for (Field field : ConsoleController.class.getFields()) {
-				output = output.replace(field.get(ConsoleController.class).toString(), "");
-			}
-		} catch (IllegalArgumentException | IllegalAccessException exception) {}
-		while (output.contains("\033[38;5;")) {
-			int index = 0;
-			for (int i = output.indexOf("\033[38;5;"); i < output.length(); i++) {
-				if (output.charAt(i) == 'm') {
-					index = i;
-					break;
-				}
-			}
-			output = output.substring(0, output.indexOf("\\") + 5) + output.substring(index + 1);
-		}
-		return output;
+	public static String removeColorCodes(String string) {
+		return string.replaceAll("\u001B\\[[;\\d]*m", "");
+	}
+	
+	/**
+	 * Generates a 256-bit color code.
+	 *  
+	 * @param number the 256-bit color index
+	 * @return the 256-bit color code
+	 */
+	public static String get256BitColorCode(int number) {
+		return "\033[38;5;" + number + "m";
+	}
+	
+	/**
+	 * Generates a 256-bit background color code.
+	 *  
+	 * @param number the 256-bit color index
+	 * @return the 256-bit background color code
+	 */
+	public static String get256BitBackgroundColorCode(int number) {
+		return "\033[48;5;" + number + "m";
 	}
 	
 	/**
