@@ -14,20 +14,23 @@ import java.util.Optional;
  * @param <A> the type of the parent accessor
  * @param <F> the type of the fields value
  */
-public class FieldAccessor<A extends Accessor<?>, F> {
+public class FieldAccessor<A, F> {
 	
-	private final A parent;
 	private final Field field;
+	private final Accessor<A> parent;
+	private final int index;
 	
 	/**
 	 * Creates a new {@link Accessor} object with its parent and the corresponding {@link Field}.
 	 * 
-	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param field the corresponding {@link Field}
+	 * @param parent the {@link Accessor} of the object, which the field is part of
+	 * @param index the position of this field in the class
 	 */
-	public FieldAccessor(A parent, Field field) {
+	public FieldAccessor(Field field, Accessor<A> parent, int index) {
 		this.parent = parent;
 		this.field = field;
+		this.index = index;
 		field.setAccessible(true);
 	}
 	
@@ -83,6 +86,24 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 	public boolean isPresent() {
 		return getValue() != null;
 	}
+
+	/**
+	 * Returns the accessor of the object, which the field is part of.
+	 * 
+	 * @return the accessor of the object, which the field is part of
+	 */
+	public Accessor<A> getParent() {
+		return parent;
+	}
+	
+	/**
+	 * Returns the the position of this field in the class.
+	 * 
+	 * @return the position of this field in the class
+	 */
+	public int getIndex() {
+		return index;
+	}
 	
 	/**.
 	 * Returns the name of the field
@@ -118,15 +139,6 @@ public class FieldAccessor<A extends Accessor<?>, F> {
 	 */
 	public boolean isFinal() {
 		return Modifier.isFinal(field.getModifiers());
-	}
-	
-	/**
-	 * Returns the {@link Accessor} parent of this {@link FieldAccessor}.
-	 * 
-	 * @return the {@link Accessor} parent of this {@link FieldAccessor}
-	 */
-	public Accessor<?> getParent() {
-		return parent;
 	}
 
 	/**

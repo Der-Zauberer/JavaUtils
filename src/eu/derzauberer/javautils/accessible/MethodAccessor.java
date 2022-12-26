@@ -16,19 +16,22 @@ import java.util.Optional;
  * @param <A> the type of the parent accessor
  */
 public class MethodAccessor<A> {
-	
-	private final Accessor<A> parent;
+
 	private final Method method;
+	private final Accessor<A> parent;
+	private final int index;
 	
 	/**
 	 * Creates a new {@link Accessor} object with its parent and the corresponding {@link Method}.
 	 * 
-	 * @param parent the {@link Accessor} of the object, which the field is part of
 	 * @param method the corresponding {@link Method}
+	 * @param parent the accessor of the object, which the method is part of
+	 * @param index the position of this method in the class
 	 */
-	public MethodAccessor(Accessor<A> parent, Method method) {
+	public MethodAccessor(Method method, Accessor<A> parent, int index) {
 		this.parent = parent;
 		this.method = method;
+		this.index = index;
 		method.setAccessible(true);
 	}
 	
@@ -48,9 +51,27 @@ public class MethodAccessor<A> {
 	}
 	
 	/**
-	 * Returns the name of the field
+	 * Returns the accessor of the object, which the method is part of.
 	 * 
-	 * @return the name of the field
+	 * @return the accessor of the object, which the method is part of
+	 */
+	public Accessor<A> getParent() {
+		return parent;
+	}
+	
+	/**
+	 * Returns the the position of this method in the class.
+	 * 
+	 * @return the position of this method in the class
+	 */
+	public int getIndex() {
+		return index;
+	}
+	
+	/**
+	 * Returns the name of the method
+	 * 
+	 * @return the name of the method
 	 */
 	public String getName() {
 		return method.getName();
@@ -139,7 +160,7 @@ public class MethodAccessor<A> {
 	}
 	
 	/**
-	 * Returns a list of all annotations that are used to describe this field.
+	 * Returns a list of all annotations that are used to describe this method.
 	 * 
 	 * @return a list of all annotations
 	 */

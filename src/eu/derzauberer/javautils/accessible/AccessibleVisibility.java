@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface AccessibleVisibility {
 	
-	Visibility fields() default Visibility.NONE;
-	Visibility methods() default Visibility.NONE;
+	Visibility fields() default Visibility.PUBLIC;
+	Visibility methods() default Visibility.PUBLIC;
 
 }

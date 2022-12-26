@@ -10,9 +10,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -28,10 +30,12 @@ public class Accessor<T> {
 
 	private final T object;
 	private final List<Class<?>> classes;
-	private final List<FieldAccessor<?, ?>> fields;
-	private final List<MethodAccessor<?>> methods;
-	private final List<String> whitelist;
-	private final List<String> blacklist;
+	private final List<FieldAccessor<T, ?>> fieldList;
+	private final HashMap<String, FieldAccessor<T, ?>> fieldMap;
+	private final List<MethodAccessor<T>> methodList;
+	private final HashMap<String, MethodAccessor<T>> methodMap;
+	private final Set<String> whitelist;
+	private final Set<String> blacklist;
 	private final List<Annotation> annotations;
 	private final Visibility fieldVisibility;
 	private final Visibility methodVisibility;
@@ -107,7 +111,7 @@ public class Accessor<T> {
 	 *                                  is an interface or abstract object or an
 	 *                                  exception is thrown
 	 */
-	public Accessor(Class<T> type, List<String> whitelist, List<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
+	public Accessor(Class<T> type, Set<String> whitelist, Set<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
 		this(instantiate(type), whitelist, blacklist, fieldVisibility, methodVisibility);
 	}
 	
@@ -129,7 +133,7 @@ public class Accessor<T> {
 	 *                                  is an interface or abstract object or an
 	 *                                  exception is thrown
 	 */
-	public Accessor(Class<T> type, Class<?>[] constructorTypes, Object[] constructorArgs, List<String> whitelist, List<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
+	public Accessor(Class<T> type, Class<?>[] constructorTypes, Object[] constructorArgs, Set<String> whitelist, Set<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
 		this(instantiate(type, constructorTypes, constructorArgs), whitelist, blacklist, fieldVisibility, methodVisibility);
 	}
 
@@ -146,14 +150,16 @@ public class Accessor<T> {
 	 * @param fieldVisibility  which visibility of the fields should be used
 	 * @param methodVisibility which visibility of the methods should be used
 	 */
-	public Accessor(T object, List<String> whitelist, List<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
+	public Accessor(T object, Set<String> whitelist, Set<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
 		this.object = object;
-		this.fields = new ArrayList<>();
-		this.methods = new ArrayList<>();
+		this.fieldList = new ArrayList<>();
+		this.fieldMap = new HashMap<>();
+		this.methodList = new ArrayList<>();
+		this.methodMap = new HashMap<>();
 		this.classes = new ArrayList<>();
 		this.classes.add(object.getClass());
-		this.whitelist = new ArrayList<>();
-		this.blacklist = new ArrayList<>();
+		this.whitelist = new HashSet<>();
+		this.blacklist = new HashSet<>();
 		this.annotations = new ArrayList<>();
 		final AccessibleVisibility visibilityAnnotation = object.getClass().getAnnotation(AccessibleVisibility.class);
 		final AccessibleWhitelist whitelistAnnotation = object.getClass().getAnnotation(AccessibleWhitelist.class);
@@ -187,35 +193,31 @@ public class Accessor<T> {
 	 * Loads all fields and methods, which are accessible in this class.
 	 */
 	private void loadContent() {
-		final Predicate<Field> fieldPredicate = field -> 
-			(fieldVisibility == Visibility.ANY || 
-			fieldVisibility == Visibility.of(field) || 
-			whitelist.contains(field.getName())) &&
-			!blacklist.contains(field.getName());
-		final Predicate<Method> methodPredicate = method -> 
-			(methodVisibility == Visibility.ANY || 
-			methodVisibility == Visibility.of(method) || 
-			whitelist.contains(method.getName())) 
-			&& !blacklist.contains(method.getName());
 		for (Class<?> clazz : classes) {
 			annotations.addAll(Arrays.asList(clazz.getAnnotations()));
-			Arrays.stream(clazz.getDeclaredFields())
-					.filter(fieldPredicate)
-					.forEach(field -> {
-				fields.add(new FieldAccessor<>(this, field));
-			});
-			Arrays.stream(clazz.getDeclaredMethods())
-					.filter(methodPredicate)
-					.forEach(method -> {
-				methods.add(new MethodAccessor<>(this, method));
-			});
+			final Field[] fieldArray = clazz.getDeclaredFields();
+			for (int i = 0; i < fieldArray.length; i++) {
+				if (fieldVisibility != Visibility.ANY && fieldVisibility != Visibility.of(fieldArray[i]) && !blacklist.contains(fieldArray[i].getName())) continue;
+				if (blacklist.contains(fieldArray[i].getName())) continue;
+				final FieldAccessor<T, ?> field = new FieldAccessor<>(fieldArray[i], this, i);
+				fieldList.add(field);
+				fieldMap.put(fieldArray[i].getName(), field);
+			}
+			final Method[] methodArray = clazz.getDeclaredMethods();
+			for (int i = 0; i < methodArray.length; i++) {
+				if (methodVisibility != Visibility.ANY && methodVisibility != Visibility.of(methodArray[i]) && !blacklist.contains(methodArray[i].getName())) continue;
+				if (blacklist.contains(methodArray[i].getName())) continue;
+				final MethodAccessor<T> method = new MethodAccessor<>(methodArray[i], this, i);
+				methodList.add(method);
+				methodMap.put(methodArray[i].getName(), method);
+			}
 		}
 	}
 
 	/**
 	 * Returns the name of the object, that is wrapped in the {@link Accessor}.
 	 * 
-	 * @return the name of the object, that is wrapped in the {@link Accessor}
+	 * @return the name of the object, that is wrapped in the accessor
 	 */
 	public String getName() {
 		return object.getClass().getSimpleName();
@@ -224,7 +226,7 @@ public class Accessor<T> {
 	/**
 	 * Returns the wrapped object of the {@link Accessor}.
 	 * 
-	 * @return the wrapped object of the {@link Accessor}
+	 * @return the wrapped object of the accessor
 	 */
 	public T getObject() {
 		return object;
@@ -234,19 +236,19 @@ public class Accessor<T> {
 	 * Returns the {@link Class} of the object, that is wrapped in the
 	 * {@link Accessor}.
 	 * 
-	 * @return the {@link Class} of the object, that is wrapped in the
-	 *         {@link Accessor}
+	 * @return the class of the object, that is wrapped in the accessor
 	 */
 	public Class<?> getClassType() {
 		return object.getClass();
 	}
 
 	/**
-	 * Returns a {@link List} of classes, which the object in the {@link Accessor}
-	 * is extending or implementing.
+	 * Returns a {@link List} of classes. That contains the host class and
+	 * superclasses and interfaces. The classes are sorted in the order
+	 * they are loaded.
 	 * 
-	 * @return a {@link List} of classes, which the object in the {@link Accessor}
-	 *         is extending or implementing
+	 * @return a list of classes such as the host class and supercass and
+	 *         interfaces
 	 */
 	public List<Class<?>> getClasses() {
 		return new ArrayList<>(classes);
@@ -256,62 +258,90 @@ public class Accessor<T> {
 	 * Returns a {@link List} of all {@link FieldAccessor}, which are usable for
 	 * this class.
 	 * 
-	 * @return a {@link List} of all {@link FieldAccessor}, which are usable for
+	 * @return a list of all fields, which are usable for
 	 *         this class
 	 */
-	public List<FieldAccessor<?, ?>> getFields() {
-		return new ArrayList<>(fields);
+	public List<FieldAccessor<T, ?>> getFields() {
+		return new ArrayList<>(fieldList);
 	}
 	
 	/**
 	 * Returns a {@link List} of all public {@link FieldAccessor}, which are usable for
 	 * this class.
 	 * 
-	 * @return a {@link List} of all public{@link FieldAccessor}, which are usable for
+	 * @return a list of all public fields, which are usable for
 	 *         this class
 	 */
-	public List<FieldAccessor<?, ?>> getPublicFields() {
-		return fields.stream().filter(field -> field.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
+	public List<FieldAccessor<T, ?>> getPublicFields() {
+		return fieldList.stream().filter(field -> field.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
+	}
+	
+	/**
+	 * Returns an {@link Optional} of the field by name. The time is
+	 * constant due to a {@link HashMap}.
+	 * 
+	 * @param name the name of the field
+	 * @return an optional of the field
+	 */
+	public Optional<FieldAccessor<T, ?>> getField(String name) {
+		return Optional.of(fieldMap.get(name));
+	}
+	
+	/**
+	 * Returns an {@link Optional} of the public field by name. The time is
+	 * constant due to a {@link HashMap}.
+	 * 
+	 * @param name the name of the field
+	 * @return an optional of the field
+	 */
+	public Optional<FieldAccessor<T, ?>> getPublicField(String name) {
+		final FieldAccessor<T, ?> field = fieldMap.get(name);
+		return field != null && field.getVisibility() == Visibility.PUBLIC ? Optional.of(field) : Optional.empty();
 	}
 	
 	/**
 	 * Returns a {@link List} of all {@link MethodAccessor}, which are usable for
 	 * this class.
 	 * 
-	 * @return a {@link List} of all {@link MethodAccessor}, which are usable for
+	 * @return a list of all methods, which are usable for
 	 *         this class
 	 */
-	public List<MethodAccessor<?>> getMethods() {
-		return new ArrayList<>(methods);
+	public List<MethodAccessor<T>> getMethods() {
+		return new ArrayList<>(methodList);
 	}
 
 	/**
 	 * Returns a {@link List} of all public {@link MethodAccessor}, which are usable for
 	 * this class.
 	 * 
-	 * @return a {@link List} of all public {@link MethodAccessor}, which are usable for
+	 * @return a list of all public method, which are usable for
 	 *         this class
 	 */
-	public List<MethodAccessor<?>> getPublicMethods() {
-		return methods.stream().filter(method -> method.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
+	public List<MethodAccessor<T>> getPublicMethods() {
+		return methodList.stream().filter(method -> method.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
 	}
 	
 	/**
-	 * Returns if the class is an interface and can not be instantiated.
+	 * Returns an {@link Optional} of the method by name. The time is
+	 * constant due to a {@link HashMap}.
 	 * 
-	 * @return if the class is an interface
+	 * @param name the name of the method
+	 * @return an optional of the method
 	 */
-	public boolean isInterface() {
-		return object.getClass().isInterface();
+	public Optional<MethodAccessor<T>> getMethod(String name) {
+		return Optional.of(methodMap.get(name));
 	}
-
+	
 	/**
-	 * Returns if the class is abstract and can not be instantiated.
+	 * Returns an {@link Optional} of the public method by name. The time is
+	 * constant due to a {@link HashMap}.
 	 * 
-	 * @return if the class is abstract
+	 * @param name the name of the method
+	 * @return an optional of the method
 	 */
-	public boolean isAbstract() {
-		return Modifier.isAbstract(object.getClass().getModifiers());
+	public Optional<MethodAccessor<T>> getMethodField(String name) {
+		final MethodAccessor<T> method = methodMap.get(name);
+		return method != null && method.getVisibility() == Visibility.PUBLIC ? Optional.of(method) : Optional.empty();
 	}
 	
 	/**
@@ -413,4 +443,3 @@ public class Accessor<T> {
 	}
 
 }
-
