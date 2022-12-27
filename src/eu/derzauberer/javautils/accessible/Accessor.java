@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,17 +32,18 @@ public class Accessor<T> {
 	private final T object;
 	private final List<Class<?>> classes;
 	private final List<FieldAccessor<T, ?>> fieldList;
-	private final HashMap<String, FieldAccessor<T, ?>> fieldMap;
+	private final Map<String, FieldAccessor<T, ?>> fieldMap;
 	private final List<MethodAccessor<T>> methodList;
-	private final HashMap<String, MethodAccessor<T>> methodMap;
+	private final Map<String, MethodAccessor<T>> methodMap;
 	private final Set<String> whitelist;
 	private final Set<String> blacklist;
+	private final List<String> order;
 	private final List<Annotation> annotations;
 	private final Visibility fieldVisibility;
 	private final Visibility methodVisibility;
 
 	/**
-	 * Creates a new Accessor to gain access to fields and methods. This
+	 * Creates a new accessor to gain access to fields and methods. This
 	 * instantiation does only work if the class contains a default private or
 	 * public constructor. It will uses the visibility setting of the object, which
 	 * is set via annotations. If there are no annotations it will use an empty
@@ -60,7 +62,7 @@ public class Accessor<T> {
 	}
 
 	/**
-	 * Creates a new Accessor to gain access to fields and methods. This
+	 * Creates a new accessor to gain access to fields and methods. This
 	 * instantiation does only work if the class constructor with the exact same
 	 * parameters. It will uses the visibility setting of the object, which is set
 	 * via annotations. If there are no annotations it will use an empty whitelist,
@@ -82,7 +84,7 @@ public class Accessor<T> {
 	}
 
 	/**
-	 * Creates a new Accessor to gain access to fields and methods. It will uses the
+	 * Creates a new accessor to gain access to fields and methods. It will uses the
 	 * visibility setting of the object, which is set via annotations. If there are
 	 * no annotations it will use an empty whitelist, an empty blacklist an
 	 * {@link Visibility#NONE} as default parameter for fields and methods.
@@ -90,17 +92,17 @@ public class Accessor<T> {
 	 * @param object the object to wrap
 	 */
 	public Accessor(T object) {
-		this(object, null, null, null, null);
+		this(object, null, null, null, null, null);
 	}
 
 	/**
-	 * Creates a new Accessor to gain access to fields and methods. All parameters
+	 * Creates a new accessor to gain access to fields and methods. All parameters
 	 * except for object are nullable. If a value is null it will uses the setting
 	 * of the object, which is set via annotations. If there are no annotations it
 	 * will use an empty whitelist, an empty blacklist an {@link Visibility#PUBLIC} as
 	 * default parameter for fields and methods.
 	 * 
-	 * @param type             the class to instanciate
+	 * @param type             the class to instantiate
 	 * @param whitelist        the names of the fields and methods to only use these
 	 * @param blacklist        the names of the fields and methods to ignore
 	 * @param fieldVisibility  which visibility of the fields should be used
@@ -111,12 +113,12 @@ public class Accessor<T> {
 	 *                                  is an interface or abstract object or an
 	 *                                  exception is thrown
 	 */
-	public Accessor(Class<T> type, Set<String> whitelist, Set<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
-		this(instantiate(type), whitelist, blacklist, fieldVisibility, methodVisibility);
+	public Accessor(Class<T> type, Set<String> whitelist, Set<String> blacklist, List<String> order, Visibility fieldVisibility, Visibility methodVisibility) {
+		this(instantiate(type), whitelist, blacklist, order, fieldVisibility, methodVisibility);
 	}
 	
 	/**
-	 * Creates a new Accessor to gain access to fields and methods. This
+	 * Creates a new accessor to gain access to fields and methods. This
 	 * instantiation does only work if the class constructor with the exact same
 	 * parameters. All parameters except for object are nullable. If a value is null
 	 * it will uses the setting of the object, which is set via annotations. If
@@ -133,12 +135,12 @@ public class Accessor<T> {
 	 *                                  is an interface or abstract object or an
 	 *                                  exception is thrown
 	 */
-	public Accessor(Class<T> type, Class<?>[] constructorTypes, Object[] constructorArgs, Set<String> whitelist, Set<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
-		this(instantiate(type, constructorTypes, constructorArgs), whitelist, blacklist, fieldVisibility, methodVisibility);
+	public Accessor(Class<T> type, Class<?>[] constructorTypes, Object[] constructorArgs, Set<String> whitelist, Set<String> blacklist, List<String> order, Visibility fieldVisibility, Visibility methodVisibility) {
+		this(instantiate(type, constructorTypes, constructorArgs), whitelist, blacklist, order, fieldVisibility, methodVisibility);
 	}
 
 	/**
-	 * Creates a new Accessor to gain access to fields and methods. All parameters
+	 * Creates a new accessor to gain access to fields and methods. All parameters
 	 * except for object are nullable. If a value is null it will uses the setting
 	 * of the object, which is set via annotations. If there are no annotations it
 	 * will use an empty whitelist, an empty blacklist an {@link Visibility#PUBLIC} as
@@ -150,7 +152,7 @@ public class Accessor<T> {
 	 * @param fieldVisibility  which visibility of the fields should be used
 	 * @param methodVisibility which visibility of the methods should be used
 	 */
-	public Accessor(T object, Set<String> whitelist, Set<String> blacklist, Visibility fieldVisibility, Visibility methodVisibility) {
+	public Accessor(T object, Set<String> whitelist, Set<String> blacklist, List<String> order, Visibility fieldVisibility, Visibility methodVisibility) {
 		this.object = object;
 		this.fieldList = new ArrayList<>();
 		this.fieldMap = new HashMap<>();
@@ -160,16 +162,21 @@ public class Accessor<T> {
 		this.classes.add(object.getClass());
 		this.whitelist = new HashSet<>();
 		this.blacklist = new HashSet<>();
+		this.order = new ArrayList<>();
 		this.annotations = new ArrayList<>();
 		final AccessibleVisibility visibilityAnnotation = object.getClass().getAnnotation(AccessibleVisibility.class);
 		final AccessibleWhitelist whitelistAnnotation = object.getClass().getAnnotation(AccessibleWhitelist.class);
 		final AccessibleBlacklist blacklistAnnotation = object.getClass().getAnnotation(AccessibleBlacklist.class);
+		final AccessibleOrder orderAnnotation = object.getClass().getAnnotation(AccessibleOrder.class);
 		
 		if (whitelist != null) this.whitelist.addAll(whitelist);
 		if (whitelistAnnotation != null) this.whitelist.addAll(Arrays.asList(whitelistAnnotation.value()));
 		
 		if (blacklist != null) this.blacklist.addAll(blacklist);
 		if (blacklistAnnotation != null) this.blacklist.addAll(Arrays.asList(blacklistAnnotation.value()));
+		
+		if (order != null) this.order.addAll(order);
+		if (orderAnnotation != null) this.order.addAll(Arrays.asList(orderAnnotation.value()));
 		
 		if (fieldVisibility != null) this.fieldVisibility = fieldVisibility;
 		else if (visibilityAnnotation != null) this.fieldVisibility = visibilityAnnotation.fields();
@@ -195,7 +202,7 @@ public class Accessor<T> {
 	private void loadContent() {
 		for (Class<?> clazz : classes) {
 			annotations.addAll(Arrays.asList(clazz.getAnnotations()));
-			final Field[] fieldArray = clazz.getDeclaredFields();
+			final Field[] fieldArray = sortFields(clazz.getDeclaredFields());
 			for (int i = 0; i < fieldArray.length; i++) {
 				if (fieldVisibility != Visibility.ANY && fieldVisibility != Visibility.of(fieldArray[i]) && !blacklist.contains(fieldArray[i].getName())) continue;
 				if (blacklist.contains(fieldArray[i].getName())) continue;
@@ -203,7 +210,7 @@ public class Accessor<T> {
 				fieldList.add(field);
 				fieldMap.put(fieldArray[i].getName(), field);
 			}
-			final Method[] methodArray = clazz.getDeclaredMethods();
+			final Method[] methodArray = sortMethods(clazz.getDeclaredMethods());
 			for (int i = 0; i < methodArray.length; i++) {
 				if (methodVisibility != Visibility.ANY && methodVisibility != Visibility.of(methodArray[i]) && !blacklist.contains(methodArray[i].getName())) continue;
 				if (blacklist.contains(methodArray[i].getName())) continue;
@@ -212,6 +219,66 @@ public class Accessor<T> {
 				methodMap.put(methodArray[i].getName(), method);
 			}
 		}
+	}
+	
+	/**
+	 * Sorts all fields in the order of the {@link #order} list.
+	 * 
+	 * @param fieldArray the array to sort
+	 * @return the sorted array
+	 */
+	private Field[] sortFields(Field[] fieldArray) {
+		if (order.isEmpty()) return fieldArray;
+		final Field[] fields = fieldArray.clone();
+		final HashMap<String, Integer> fieldMap = new HashMap<>(fields.length);
+		for (int i = 0; i < fields.length; i++) {
+			fieldMap.put(fields[i].getName(), i);
+		}
+		final Field[] resultFields = new Field[fields.length];
+		int index = 0;
+		for (String name : order) {
+			final Integer fieldIndex = fieldMap.get(name);
+			if (fieldIndex == null) continue;
+			final Field field = fields[fieldIndex];
+			resultFields[index++] = field;
+			fields[fieldIndex] = null;
+			fieldMap.remove(name);
+		}
+		for (int i = 0; i < fields.length; i++) {
+			if (fields[i] == null) continue;
+			resultFields[index++] = fields[i];
+		}
+		return resultFields;
+	}
+	
+	/**
+	 * Sorts all methods in the order of the {@link #order} list.
+	 * 
+	 * @param methodArray the array to sort
+	 * @return the sorted array
+	 */
+	private Method[] sortMethods(Method[] methodArray) {
+		if (order.isEmpty()) return methodArray;
+		final Method[] methods = methodArray.clone();
+		final HashMap<String, Integer> methodMap = new HashMap<>(methods.length);
+		for (int i = 0; i < methods.length; i++) {
+			methodMap.put(methods[i].getName(), i);
+		}
+		final Method[] resultMethods = new Method[methods.length];
+		int index = 0;
+		for (String name : order) {
+			final Integer fieldIndex = methodMap.get(name);
+			if (fieldIndex == null) continue;
+			final Method field = methods[fieldIndex];
+			resultMethods[index++] = field;
+			methods[fieldIndex] = null;
+			methodMap.remove(name);
+		}
+		for (int i = 0; i < methods.length; i++) {
+			if (methods[i] == null) continue;
+			resultMethods[index++] = methods[i];
+		}
+		return resultMethods;
 	}
 
 	/**
