@@ -109,7 +109,8 @@ public class DataUtil {
 	 * @return a primitive type or the input string
 	 */
 	public static Object autoDeserializePrimitive(String input) {
-		if (input == null || input.isEmpty()) return null;
+		if (input == null) return null;
+		else if (input.isEmpty()) return input;
 		else if (input.equals("true")) return true;
 		else if (input.equals("false")) return false;
 		else {
