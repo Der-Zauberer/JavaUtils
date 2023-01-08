@@ -257,7 +257,13 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		string.append(TAB.repeat(offset) + (name != null ? "\"" + name + "\":" + SPACE + "[" : "[") + NEW_LINE);
 		for (Object value : collection) {
 			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
-				string.append(parseOutCollections(oneliner, offset + 1, null, value instanceof Collection<?> ? (Collection<?>) value : Arrays.stream((Object[]) value).collect(Collectors.toList())));
+				Collection<?> innerCollection;
+				if (value instanceof Collection<?>) {
+					innerCollection = (Collection<?>) value;
+				} else {
+					innerCollection = Arrays.stream((Object[]) value).collect(Collectors.toList());
+				}
+				string.append(parseOutCollections(oneliner, offset + 1, null, innerCollection));
 			} else if (value != null && value instanceof KeyValueParser<?>) {
 				JsonParser parser;
 				if (value instanceof JsonParser) {
