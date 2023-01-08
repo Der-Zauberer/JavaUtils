@@ -3,6 +3,7 @@ package eu.derzauberer.javautils.parser;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -193,92 +194,102 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * Gets the output of the parser. The object structure will be
+	 * converted back to a string.
+	 * 
+	 * @param oneliner if the output should be given in a single line
+	 * @param offset   the tab offset for inner objects
+	 * @return the output of the parser
 	 */
 	private String parseOut(boolean oneliner, int offset) {
+		if (containsKey("null")) return parseOutCollections(oneliner, offset, null, getAsCollection(null));
 		final StringBuilder string = new StringBuilder();
-		final String tab = oneliner ? "" : "\t";
-		final String space = oneliner ?  "" : " ";
-		final String newLine = oneliner ?"" : "\n";
-		String tabs = "";
-		String[] keys = {};
-		String[] lastKeys = {};
-		int layer = 1;
+		final String TAB = oneliner ? "" : "\t";
+		final String SPACE = oneliner ? "" : " ";
+		final String NEW_LINE = oneliner ? "" : "\n";
 		int lastLayer = 1;
-		if (!oneliner) {
-			if (!containsKey("null")) tabs = tab;
-			for (int i = 0; i < offset; i++) tabs += tab; 
-		}
-		if (getEntries().containsKey("null") && (isCollection("null") || isArray("null"))) {
-			string.append("[");
-			if (getAsCollection("null").isEmpty()) {
-				string.append("]");
-				return string.toString();
-			}
-		} else {
-			string.append("{");
-		}
+		String[] lastkeys = {};
+		string.append(TAB.repeat(offset) + '{' + NEW_LINE);
 		for (String key : getStructure()) {
-			keys = key.split("\\.");
-			final String name = keys[keys.length - 1];
-			layer = keys.length;
-			int sameLayer = 0;
-			for (String subKey : keys) {
-				if (lastKeys.length >= sameLayer + 1 && subKey.equals(lastKeys[sameLayer])) sameLayer++; else break;
+			final String[] keys = key.split("\\.");
+			if (keys.length < lastLayer || !isSamePath(keys, lastkeys, lastLayer - 1)) string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+			while (keys.length < lastLayer || !isSamePath(keys, lastkeys, lastLayer - 1)) {
+				string.append(TAB.repeat(--lastLayer + offset) + '}');
+				if (keys.length >= lastLayer && isSamePath(keys, lastkeys, lastLayer - 1)) string.append(',');
+				string.append(NEW_LINE);
 			}
-			if (lastKeys.length > 0 && !(layer < lastLayer || sameLayer + 1 < lastLayer)) string.append("," + newLine); else string.append(newLine);
-			while (layer < lastLayer || sameLayer + 1 < lastLayer) {
-				lastLayer--;
-				if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
-				string.append(tabs + "}");
-				if (!(layer < lastLayer || sameLayer + 1 < lastLayer)) string.append("," + newLine); else string.append(newLine);
+			while (keys.length > lastLayer) {
+				string.append(TAB.repeat(lastLayer++ + offset) + '\"' + keys[lastLayer - 2] + "\":" + SPACE + '{' + NEW_LINE);
 			}
-			while (layer > lastLayer) {
-				string.append(tabs + "\"" + keys[lastLayer - 1] + "\":" + space + "{");
-				string.append(newLine);
-				if (!oneliner) tabs += tab;
-				lastLayer++;
-			}
-			if (!isArray(key) && !isCollection(key)) {
-				string.append(tabs + "\"" + name + "\":" + space + DataUtil.autoSerializePrimitive(get(key), true));
+			final String name = keys[lastLayer - 1];
+			final Object value = getEntries().get(key);
+			final String TABS = TAB.repeat(lastLayer + offset);
+			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
+				string.append(parseOutCollections(oneliner, offset + lastLayer, name, getAsCollection(key)));
 			} else {
-				final Collection<?> list = getAsCollection(key);
-				if (list.isEmpty()) {
-					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[]");
-				} else {
-					if (!key.equals("null")) string.append(tabs + "\"" + name + "\":" + space + "[" + newLine);
-					if (!oneliner) tabs += tab;
-					for (Object object : list) {
-						if (object instanceof KeyValueParser) {
-							final JsonParser parser = new JsonParser();
-							((KeyValueParser<?>) object).forEach((parserKey, parserValue) -> parser.set(parserKey, parserValue));
-							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
-						} else if (object.getClass().isArray() || object instanceof Collection<?>) {
-							final JsonParser parser = new JsonParser();
-							parser.setValue("null", object);
-							string.append(tabs + parser.parseOut(oneliner, tabs.length()) + "," + newLine);
-						} else {
-							string.append(tabs + DataUtil.autoSerializePrimitive(object, true) + "," + newLine);
-						}
-					}
-					if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
-					if (oneliner) string.deleteCharAt(string.length() - 1); else string.deleteCharAt(string.length() - 2);
-					if (!key.equals("null")) string.append(tabs + "]");
-				}
-				
+				string.append(TABS + '\"' + name + "\":" + SPACE + DataUtil.autoSerializePrimitive(value, true));
 			}
-			lastLayer = layer;
-			lastKeys = keys;
+			string.append(',' + NEW_LINE);
+			lastkeys = keys;
 		}
-		while (1 < lastLayer) {
-			string.append(newLine);
-			lastLayer--;
-			if (!oneliner) tabs = tabs.substring(0, tabs.length() - 1);
-			string.append(tabs + "}");
-		}
-		if (!oneliner && !containsKey("null")) tabs = tabs.substring(0, tabs.length() - 1);
-		if (containsKey("null")) string.append(tabs + "]"); else string.append(newLine + tabs + "}");
+		string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+		while (1 < lastLayer) string.append(TAB.repeat(--lastLayer + offset) + '}' + NEW_LINE);
+		string.append(TAB.repeat(offset) + '}');
 		return string.toString();
+	}
+	
+	/**
+	 * Gets the output of a collection in the parser. The collection
+	 * structure will be converted back to a string.
+	 * 
+	 * @param oneliner   if the output should be given in a single line
+	 * @param offset     the tab offset for inner objects
+	 * @param name       the name of the collection
+	 * @param collection the collection to parse out
+	 * @return the collection as string
+	 */
+	private String parseOutCollections(boolean oneliner, int offset, String name, Collection<?> collection) {
+		final StringBuilder string = new StringBuilder();
+		final String TAB = oneliner ? "" : "\t";
+		final String SPACE = oneliner ? "" : " ";
+		final String NEW_LINE = oneliner ? "" : "\n";
+		final String TABS = TAB.repeat(offset + 1);
+		string.append(TAB.repeat(offset) + (name != null ? "\"" + name + "\":" + SPACE + "[" : "[") + NEW_LINE);
+		for (Object value : collection) {
+			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
+				string.append(parseOutCollections(oneliner, offset + 1, null, value instanceof Collection<?> ? (Collection<?>) value : Arrays.stream((Object[]) value).collect(Collectors.toList())));
+			} else if (value != null && value instanceof KeyValueParser<?>) {
+				JsonParser parser;
+				if (value instanceof JsonParser) {
+					parser = (JsonParser) value;
+				} else {
+					parser = new JsonParser();
+					((KeyValueParser<?>) value).forEach((objectKey, objectValue) -> parser.set(objectKey, objectValue));
+				}
+				string.append(parser.parseOut(oneliner, offset + 1));
+			} else {
+				string.append(TABS + DataUtil.autoSerializePrimitive(value, true));
+			}
+			string.append(',' + NEW_LINE);
+		}
+		string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+		string.append(TAB.repeat(offset) + "]");
+		return string.toString();
+	}
+	
+	/**
+	 * Checks if two arrays have the same entries until a specific index.
+	 * 
+	 * @param keys     the first array
+	 * @param lastkeys the second array
+	 * @param layer    the index until which the arrays have to be checked
+	 * @return if the arrays have the same entries until a specific point
+	 */
+	private boolean isSamePath(String[] keys, String[] lastkeys, int layer) {
+		for (int i = 0; i < layer && i < keys.length - 1 && i < lastkeys.length - 1; i++) {
+			if (!keys[i].equals(lastkeys[i])) return false;
+		}
+		return true;
 	}
 
 	/**
@@ -288,5 +299,5 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	protected JsonParser getImplementationInstance() {
 		return new JsonParser();
 	}
-
+	
 }
