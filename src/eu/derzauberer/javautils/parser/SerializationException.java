@@ -1,7 +1,7 @@
 package eu.derzauberer.javautils.parser;
 
 /**
- * The exception is thrown, when a problem occurs while trying to serialize
+ * The exception is thrown when a problem occurs while trying to serialize
  * objects for a {@link Parser}.
  *
  */
@@ -9,9 +9,8 @@ public class SerializationException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 	
-	/**
-	 *
-	 * Creates an exception, which is thrown, when a problem occurs while trying to
+	/*
+	 * Creates an exception which is thrown, when a problem occurs while trying to
 	 * serialize objects with the {@link Accessor}.
 	 *
 	 * @param message the exception message
@@ -22,7 +21,7 @@ public class SerializationException extends RuntimeException {
 
 	/**
 	 *
-	 * Creates an exception, which is thrown, when a problem occurs while trying to
+	 * Creates an exception which is thrown when a problem occurs while trying to
 	 * serialize objects with the {@link Accessor}.
 	 *
 	 * @param message the exception message
