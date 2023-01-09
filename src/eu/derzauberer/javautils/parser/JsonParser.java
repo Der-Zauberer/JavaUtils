@@ -207,12 +207,13 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		final String TAB = oneliner ? "" : "\t";
 		final String SPACE = oneliner ? "" : " ";
 		final String NEW_LINE = oneliner ? "" : "\n";
+		if (getStructure().isEmpty()) return TAB.repeat(offset) + "{}";
 		int lastLayer = 1;
 		String[] lastkeys = {};
 		string.append(TAB.repeat(offset) + '{' + NEW_LINE);
 		for (String key : getStructure()) {
 			final String[] keys = key.split("\\.");
-			if (keys.length < lastLayer || !isSamePath(keys, lastkeys, lastLayer - 1)) string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+			if ((keys.length < lastLayer || !isSamePath(keys, lastkeys, lastLayer - 1)) && string.charAt(string.length() - (oneliner ? 1 : 2)) == ',') string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
 			while (keys.length < lastLayer || !isSamePath(keys, lastkeys, lastLayer - 1)) {
 				string.append(TAB.repeat(--lastLayer + offset) + '}');
 				if (keys.length >= lastLayer && isSamePath(keys, lastkeys, lastLayer - 1)) string.append(',');
@@ -232,7 +233,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			string.append(',' + NEW_LINE);
 			lastkeys = keys;
 		}
-		string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+		if (string.charAt(string.length() - (oneliner ? 1 : 2)) == ',') string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
 		while (1 < lastLayer) string.append(TAB.repeat(--lastLayer + offset) + '}' + NEW_LINE);
 		string.append(TAB.repeat(offset) + '}');
 		return string.toString();
@@ -254,6 +255,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		final String SPACE = oneliner ? "" : " ";
 		final String NEW_LINE = oneliner ? "" : "\n";
 		final String TABS = TAB.repeat(offset + 1);
+		if (collection.isEmpty()) return TAB.repeat(offset) + "[]";
 		string.append(TAB.repeat(offset) + (name != null ? "\"" + name + "\":" + SPACE + "[" : "[") + NEW_LINE);
 		for (Object value : collection) {
 			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
@@ -278,7 +280,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			}
 			string.append(',' + NEW_LINE);
 		}
-		string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+		if (string.charAt(string.length() - (oneliner ? 1 : 2)) == ',') string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
 		string.append(TAB.repeat(offset) + "]");
 		return string.toString();
 	}
