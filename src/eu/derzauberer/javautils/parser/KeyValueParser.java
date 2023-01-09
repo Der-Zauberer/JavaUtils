@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
 import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.accessible.AccessorException;
+import eu.derzauberer.javautils.accessible.FieldAccessor;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -433,6 +434,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				((Map<?, ?>) field.getValue()).forEach((mapKey, mapValue) -> {
 					//TODO
 				});
+			} else if (Enum.class.isAssignableFrom(field.getClassType())) {
+				set(fieldKey, field.getValue().toString());
 			} else {
 				serialize(fieldKey, new Accessor<>(field.getValue()));
 			}
@@ -497,6 +500,11 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				field.setObjectValue(collection.toArray(Accessor.instantiateArray(field.getClassType().getComponentType(), collection.size())));				
 			} else if (Map.class.isAssignableFrom(field.getClassType())) {
 				//TODO
+			} else if (Enum.class.isAssignableFrom(field.getClassType())) {
+				final String value = get(fieldKey, String.class);
+				if (value != null) Arrays.stream(field.getClassType().getEnumConstants()).filter(object -> object.toString().equals(value)).findAny().ifPresentOrElse(field::setObjectValue, () -> {
+					new SerializationException(value + " is not an enum contant of " + field.getClassType().getSimpleName() + "!").printStackTrace();
+				});
 			} else {
 				if (field.isPresent()) {
 					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
