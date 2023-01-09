@@ -4,8 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -165,12 +163,12 @@ public class FieldAccessor<A, F> {
 	}
 	
 	/**
-	 * Returns a list of all annotations that are used to describe this field.
+	 * Returns an array of all annotations that are used to describe this field.
 	 * 
-	 * @return a list of all annotations
+	 * @return an array of all annotations
 	 */
-	public List<Annotation> getAnnotations() {
-		return Arrays.asList(field.getAnnotations());
+	public Annotation[] getAnnotations() {
+		return field.getAnnotations();
 	}
 	
 	/**

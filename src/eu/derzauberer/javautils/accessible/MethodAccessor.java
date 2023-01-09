@@ -6,8 +6,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -160,12 +158,12 @@ public class MethodAccessor<A> {
 	}
 	
 	/**
-	 * Returns a list of all annotations that are used to describe this method.
+	 * Returns an array of all annotations that are used to describe this method.
 	 * 
-	 * @return a list of all annotations
+	 * @return an array of all annotations
 	 */
-	public List<Annotation> getAnnotations() {
-		return Arrays.asList(method.getAnnotations());
+	public Annotation[] getAnnotations() {
+		return method.getAnnotations();
 	}
 	
 	/**

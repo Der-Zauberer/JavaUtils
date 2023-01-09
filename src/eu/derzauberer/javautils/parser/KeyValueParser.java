@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -736,7 +737,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return the amount of entries
 	 */
 	public List<String> getKeys() {
-		return new ArrayList<>(structure);
+		return Collections.unmodifiableList(structure);
 	}
 
 	/**
@@ -748,7 +749,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	public List<String> getKeys(String key) {
 		return getKeys().stream().filter(string -> string.startsWith(Objects.requireNonNull(key)))
-				.collect(Collectors.toList());
+				.collect(Collectors.toUnmodifiableList());
 	}
 
 	/**

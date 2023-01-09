@@ -318,7 +318,7 @@ public class Accessor<T> {
 	 *         interfaces
 	 */
 	public List<Class<?>> getClasses() {
-		return new ArrayList<>(classes);
+		return Collections.unmodifiableList(classes);
 	}
 
 	/**
@@ -329,7 +329,7 @@ public class Accessor<T> {
 	 *         this class
 	 */
 	public List<FieldAccessor<T, ?>> getFields() {
-		return new ArrayList<>(fieldList);
+		return Collections.unmodifiableList(fieldList);
 	}
 	
 	/**
@@ -340,7 +340,7 @@ public class Accessor<T> {
 	 *         this class
 	 */
 	public List<FieldAccessor<T, ?>> getPublicFields() {
-		return fieldList.stream().filter(field -> field.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
+		return fieldList.stream().filter(field -> field.getVisibility() == Visibility.PUBLIC).collect(Collectors.toUnmodifiableList());
 	}
 	
 	/**
@@ -374,7 +374,7 @@ public class Accessor<T> {
 	 *         this class
 	 */
 	public List<MethodAccessor<T>> getMethods() {
-		return new ArrayList<>(methodList);
+		return Collections.unmodifiableList(methodList);
 	}
 
 	/**
@@ -385,7 +385,7 @@ public class Accessor<T> {
 	 *         this class
 	 */
 	public List<MethodAccessor<T>> getPublicMethods() {
-		return methodList.stream().filter(method -> method.getVisibility() == Visibility.PUBLIC).collect(Collectors.toList());
+		return methodList.stream().filter(method -> method.getVisibility() == Visibility.PUBLIC).collect(Collectors.toUnmodifiableList());
 	}
 	
 	/**
@@ -418,7 +418,7 @@ public class Accessor<T> {
 	 * @return a list of all annotations
 	 */
 	public List<Annotation> getAnnotations() {
-		return new ArrayList<>(annotations);
+		return Collections.unmodifiableList(annotations);
 	}
 	
 	/**
