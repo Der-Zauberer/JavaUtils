@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import eu.derzauberer.javautils.util.DataUtil;
 
@@ -46,31 +45,22 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * Creates a new parser and parses the string into the parser
 	 * object structure.
 	 * 
-	 * @param string input the input for the parser
+	 * @param jsonString input the input for the parser
 	 */
-	public JsonParser(String string) {
-		super(string);
+	public JsonParser(String jsonString) {
+		super(jsonString);
 	}
 	
 	/**
 	 * Creates a new parser and reads a file and parse the file
 	 * content in the parser.
 	 * 
-	 * @param file file the file to read
+	 * @param jsonFile file the file to read
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public JsonParser(File file) throws IOException {
-		super(file);
-	}
-	
-	/**
-	 * Creates a new parser and puts the map entries in the parser.
-	 * 
-	 * @param map the map for the parser
-	 */
-	public JsonParser(Map<String, ?> map) {
-		super(map);
+	public JsonParser(File jsonFile) throws IOException {
+		super(jsonFile);
 	}
 
 	/**

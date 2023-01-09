@@ -75,15 +75,6 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 
 	/**
-	 * Creates a new parser and puts the map entries in the parser.
-	 * 
-	 * @param map the map for the parser
-	 */
-	public KeyValueParser(Map<String, ?> map) {
-		map.forEach(this::setValue);
-	}
-
-	/**
 	 * Sets the value to a given key. A key represents a value, but the value can be
 	 * null. The key null or "null" represents the root list. A string key is a path
 	 * separated by dots. Supported types are primitive types and their wrappers,
