@@ -263,7 +263,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 				if (value instanceof Collection<?>) {
 					innerCollection = (Collection<?>) value;
 				} else {
-					innerCollection = Arrays.stream((Object[]) value).collect(Collectors.toList());
+					innerCollection = Arrays.asList((Object[]) value);
 				}
 				string.append(parseOutCollections(oneliner, offset + 1, null, innerCollection));
 			} else if (value != null && value instanceof KeyValueParser<?>) {

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,7 +21,6 @@ import java.util.stream.Collectors;
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
 import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.accessible.AccessorException;
-import eu.derzauberer.javautils.accessible.FieldAccessor;
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -215,7 +215,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * root list. If there is no value then it will return null. Note, that the
 	 * returned value is a copy of the original one, changes doesn't have any impact
 	 * on the original object. To change the value please put the object back in
-	 * with {{@link #set(String, Object)}}.
+	 * with {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return collection as value represented by its key
@@ -229,13 +230,46 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		}
 		return collection;
 	}
+	
+	/**
+	 * Gets the list as value by its key The key null or "null" represents the root
+	 * list. If there is no value then it will return null. Note, that the returned
+	 * value is a copy of the original one, changes doesn't have any impact on the
+	 * original object. To change the value please put the object back in with
+	 * {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * 
+	 * @param key the path that represents the value
+	 * @return collection as value represented by its key
+	 * @see {@link Collection}
+	 */
+	public List<?> getAslist(String key) {
+		return getAsCollection(key, new ArrayList<>(), Object.class);
+	}
+	
+	/**
+	 * Gets the set as value by its key The key null or "null" represents the root
+	 * list. If there is no value then it will return null. Note, that the returned
+	 * value is a copy of the original one, changes doesn't have any impact on the
+	 * original object. To change the value please put the object back in with
+	 * {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * 
+	 * @param key the path that represents the value
+	 * @return collection as value represented by its key
+	 * @see {@link Collection}
+	 */
+	public Set<?> getAsSet(String key) {
+		return getAsCollection(key, new HashSet<>(), Object.class);
+	}
 
 	/**
 	 * Gets the collection as value by its key and convert it to the requested type.
 	 * The key null or "null" represents the root list. If there is no value then it
 	 * will return null. Note, that the returned value is a copy of the original
 	 * one, changes doesn't have any impact on the original object. To change the
-	 * value please put the object back in with {{@link #set(String, Object)}}.
+	 * value please put the object back in with {{@link #set(String, Object)}} or
+	 * with {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
@@ -256,7 +290,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * root list. If there is no value then it will return null. Note, that the
 	 * returned value is a copy of the original one, changes doesn't have any impact
 	 * on the original object. To change the value please put the object back in
-	 * with {{@link #set(String, Object)}}.
+	 * with {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return the array as value represented by its key
@@ -278,7 +313,8 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * key null or "null" represents the root list. If there is no value then it
 	 * will return null. Note, that the returned value is a copy of the original
 	 * one, changes doesn't have any impact on the original object. To change the
-	 * value please put the object back in with {{@link #set(String, Object)}}.
+	 * value please put the object back in with {{@link #set(String, Object)}} or
+	 * with {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
@@ -312,17 +348,19 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param value the value to put in the array or collection at the
 	 *              index
 	 * @return the own parser object for further customizations
+	 * @throws IndexOutOfBoundsException if the index is out of range
+     *         ({@code index < 0 || index >= size()})
 	 */
 	@SuppressWarnings("unchecked")
 	public P setAtArrayIndex(String key, int index, Object value) {
 		if (!isCollection(key) && !isArray(key)) return (P) this;
-		List<Object> list;
-		if (getValue(key) instanceof List<?>) { 
-			list = (List<Object>) getValue(key);
+		ArrayList<Object> list;
+		if (getValue(key) instanceof ArrayList<?>) { 
+			list = (ArrayList<Object>) getValue(key);
 		} else if (isCollection(key)) {
 			list = new ArrayList<>((Collection<?>) getValue(key));
 		} else {
-			list = Arrays.asList((Object[]) getValue(key));
+			list = new ArrayList<>(Arrays.asList((Object[]) getValue(key)));
 		}
 		if (index < list.size()) {
 			list.set(index, value);
