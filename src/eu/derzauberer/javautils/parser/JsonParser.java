@@ -94,9 +94,13 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 					if (character == ']') {
 						isArray = false;
 						isValue = false;
-						if (name.length() == 0) name.append("null");
-						getStructure().add(key + name.toString());
-						getEntries().put(key.toString() + name.toString(), array.clone());
+						if (name.length() == 0) {
+							getStructure().add(null);
+							getEntries().put(null, array.clone());
+						} else {
+							getStructure().add(key + name.toString());
+							getEntries().put(key.toString() + name.toString(), array.clone());
+						}
 						name.setLength(0);
 						value.setLength(0);
 						array.clear();
@@ -192,7 +196,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * @return the output of the parser
 	 */
 	private String parseOut(boolean oneliner, int offset) {
-		if (containsKey("null")) return parseOutCollections(oneliner, offset, null, getAsCollection(null));
+		if (containsKey(null)) return parseOutCollections(oneliner, offset, null, getAsCollection(null));
 		final StringBuilder string = new StringBuilder();
 		final String TAB = oneliner ? "" : "\t";
 		final String SPACE = oneliner ? "" : " ";
