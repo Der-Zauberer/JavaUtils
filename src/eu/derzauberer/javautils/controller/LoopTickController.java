@@ -42,7 +42,6 @@ public class LoopTickController {
 			deltaTimeNanos = time - lastTimestamp;
 			lastTimestamp = time;
 			final TickEvent event = new TickEvent(deltaTimeNanos);
-			EventController.getGlobalEventController().callListeners(event);
 			action.accept(event);
 		}
 	}

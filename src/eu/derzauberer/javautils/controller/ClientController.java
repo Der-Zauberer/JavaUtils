@@ -77,7 +77,6 @@ public class ClientController implements Sender, Closeable {
 		isDisconnected = false;
 		nextLineIgnored = false;
 		final ClientConnectEvent event = new ClientConnectEvent(this);
-		EventController.getGlobalEventController().callListeners(event);
 		if (connectAction != null) connectAction.accept(event);
 		if (isPartOfServer() && server.getConnectAction() != null) server.getConnectAction().accept(event);
 		if (!isPartOfServer()) new Thread(this::inputLoop).start();
@@ -93,7 +92,6 @@ public class ClientController implements Sender, Closeable {
 				message = readLine();
 				if (message.equals("null")) break;
 				final ClientMessageReceiveEvent event = new ClientMessageReceiveEvent(this, message);
-				EventController.getGlobalEventController().callListeners(event);
 				if (messageReceiveAction != null && !event.isCancelled()) {
 					messageReceiveAction.accept(event);
 				}
@@ -121,7 +119,6 @@ public class ClientController implements Sender, Closeable {
 	@Override
 	public void send(String string) {
 		final ClientMessageSendEvent event = new ClientMessageSendEvent(this, string);
-		EventController.getGlobalEventController().callListeners(event);
 		if (messageSendAction != null && !event.isCancelled()) messageSendAction.accept(event);
 		if (!event.isCancelled() && isPartOfServer() && server.getMessageSendAction() != null) server.getMessageSendAction().accept(event);
 		if (!event.isCancelled()) Sender.super.send(event.getMessage());

@@ -123,7 +123,6 @@ public class ConsoleController implements Sender {
 				send(prefix);
 				input = readLine();
 				final ConsoleInputEvent event = new ConsoleInputEvent(this, input);
-				EventController.getGlobalEventController().callListeners(event);
 				if (inputAction != null && !event.isCancelled()) {
 					inputAction.accept(event);
 				}
@@ -141,7 +140,6 @@ public class ConsoleController implements Sender {
 	@Override
 	public void send(String string) {
 		final ConsoleOutputEvent event = new ConsoleOutputEvent(this, string);
-		EventController.getGlobalEventController().callListeners(event);
 		if (outputAction != null && !event.isCancelled()) outputAction.accept(event);
 		if (!event.isCancelled()) {
 			if (hasColorCodesEnabled) Sender.super.send(event.getOutput());

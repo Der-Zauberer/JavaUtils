@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
 import eu.derzauberer.javautils.events.LoggingEvent;
 import eu.derzauberer.javautils.util.FileUtil;
 
@@ -34,6 +35,7 @@ public class LoggingController {
 	private boolean enableOutputInformation = true;
 	private File fileDirectory = new File("logs");
 	private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+	private Consumer<LoggingEvent> loggingAction;
 
 	/**
 	 *  Creates a new logging controller without a prefix.
@@ -101,8 +103,7 @@ public class LoggingController {
 		if (type == LogType.DEBUG && !isDebugEnabled()) return;
 		final LocalDateTime timeStamp = LocalDateTime.now();
 		final String output = enableOutputInformation ?  "[" + timeStamp.format(dateTimeFormatter) + " " + type + "] " + prefix + message: message;
-		final LoggingEvent event = new LoggingEvent(this, type, message, timeStamp, output);
-		EventController.getGlobalEventController().callListeners(event);
+		if (loggingAction != null) loggingAction.accept(new LoggingEvent(this, type, message, timeStamp, output));
 		if (systemOutput) System.out.println(output);
 		if (fileOutput) {
 			try {
@@ -232,6 +233,24 @@ public class LoggingController {
 	 */
 	public DateTimeFormatter getDateTimeFormatter() {
 		return dateTimeFormatter;
+	}
+	
+	/**
+	 * Sets an action to execute when something is logged.
+	 * 
+	 * @param outputAction an action to execute when something is logged
+	 */
+	public void setLoggingAction(Consumer<LoggingEvent> loggingAction) {
+		this.loggingAction = loggingAction;
+	}
+	
+	/**
+	 * Returns an action to execute when something is logged.
+	 * 
+	 * @return an action to execute when something is logged
+	 */
+	public Consumer<LoggingEvent> getLoggingAction() {
+		return loggingAction;
 	}
 	
 }
