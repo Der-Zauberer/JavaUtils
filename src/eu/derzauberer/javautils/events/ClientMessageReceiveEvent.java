@@ -1,13 +1,13 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.ClientController;
+import eu.derzauberer.javautils.service.ClientService;
 
 /**
  * This event gets called when the client receives a massage.
  */
 public class ClientMessageReceiveEvent extends CancellableEvent {
 	
-	private final ClientController client;
+	private final ClientService client;
 	private String message;
 
 	/**
@@ -16,7 +16,7 @@ public class ClientMessageReceiveEvent extends CancellableEvent {
 	 * @param client  the client which receives the message
 	 * @param message the received message
 	 */
-	public ClientMessageReceiveEvent(ClientController client, String message) {
+	public ClientMessageReceiveEvent(ClientService client, String message) {
 		this.client = client;
 		this.message = message;
 	}
@@ -26,7 +26,7 @@ public class ClientMessageReceiveEvent extends CancellableEvent {
 	 * 
 	 * @return the client receiving the message
 	 */
-	public ClientController getClient() {
+	public ClientService getClient() {
 		return client;
 	}
 

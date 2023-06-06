@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import eu.derzauberer.javautils.util.FileUtil;
  * use of one of the {@link #log(String)} functions triggers a
  * {@link LoggingEvent}.
  */
-public class LoggingController {
+public class LoggingService {
 	
 	/**
 	 * Represents the type of logging outputs.
@@ -38,31 +38,31 @@ public class LoggingController {
 	private Consumer<LoggingEvent> loggingAction;
 
 	/**
-	 *  Creates a new logging controller without a prefix.
+	 *  Creates a new logging service without a prefix.
 	 */
-	public LoggingController() {
+	public LoggingService() {
 		this.prefix = "";
 	}
 	
 	/**
-	 * Creates a new logging controller with a prefix. The prefix will be displayed
+	 * Creates a new logging service with a prefix. The prefix will be displayed
 	 * between the logging type and the message.
 	 * 
 	 * @param prefix the prefix that will be displayed between the logging type and
 	 *               the message
 	 */
-	public LoggingController(String  prefix) {
+	public LoggingService(String  prefix) {
 		this.prefix = prefix + ": ";
 	}
 	
 	/**
-	 * Creates a new logging controller with the name of the class as prefix. The prefix will be displayed
+	 * Creates a new logging service with the name of the class as prefix. The prefix will be displayed
 	 * between the logging type and the message.
 	 * 
 	 * @param classType the class of which the name will be displayed as prefix between the logging type and
 	 *               the message
 	 */
-	public LoggingController(Class<?> classType) {
+	public LoggingService(Class<?> classType) {
 		prefix = classType.getName() + ": ";
 	}
 	

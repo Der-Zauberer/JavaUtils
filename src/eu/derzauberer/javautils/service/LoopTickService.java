@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.util.function.Consumer;
 
@@ -10,7 +10,7 @@ import eu.derzauberer.javautils.events.TickEvent;
  * 
  * @see {@link Consumer}
  */
-public class LoopTickController {
+public class LoopTickService {
 	
 	private Thread thread;
 	private final Consumer<TickEvent> action;
@@ -19,12 +19,12 @@ public class LoopTickController {
 	private long lastTimestamp;
 	
 	/**
-	 * Creates a new {@link LoopTickController} with the {@link Consumer}, which
+	 * Creates a new {@link LoopTickService} with the {@link Consumer}, which
 	 * will be called every iteration. One iteration is called a tick.
 	 * 
 	 * @param action the consumer, which will be called every iteration
 	 */
-	public LoopTickController(Consumer<TickEvent> action) {
+	public LoopTickService(Consumer<TickEvent> action) {
 		this.action = action;
 		isRunning = false;
 		deltaTimeNanos = 0;
@@ -47,7 +47,7 @@ public class LoopTickController {
 	}
 	
 	/**
-	 * Starts the {@link LoopTickController}, so that it keeps calling the
+	 * Starts the {@link LoopTickService}, so that it keeps calling the
 	 * {@link Consumer} and measures the time between the calls one iteration is called a tick.
 	 */
 	public void start() {
@@ -59,7 +59,7 @@ public class LoopTickController {
 	}
 	
 	/**
-	 * Stops the {@link LoopTickController}. It can be restarted with
+	 * Stops the {@link LoopTickService}. It can be restarted with
 	 * {@link #start()}.
 	 */
 	public void stop() {
@@ -70,7 +70,7 @@ public class LoopTickController {
 	}
 	
 	/**
-	 * Returns if the {@link LoopTickController} is running.
+	 * Returns if the {@link LoopTickService} is running.
 	 * 
 	 * @return if the controller is running
 	 */

@@ -1,20 +1,20 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.ClientController;
+import eu.derzauberer.javautils.service.ClientService;
 
 /**
  * This event gets called when a client connected to a server.
  */
 public class ClientConnectEvent extends Event {
 
-	private final ClientController client;
+	private final ClientService client;
 
 	/**
 	 * Creates a new event which is called when a client connected to a server
 	 * 
 	 * @param client the client which connected to the server
 	 */
-	public ClientConnectEvent(ClientController client) {
+	public ClientConnectEvent(ClientService client) {
 		this.client = client;
 	}
 
@@ -23,7 +23,7 @@ public class ClientConnectEvent extends Event {
 	 * 
 	 * @return the client connecting to the server
 	 */
-	public ClientController getClient() {
+	public ClientService getClient() {
 		return client;
 	}
 

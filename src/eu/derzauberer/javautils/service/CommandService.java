@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,7 +18,7 @@ import eu.derzauberer.javautils.util.Sender;
 /**
  * This controller can process commands based on the given inputs.
  */
-public class CommandController {
+public class CommandService {
 
 	private final Map<String, Command> commands = new HashMap<>();
 	private final List<String> history = new ArrayList<>();

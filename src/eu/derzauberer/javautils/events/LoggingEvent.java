@@ -1,15 +1,15 @@
 package eu.derzauberer.javautils.events;
 
 import java.time.LocalDateTime;
-import eu.derzauberer.javautils.controller.LoggingController;
-import eu.derzauberer.javautils.controller.LoggingController.LogType;
+import eu.derzauberer.javautils.service.LoggingService;
+import eu.derzauberer.javautils.service.LoggingService.LogType;
 
 /**
- * The event gets called when one of the {@link LoggingController#log(String)} functions was used in the {@link LoggingController}.
+ * The event gets called when one of the {@link LoggingService#log(String)} functions was used in the {@link LoggingService}.
  */
 public class LoggingEvent extends Event {
 	
-	private final LoggingController logger;
+	private final LoggingService logger;
 	private final LogType type;
 	private final String message;
 	private final LocalDateTime timeStamp;
@@ -17,8 +17,8 @@ public class LoggingEvent extends Event {
 	
 	/**
 	 * Creates a new event that gets called when one of the
-	 * {@link LoggingController#log(String)} functions was used in the
-	 * {@link LoggingController}.
+	 * {@link LoggingService#log(String)} functions was used in the
+	 * {@link LoggingService}.
 	 * 
 	 * @param logger    the logger from which the event was triggered
 	 * @param type      the type of the message
@@ -27,7 +27,7 @@ public class LoggingEvent extends Event {
 	 * @param output    the final output which contains the timestamp the type and
 	 *                  the message
 	 */
-	public LoggingEvent(LoggingController logger, LogType type, String message, LocalDateTime timeStamp, String output) {
+	public LoggingEvent(LoggingService logger, LogType type, String message, LocalDateTime timeStamp, String output) {
 		this.logger = logger;
 		this.type = type;
 		this.message = message;
@@ -40,7 +40,7 @@ public class LoggingEvent extends Event {
 	 * 
 	 * @return the logger from which the event was triggered
 	 */
-	public LoggingController getLogger() {
+	public LoggingService getLogger() {
 		return logger;
 	}
 	

@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import eu.derzauberer.javautils.util.Sender;
  * usage of input and output functionalities. It also automatically removes
  * color codes on systems that do not support these.
  */
-public class ConsoleController implements Sender {
+public class ConsoleService implements Sender {
 	
 	public static final String BLACK = "\u001b[30m";
 	public static final String GRAY = "\u001b[30;1m";
@@ -53,7 +53,7 @@ public class ConsoleController implements Sender {
 	private final InputStream input;
 	private final OutputStream output;
 	private Charset charset;
-	private CommandController commandHandler;
+	private CommandService commandHandler;
 	private String prefix;
 	private boolean hasColorCodesEnabled;
 	private boolean isLoggingEnabled;
@@ -66,7 +66,7 @@ public class ConsoleController implements Sender {
 	/**
 	 * Creates a new console with input reader and output printer.
 	 */
-	public ConsoleController() {
+	public ConsoleService() {
 		this("", null);
 	}
 	
@@ -76,7 +76,7 @@ public class ConsoleController implements Sender {
 	 * @param prefix prefix he prefix which should be displayed in front of the
 	 *               input line
 	 */
-	public ConsoleController(String prefix) {
+	public ConsoleService(String prefix) {
 		this(prefix, null);
 	}
 
@@ -86,7 +86,7 @@ public class ConsoleController implements Sender {
 	 * @param commandController the command handler, in which the input from the
 	 *                          console should be passed
 	 */
-	public ConsoleController(CommandController commandController) {
+	public ConsoleService(CommandService commandController) {
 		this("", commandController);
 	}
 
@@ -98,7 +98,7 @@ public class ConsoleController implements Sender {
 	 * @param commandController the command handler, in which the input from the
 	 *                          console should be passed
 	 */
-	public ConsoleController(String prefix, CommandController commandController) {
+	public ConsoleService(String prefix, CommandService commandController) {
 		input = System.in;
 		output = System.out;
 		charset = Charset.defaultCharset();
@@ -198,7 +198,7 @@ public class ConsoleController implements Sender {
 	 * @param commandHandler the command handler, in which the input from the
 	 *                       console should be passed
 	 */
-	public void setCommandHandler(CommandController commandHandler) {
+	public void setCommandHandler(CommandService commandHandler) {
 		this.commandHandler = commandHandler;
 	}
 	
@@ -208,7 +208,7 @@ public class ConsoleController implements Sender {
 	 * 
 	 * @return command handler, in which the input from the console is passed
 	 */
-	public CommandController getCommandHandler() {
+	public CommandService getCommandHandler() {
 		return commandHandler;
 	}
 	

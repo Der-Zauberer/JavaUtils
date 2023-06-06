@@ -1,24 +1,24 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.ConsoleController;
+import eu.derzauberer.javautils.service.ConsoleService;
 
 /**
  * This event gets called when the
- * {@link CommandController} sends an output.
+ * {@link CommandService} sends an output.
  */
 public class ConsoleOutputEvent extends CancellableEvent {
 	
-	private final ConsoleController console;
+	private final ConsoleService console;
 	private String output;
 	
 	/**
-	 * Creates a new event that gets called when the {@link CommandController} sends
+	 * Creates a new event that gets called when the {@link CommandService} sends
 	 * an output.
 	 * 
 	 * @param console the console sending the output
 	 * @param output  the output, which the console will print
 	 */
-	public ConsoleOutputEvent(ConsoleController console, String output) {
+	public ConsoleOutputEvent(ConsoleService console, String output) {
 		this.console = console;
 		this.output = output;
 	}
@@ -28,7 +28,7 @@ public class ConsoleOutputEvent extends CancellableEvent {
 	 * 
 	 * @return the console sending the output
 	 */
-	public ConsoleController getConsole() {
+	public ConsoleService getConsole() {
 		return console;
 	}
 	

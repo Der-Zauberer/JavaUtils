@@ -1,14 +1,14 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.ConsoleController;
+import eu.derzauberer.javautils.service.ConsoleService;
 
 /**
  * This event gets called when an input was given to the
- * {@link CommandController}.
+ * {@link CommandService}.
  */
 public class ConsoleInputEvent extends CancellableEvent {
 	
-	private final ConsoleController console;
+	private final ConsoleService console;
 	private String input;
 	
 	/**
@@ -18,7 +18,7 @@ public class ConsoleInputEvent extends CancellableEvent {
 	 * @param console the console receiving the input
 	 * @param input   the input that was given from the console
 	 */
-	public ConsoleInputEvent(ConsoleController console, String input) {
+	public ConsoleInputEvent(ConsoleService console, String input) {
 		this.console = console;
 		this.input = input;
 	}
@@ -28,7 +28,7 @@ public class ConsoleInputEvent extends CancellableEvent {
 	 * 
 	 * @return the console receiving the input
 	 */
-	public ConsoleController getConsole() {
+	public ConsoleService getConsole() {
 		return console;
 	}
 

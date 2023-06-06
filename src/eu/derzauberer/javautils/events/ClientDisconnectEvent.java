@@ -1,6 +1,6 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.ClientController;
+import eu.derzauberer.javautils.service.ClientService;
 
 /**
  * This event gets called when a client disconnected from a server.
@@ -12,7 +12,7 @@ public class ClientDisconnectEvent extends Event {
 	 */
 	public enum DisconnectCause {CLOSED, DISCONNECTED, TIMEOUT}
 	
-	private final ClientController client;
+	private final ClientService client;
 	private final DisconnectCause cause;
 	
 	/**
@@ -21,7 +21,7 @@ public class ClientDisconnectEvent extends Event {
 	 * @param client the client which disconnected from the server
 	 * @param cause the cause of the disconnect
 	 */
-	public ClientDisconnectEvent(ClientController client, DisconnectCause cause) {
+	public ClientDisconnectEvent(ClientService client, DisconnectCause cause) {
 		this.client = client;
 		this.cause = cause;
 	}
@@ -31,7 +31,7 @@ public class ClientDisconnectEvent extends Event {
 	 * 
 	 * @return the client which disconnected from the server
 	 */
-	public ClientController getClient() {
+	public ClientService getClient() {
 		return client;
 	}
 	

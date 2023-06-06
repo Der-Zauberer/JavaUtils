@@ -1,10 +1,10 @@
 package eu.derzauberer.javautils.util;
 
 import java.util.function.Consumer;
-import eu.derzauberer.javautils.controller.TimeTickController;
+import eu.derzauberer.javautils.service.TimeTickService;
 
 /**
- * This is a task for the {@link TimeTickController} that is called in
+ * This is a task for the {@link TimeTickService} that is called in
  * regular intervals.
  */
 public class TickTask {
@@ -82,7 +82,7 @@ public class TickTask {
 
 	/**
 	 * Returns the {@link Consumer}, which is called in regular intervals
-	 * by the {@link TimeTickController}.
+	 * by the {@link TimeTickService}.
 	 * 
 	 * @return the consumer which is called in regular intervals
 	 */

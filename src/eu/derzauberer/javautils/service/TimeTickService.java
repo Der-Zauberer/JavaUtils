@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +15,7 @@ import eu.derzauberer.javautils.util.TickTask;
  * 
  * @see {@link Consumer}
  */
-public class TimeTickController {
+public class TimeTickService {
 	
 	private boolean isRunning;
 	private boolean restart;
@@ -27,26 +27,26 @@ public class TimeTickController {
 	private final HashMap<TickTask, Integer> asyncTasks = new HashMap<>();
 	
 	/**
-	 * Creates a new {@link TimeTickController} with a tickSpeed of 1000
+	 * Creates a new {@link TimeTickService} with a tickSpeed of 1000
 	 * milliseconds. The tickSpeed is the time between the ticks.
 	 */
-	public TimeTickController() {
+	public TimeTickService() {
 		this(1000);
 	}
 
 	/**
-	 * Creates a new {@link TimeTickController}.
+	 * Creates a new {@link TimeTickService}.
 	 * 
 	 * @param tickSpeed the time between the ticks
 	 */
-	public TimeTickController(int tickSpeed) {
+	public TimeTickService(int tickSpeed) {
 		isRunning = false;
 		restart = false;
 		this.tickSpeed = tickSpeed;
 	}
 	
 	/**
-	 * Starts the {@link TimeTickController}, so that it keeps calling the
+	 * Starts the {@link TimeTickService}, so that it keeps calling the
 	 * {@link TickTask} tasks.
 	 */
 	public void start() {
@@ -72,7 +72,7 @@ public class TimeTickController {
 	}
 	
 	/**
-	 * Stops the {@link TimeTickController}. It can be restarted with
+	 * Stops the {@link TimeTickService}. It can be restarted with
 	 * {@link #start()}.
 	 */
 	public void stop() {
@@ -83,7 +83,7 @@ public class TimeTickController {
 	}
 	
 	/**
-	 * Returns if the {@link TimeTickController} is running.
+	 * Returns if the {@link TimeTickService} is running.
 	 * 
 	 * @return if the controller is running
 	 */

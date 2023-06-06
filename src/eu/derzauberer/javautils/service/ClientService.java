@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -20,12 +20,12 @@ import eu.derzauberer.javautils.util.Sender;
 
 /**
  * This client socket can send and receive messages from
- * a server socket, for example the {@link ServerController}.
+ * a server socket, for example the {@link ServerService}.
  */
-public class ClientController implements Sender, Closeable {
+public class ClientService implements Sender, Closeable {
 
 	private final Socket socket;
-	private final ServerController server;
+	private final ServerService server;
 	private final InputStream input;
 	private final OutputStream output;
 	private Charset charset;
@@ -47,7 +47,7 @@ public class ClientController implements Sender, Closeable {
 	 *                              found.
 	 * @throws IOException          if an I/O exception occurs
 	 */
-	public ClientController(String host, int port) throws UnknownHostException, IOException {
+	public ClientService(String host, int port) throws UnknownHostException, IOException {
 		this(new Socket(host, port));
 	}
 
@@ -57,7 +57,7 @@ public class ClientController implements Sender, Closeable {
 	 * @param socket the existing socket
 	 * @throws IOException if an I/O exception occurs
 	 */
-	public ClientController(Socket socket) throws IOException {
+	public ClientService(Socket socket) throws IOException {
 		this(socket, null);
 	}
 
@@ -68,7 +68,7 @@ public class ClientController implements Sender, Closeable {
 	 * @param server the server if the socket is a part of a server
 	 * @throws IOException if an I/O exception occurs
 	 */
-	public ClientController(Socket socket, ServerController server) throws IOException {
+	public ClientService(Socket socket, ServerService server) throws IOException {
 		this.server = server;
 		this.socket = socket;
 		input = socket.getInputStream();
@@ -125,13 +125,13 @@ public class ClientController implements Sender, Closeable {
 	}
 	
 	/**
-	 * Returns the {@link ServerController} if this socket is part of a server,
+	 * Returns the {@link ServerService} if this socket is part of a server,
 	 * returns null if not.
 	 * 
 	 * @return Returns the server of this socket if this socket is part of a server,
 	 *         returns null if not
 	 */
-	public ServerController getServer() {
+	public ServerService getServer() {
 		return server;
 	}
 	

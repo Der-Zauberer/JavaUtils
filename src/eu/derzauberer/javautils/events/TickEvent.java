@@ -1,16 +1,16 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.controller.LoopTickController;
+import eu.derzauberer.javautils.service.LoopTickService;
 
 /**
- * This event gets called every time, the {@link LoopTickController} ticks.
+ * This event gets called every time, the {@link LoopTickService} ticks.
  */
 public class TickEvent extends Event {
 	
 	private final long deltaTimeNanos;
 	
 	/**
-	 * Creates a new event that gets called every time, the {@link LoopTickController} ticks.
+	 * Creates a new event that gets called every time, the {@link LoopTickService} ticks.
 	 * 
 	 * @param deltaTimeNanos the time between the ticks in nanoseconds
 	 */

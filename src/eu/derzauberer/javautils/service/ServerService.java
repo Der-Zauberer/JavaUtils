@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.controller;
+package eu.derzauberer.javautils.service;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -21,13 +21,13 @@ import eu.derzauberer.javautils.events.ClientMessageSendEvent;
 
 /**
  * This server socket can be used to send and receive messages from
- * multiple client sockets, for example the {@link ClientController}.
+ * multiple client sockets, for example the {@link ClientService}.
  */
-public class ServerController implements Closeable {
+public class ServerService implements Closeable {
 	
 	private final ServerSocket server;
 	private final ExecutorService service;
-	private final List<ClientController> clients;
+	private final List<ClientService> clients;
 	private int clientTimeout;
 	private Consumer<ClientMessageReceiveEvent> messageReceiveAction;
 	private Consumer<ClientMessageSendEvent> messageSendAction;
@@ -40,7 +40,7 @@ public class ServerController implements Closeable {
 	 * @param port the port on which the server should run
 	 * @throws IOException if an I/O exception occurs
 	 */
-	public ServerController(int port) throws IOException {
+	public ServerService(int port) throws IOException {
 		this(new ServerSocket(port));
 	}
 	
@@ -50,7 +50,7 @@ public class ServerController implements Closeable {
 	 * @param server the existing server socket
 	 * @throws IOException if an I/O exception occurs
 	 */
-	public ServerController(ServerSocket server) throws IOException {
+	public ServerService(ServerSocket server) throws IOException {
 		this.server = server;
 		clients = new ArrayList<>();
 		service = Executors.newCachedThreadPool();
@@ -67,7 +67,7 @@ public class ServerController implements Closeable {
 			while (!server.isClosed()) {
 				try {
 					final Socket socket = server.accept();
-					final ClientController client = getClientControllerInstance(socket);
+					final ClientService client = getClientControllerInstance(socket);
 					client.setTimeout(clientTimeout);
 					service.submit(client::inputLoop);
 					clients.add(client);
@@ -92,7 +92,7 @@ public class ServerController implements Closeable {
 	 * @param bytes the byte array to send
 	 */
 	public synchronized void broadcastBytes(byte[] bytes) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.sendBytes(bytes);
 		}
 	}
@@ -103,7 +103,7 @@ public class ServerController implements Closeable {
 	 * @param string the string to send to the stream
 	 */
 	public synchronized void broadcast(String string) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.send(string);
 		}
 	}
@@ -119,7 +119,7 @@ public class ServerController implements Closeable {
 	 * @param args   the arguments that are passed in the string
 	 */
 	public synchronized void broadcast(String string, Object... args) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.send(string, args);
 		}
 	}
@@ -132,7 +132,7 @@ public class ServerController implements Closeable {
 	 * @param object the object to send to the stream
 	 */
 	public synchronized void broadcast(Object object) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.send(object);
 		}
 	}
@@ -145,7 +145,7 @@ public class ServerController implements Closeable {
 	 * @param string the string to send to the stream
 	 */
 	public synchronized void broadcastLine(String string) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.sendLine(string);
 		}
 	}
@@ -161,7 +161,7 @@ public class ServerController implements Closeable {
 	 * @param args   the arguments that are passed in the string
 	 */
 	public synchronized void broadcastLine(String string, Object... args) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.sendLine(string, args);
 		}
 	}
@@ -174,7 +174,7 @@ public class ServerController implements Closeable {
 	 * @param object the object to send to the stream
 	 */
 	public synchronized void broadcastLine(Object object) {
-		for (ClientController client : clients) {
+		for (ClientService client : clients) {
 			client.sendLine(object);
 		}
 	}
@@ -231,7 +231,7 @@ public class ServerController implements Closeable {
 	 */
 	public void setClientTimeout(int timeout) {
 		clientTimeout = timeout;
-		for (ClientController client : getClients()) {
+		for (ClientService client : getClients()) {
 			if (!client.isClosed())
 				client.setTimeout(timeout);
 		}
@@ -256,7 +256,7 @@ public class ServerController implements Closeable {
 	public void close() throws IOException {
 		if (!server.isClosed()) {
 			server.close();
-			for (ClientController client : clients) {
+			for (ClientService client : clients) {
 				client.close();
 			}
 			service.shutdown();
@@ -279,7 +279,7 @@ public class ServerController implements Closeable {
 	 * @return an unmodifiable list of all clients currently connected to this
 	 *         server
 	 */
-	public List<ClientController> getClients() {
+	public List<ClientService> getClients() {
 		return Collections.unmodifiableList(clients);
 	}
 
@@ -360,14 +360,14 @@ public class ServerController implements Closeable {
 	}
 	
 	/**
-	 * Creates an instance of the {@link ClientController} implementation and returns it.
+	 * Creates an instance of the {@link ClientService} implementation and returns it.
 	 * 
 	 * @param socket the socket to create a ClientController
 	 * @return the instance of the implementation
 	 * @throws IOException if an I/O exception occurs
 	 */
-	protected ClientController getClientControllerInstance(Socket socket) throws IOException {
-		return new ClientController(socket, this);
+	protected ClientService getClientControllerInstance(Socket socket) throws IOException {
+		return new ClientService(socket, this);
 	}
 
 }
