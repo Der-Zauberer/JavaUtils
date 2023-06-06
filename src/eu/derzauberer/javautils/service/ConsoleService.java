@@ -4,14 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
-import eu.derzauberer.javautils.util.FileUtil;
 import eu.derzauberer.javautils.util.Sender;
 
 /**
@@ -156,7 +157,10 @@ public class ConsoleService implements Sender {
 	 */
 	private void log(String string) {
 		try {
-			FileUtil.append(Path.of(loggingDirectory.toString(), "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), string + "\n");
+			final Path loggingFile = Path.of(loggingDirectory.toString(), "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt");
+			if (!Files.exists(loggingDirectory)) Files.createDirectories(loggingDirectory);
+			if (!Files.exists(loggingFile)) Files.createFile(loggingFile);
+			Files.writeString(loggingFile, output + "\n", StandardOpenOption.APPEND);
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}

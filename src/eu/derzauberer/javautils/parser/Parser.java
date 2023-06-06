@@ -1,10 +1,8 @@
 package eu.derzauberer.javautils.parser;
 
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
-
-import eu.derzauberer.javautils.util.FileUtil;
 
 /**
  * This interface contains the abstract methods {@link #parseIn(String)} and
@@ -32,22 +30,7 @@ public interface Parser<P extends Parser<P>> {
 	 */
 	@SuppressWarnings("unchecked")
 	public default P parseFromFile(Path file) throws IOException {
-		parseIn(FileUtil.readString(file));
-		return (P) this;
-	}
-	
-	/**
-	 * Connects to a website and parse the file content in the
-	 * {@link #parseIn(String)} method. This call will override the existing
-	 * content of the parser!
-	 * 
-	 * @param url the url of the website
-	 * @return the own parser object for further customization
-	 * @throws IOException if an I/O exception occurs
-	 */
-	@SuppressWarnings("unchecked")
-	public default P parseFromWebsite(URL url) throws IOException {
-		parseIn(FileUtil.getStringFromWebsite(url));
+		parseIn(Files.readString(file));
 		return (P) this;
 	}
 	
@@ -70,7 +53,10 @@ public interface Parser<P extends Parser<P>> {
 	 */
 	@SuppressWarnings("unchecked")
 	public default P parseToFile(Path file) throws IOException {
-		FileUtil.write(file, parseOut());
+		if (!Files.exists(file) && file.getParent() != null) {
+			Files.createDirectories(file.getParent());
+		}
+		Files.writeString(file, parseOut());
 		return (P) this;
 	}
 

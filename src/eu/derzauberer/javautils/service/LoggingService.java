@@ -3,12 +3,14 @@ package eu.derzauberer.javautils.service;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
+
 import eu.derzauberer.javautils.events.LoggingEvent;
-import eu.derzauberer.javautils.util.FileUtil;
 
 /**
  * The logger collects messages from the {@link #log(String)} methods and send
@@ -108,7 +110,10 @@ public class LoggingService {
 		if (systemOutput) System.out.println(output);
 		if (fileOutput) {
 			try {
-				FileUtil.append(Path.of(fileDirectory.toString(), "log-" + timeStamp.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), output + "\n");
+				final Path outputFile = Path.of(fileDirectory.toString(), "log-" + timeStamp.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt");
+				if (!Files.exists(fileDirectory)) Files.createDirectories(fileDirectory);
+				if (!Files.exists(outputFile)) Files.createFile(outputFile);
+				Files.writeString(outputFile, output + "\n", StandardOpenOption.APPEND);
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
