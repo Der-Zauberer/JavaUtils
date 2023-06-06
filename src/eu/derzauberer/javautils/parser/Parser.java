@@ -1,8 +1,8 @@
 package eu.derzauberer.javautils.parser;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 
 import eu.derzauberer.javautils.util.FileUtil;
 
@@ -31,7 +31,7 @@ public interface Parser<P extends Parser<P>> {
 	 * @throws IOException       if an I/O exception occurs
 	 */
 	@SuppressWarnings("unchecked")
-	public default P parseFromFile(File file) throws IOException {
+	public default P parseFromFile(Path file) throws IOException {
 		parseIn(FileUtil.readString(file));
 		return (P) this;
 	}
@@ -69,8 +69,8 @@ public interface Parser<P extends Parser<P>> {
 	 * @throws IOException       if an I/O exception occurs
 	 */
 	@SuppressWarnings("unchecked")
-	public default P parseToFile(File file) throws IOException {
-		FileUtil.writeString(file, parseOut());
+	public default P parseToFile(Path file) throws IOException {
+		FileUtil.write(file, parseOut());
 		return (P) this;
 	}
 

@@ -1,11 +1,11 @@
 package eu.derzauberer.javautils.parser;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
 import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.accessible.AccessorException;
@@ -66,11 +67,11 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * Creates a new parser and reads a file and parse the file
 	 * content in the parser.
 	 * 
-	 * @param file file the file to read
+	 * @param file the file to read
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public KeyValueParser(File file) throws IOException {
+	public KeyValueParser(Path file) throws IOException {
 		parseFromFile(file);
 	}
 

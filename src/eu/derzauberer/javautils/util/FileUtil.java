@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -26,23 +27,91 @@ import java.util.stream.Stream;
 public class FileUtil {
 
 	/**
-	 * Creates a file and the folders if necessary. The method does nothing if the
-	 * file already exists.
+	 * Reads a file and returns the content as string.
 	 * 
-	 * @param file The file, which should be created
+	 * @param file the file to read
+	 * @return the content of the file as string
 	 * @throws IOException       if an I/O exception occurs
-	 * @throws SecurityException if java has no permission to create the file or
-	 *                           folder
+	 * @throws SecurityException if java has no permission to read the file
 	 */
-	public static void createFile(File file) throws IOException {
-		if (!file.exists()) {
-			if (file.getParentFile() != null) {
-				file.getParentFile().mkdirs();
-			}
-			file.createNewFile();
-		}
+	public static String readString(Path file) throws IOException {
+		return new String(Files.readAllBytes(file));
+	}
+	
+	/**
+	 * Reads a file and returns the content as byte array.
+	 * 
+	 * @param file the file to read
+	 * @return the content of the file as byte array
+	 * @throws IOException       if an I/O exception occurs
+	 * @throws SecurityException if java has no permission to read the file
+	 */
+	public static byte[] readBytes(Path file) throws IOException {
+		return Files.readAllBytes(file);
 	}
 
+	/**
+	 * Writes a string to a file and create all directories to that file if the file
+	 * didn't exist.
+	 * 
+	 * @param file   the file to write
+	 * @param string the string to write to the file
+	 * @throws SecurityException if java has no permission to write to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public static void write(Path file, String string) throws IOException {
+		if (!Files.exists(file)) Files.createDirectories(file.getParent());
+		Files.write(file, string.getBytes());
+	}
+	
+	/**
+	 * Writes a byte array to a file and create all directories to that file if the file
+	 * didn't exist.
+	 * 
+	 * @param file   the file to write
+	 * @param string the string to write to the file
+	 * @throws SecurityException if java has no permission to write to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public static void write(Path file, byte[] bytes) throws IOException {
+	    if (!Files.exists(file)) Files.createDirectories(file.getParent());
+		Files.write(file, bytes);
+	}
+
+	/**
+	 * Appends a string to a file and create all directories to that file if the file
+	 * didn't exist.
+	 * 
+	 * @param file   the file to append
+	 * @param string the string to write to the file
+	 * @throws SecurityException if java has no permission to append to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public static void append(Path file, String string) throws IOException {
+	    if (!Files.exists(file)) {
+	    	Files.createDirectories(file.getParent());
+	    	Files.createFile(file);
+	    }
+		Files.write(file, string.getBytes(), StandardOpenOption.APPEND);
+	}
+	
+	/**
+	 * Appends a byte array to a file and create all directories to that file if the file
+	 * didn't exist.
+	 * 
+	 * @param file  the file to append
+	 * @param bytes the byte array to write to the file
+	 * @throws SecurityException if java has no permission to append to the file
+	 * @throws IOException       if an I/O exception occurs
+	 */
+	public static void append(Path file, byte[] bytes) throws IOException {
+		if (!Files.exists(file)) {
+	    	Files.createDirectories(file.getParent());
+	    	Files.createFile(file);
+	    }
+		Files.write(file, bytes, StandardOpenOption.APPEND);
+	}
+	
 	/**
 	 * Deletes a file of folder. The method does nothing if the file doesn't exist.
 	 * 
@@ -86,86 +155,6 @@ public class FileUtil {
 			input.close();
 			output.close();
 		}
-	}
-
-	/**
-	 * Reads a file and returns the content as string.
-	 * 
-	 * @param file the file to read
-	 * @return the content of the file as string
-	 * @throws IOException       if an I/O exception occurs
-	 * @throws SecurityException if java has no permission to read the file
-	 */
-	public static String readString(File file) throws IOException {
-		return new String(Files.readAllBytes(Paths.get(file.toURI())));
-	}
-	
-	/**
-	 * Reads a file and returns the content as byte array.
-	 * 
-	 * @param file the file to read
-	 * @return the content of the file as byte array
-	 * @throws IOException       if an I/O exception occurs
-	 * @throws SecurityException if java has no permission to read the file
-	 */
-	public static byte[] readBytes(File file) throws IOException {
-		return Files.readAllBytes(Paths.get(file.toURI()));
-	}
-
-	/**
-	 * Writes a string to a file and create the file before writing if the file
-	 * didn't exist.
-	 * 
-	 * @param file   the file to write
-	 * @param string the string to write to the file
-	 * @throws SecurityException if java has no permission to write to the file
-	 * @throws IOException       if an I/O exception occurs
-	 */
-	public static void writeString(File file, String string) throws IOException {
-		createFile(file);
-		Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-	}
-	
-	/**
-	 * Writes a byte array to a file and create the file before writing if the file
-	 * didn't exist.
-	 * 
-	 * @param file  the file to write
-	 * @param bytes the byte array to write to the file
-	 * @throws SecurityException if java has no permission to write to the file
-	 * @throws IOException       if an I/O exception occurs
-	 */
-	public static void writeString(File file, byte[] bytes) throws IOException {
-		createFile(file);
-		Files.write(Paths.get(file.toURI()), bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-	}
-
-	/**
-	 * Appends a string to a file and create the file before writing if the file
-	 * didn't exist.
-	 * 
-	 * @param file   the file to append
-	 * @param string the string to write to the file
-	 * @throws SecurityException if java has no permission to append to the file
-	 * @throws IOException       if an I/O exception occurs
-	 */
-	public static void appendString(File file, String string) throws IOException {
-		createFile(file);
-		Files.write(Paths.get(file.toURI()), string.getBytes(), StandardOpenOption.APPEND);
-	}
-	
-	/**
-	 * Appends a byte array to a file and create the file before writing if the
-	 * file didn't exist.
-	 * 
-	 * @param file  the file to append
-	 * @param bytes the byte array to write to the file
-	 * @throws SecurityException if java has no permission to append to the file
-	 * @throws IOException       if an I/O exception occurs
-	 */
-	public static void appendString(File file, byte[] bytes) throws IOException {
-		createFile(file);
-		Files.write(Paths.get(file.toURI()), bytes, StandardOpenOption.APPEND);
 	}
 	
 	/**
@@ -251,15 +240,15 @@ public class FileUtil {
 	}
 	
 	/**
-	 * Opens the url in the operating systems default file browser.
+	 * Opens the uri in the operating systems default file browser.
 	 * 
-	 * @param url the url to open
+	 * @param uri the uri to open
 	 * @throws URISyntaxException if this URL is not formatted strictly according
 	 *                            to RFC2396 and cannot be converted to a URI
 	 * @throws IOException        if an I/O exception occurs
 	 */
-	public static void openUrlInBrowser(URL url) throws IOException, URISyntaxException {
-		Desktop.getDesktop().browse(url.toURI());
+	public static void openUrlInBrowser(URI uri) throws IOException, URISyntaxException {
+		Desktop.getDesktop().browse(uri);
 	}
 	
 	/**

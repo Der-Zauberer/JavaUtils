@@ -1,13 +1,14 @@
 package eu.derzauberer.javautils.service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
+
 import eu.derzauberer.javautils.events.ConsoleInputEvent;
 import eu.derzauberer.javautils.events.ConsoleOutputEvent;
 import eu.derzauberer.javautils.util.FileUtil;
@@ -57,7 +58,7 @@ public class ConsoleService implements Sender {
 	private String prefix;
 	private boolean hasColorCodesEnabled;
 	private boolean isLoggingEnabled;
-	private File loggingDirectory;
+	private Path loggingDirectory;
 	private boolean isClosed;
 	private boolean nextLineIgnored;
 	private Consumer<ConsoleInputEvent> inputAction;
@@ -106,7 +107,7 @@ public class ConsoleService implements Sender {
 		this.commandHandler = commandController;
 		hasColorCodesEnabled = hasSystemColorCodeSupport();
 		isLoggingEnabled = false;
-		loggingDirectory = new File("logs");
+		loggingDirectory = Path.of("logs");
 		isClosed = false;
 		nextLineIgnored = false;
 		thread = new Thread(this::inputLoop);
@@ -155,7 +156,7 @@ public class ConsoleService implements Sender {
 	 */
 	private void log(String string) {
 		try {
-			FileUtil.appendString(new File(loggingDirectory, "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), string + "\n");
+			FileUtil.append(Path.of(loggingDirectory.toString(), "log-" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), string + "\n");
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
@@ -281,7 +282,7 @@ public class ConsoleService implements Sender {
 	 * @param loggingDirectory the directory in which the logging files should be
 	 *                         written
 	 */
-	public void setLoggingDirectory(File loggingDirectory) {
+	public void setLoggingDirectory(Path loggingDirectory) {
 		this.loggingDirectory = loggingDirectory;
 	}
 	
@@ -290,7 +291,7 @@ public class ConsoleService implements Sender {
 	 * 
 	 * @return the directory in which the logging files are written
 	 */
-	public File getLoggingDirectory() {
+	public Path getLoggingDirectory() {
 		return loggingDirectory;
 	}
 	

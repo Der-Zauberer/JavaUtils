@@ -3,6 +3,7 @@ package eu.derzauberer.javautils.service;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
@@ -33,7 +34,7 @@ public class LoggingService {
 	private boolean systemOutput = true;
 	private boolean fileOutput = true;
 	private boolean enableOutputInformation = true;
-	private File fileDirectory = new File("logs");
+	private Path fileDirectory = Path.of("logs");
 	private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 	private Consumer<LoggingEvent> loggingAction;
 
@@ -107,7 +108,7 @@ public class LoggingService {
 		if (systemOutput) System.out.println(output);
 		if (fileOutput) {
 			try {
-				FileUtil.appendString(new File(fileDirectory, "log-" + timeStamp.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), output + "\n");
+				FileUtil.append(Path.of(fileDirectory.toString(), "log-" + timeStamp.format(DateTimeFormatter.ISO_LOCAL_DATE) + ".txt"), output + "\n");
 			} catch (IOException exception) {
 				exception.printStackTrace();
 			}
@@ -200,7 +201,7 @@ public class LoggingService {
 	 * @param fileDirectory the directory in which the files for the logging output
 	 *                      should be in
 	 */
-	public void setFileDirectory(File fileDirectory) {
+	public void setFileDirectory(Path fileDirectory) {
 		this.fileDirectory = fileDirectory;
 	}
 	
@@ -209,7 +210,7 @@ public class LoggingService {
 	 * 
 	 * @return the directory in which the files for the logging output should be in
 	 */
-	public File getFileDirectory() {
+	public Path getFileDirectory() {
 		return fileDirectory;
 	}
 	

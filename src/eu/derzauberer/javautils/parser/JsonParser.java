@@ -1,12 +1,13 @@
 package eu.derzauberer.javautils.parser;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import eu.derzauberer.javautils.util.DataUtil;
 
 /**
@@ -55,11 +56,11 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * Creates a new parser and reads a file and parse the file
 	 * content in the parser.
 	 * 
-	 * @param jsonFile file the file to read
+	 * @param jsonFile the file to read
 	 * @throws SecurityException if java has no permission to write to the file
 	 * @throws IOException       if an I/O exception occurs
 	 */
-	public JsonParser(File jsonFile) throws IOException {
+	public JsonParser(Path jsonFile) throws IOException {
 		super(jsonFile);
 	}
 
