@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.observables;
 
 import java.util.List;
 import eu.derzauberer.javautils.events.Event;

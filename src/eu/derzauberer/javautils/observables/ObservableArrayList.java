@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.util;
+package eu.derzauberer.javautils.observables;
 
 import java.util.ArrayList;
 import java.util.Collection;
