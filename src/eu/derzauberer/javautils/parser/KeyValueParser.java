@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
 import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.accessible.AccessorException;
-import eu.derzauberer.javautils.util.DataUtil;
 
 /**
  * This provides a parser based on key-value pairs and basic parser
@@ -143,7 +142,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	@SuppressWarnings("unchecked")
 	public <T> T get(String key, Class<T> type) {
 		if (type.isArray()) return (T) getAsArray(key, type);
-		return DataUtil.convert(getValue(key), type);
+		return Parser.convertObject(getValue(key), type);
 	}
 
 	/**
@@ -163,7 +162,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T> T get(String key, Class<T> type, T standard) {
 		if (!isPresent(key)) return standard;
 		if (type.isArray()) return (T) getAsArray(key, type);
-		return DataUtil.convert(getValue(key), type);
+		return Parser.convertObject(getValue(key), type);
 	}
 	
 	/**
@@ -181,7 +180,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T> Optional<T> getOptional(String key, Class<T> type) {
 		if (!isPresent(key)) return Optional.empty();
 		if (type.isArray()) return Optional.of((T) getAsArray(key, type));
-		return Optional.of(DataUtil.convert(getValue(key), type));
+		return Optional.of(Parser.convertObject(getValue(key), type));
 	}
 	
 	/**
@@ -271,7 +270,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T, C extends Collection<T>> C getAsCollection(String key, C collection, Class<T> type) {
 		if (!isCollection(key) && !isArray(key)) return null;
 		for (Object object : isArray(key) ? Arrays.asList(get(key)) : (Collection<?>) getValue(key)) {
-			collection.add(DataUtil.convert(object, type));
+			collection.add(Parser.convertObject(object, type));
 		}
 		return collection;
 	}
@@ -320,7 +319,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		final T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, size);
 		int i = 0;
 		for (Object object : isArray(key) ? (Object[]) get(key) : ((Collection<?>) get(key)).toArray()) {
-			t[i] = DataUtil.convert(object, type);
+			t[i] = Parser.convertObject(object, type);
 			i++;
 		}
 		return t;
@@ -567,7 +566,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 						Character.class.isAssignableFrom(classType) ||
 						Boolean.class.isAssignableFrom(classType) ||
 						Number.class.isAssignableFrom(classType))) {
-					collection.add(DataUtil.convert(object, classType));
+					collection.add(Parser.convertObject(object, classType));
 				} else if (object instanceof Collection<?>) {
 					collection.add(deserializeCollection((Collection<?>) object, object.getClass(), classType));
 				} else if (object instanceof KeyValueParser<?>) {
