@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.service;
+package eu.derzauberer.javautils.services;
 
 import java.util.function.Consumer;
 

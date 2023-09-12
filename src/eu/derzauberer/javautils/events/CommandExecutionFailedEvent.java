@@ -11,7 +11,7 @@ public class CommandExecutionFailedEvent extends CancellableEvent {
 	/**
 	 * Represents the reason of the execution fail.
 	 */
-	public enum ExecutionFailCause {EXCEPTION, BAD_RETURN}
+	public enum ExecutionFailCause { EXCEPTION, BAD_RETURN }
 	
 	private final Sender sender;
 	private final Command command;

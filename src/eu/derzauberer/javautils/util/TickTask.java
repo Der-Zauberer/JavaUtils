@@ -1,7 +1,8 @@
 package eu.derzauberer.javautils.util;
 
 import java.util.function.Consumer;
-import eu.derzauberer.javautils.service.TimeTickService;
+
+import eu.derzauberer.javautils.services.TimeTickService;
 
 /**
  * This is a task for the {@link TimeTickService} that is called in

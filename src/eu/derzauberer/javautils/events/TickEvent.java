@@ -1,6 +1,6 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.service.LoopTickService;
+import eu.derzauberer.javautils.services.LoopTickService;
 
 /**
  * This event gets called every time, the {@link LoopTickService} ticks.

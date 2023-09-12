@@ -1,8 +1,9 @@
 package eu.derzauberer.javautils.events;
 
 import java.time.LocalDateTime;
-import eu.derzauberer.javautils.service.LoggingService;
-import eu.derzauberer.javautils.service.LoggingService.LogType;
+
+import eu.derzauberer.javautils.services.LoggingService;
+import eu.derzauberer.javautils.services.LoggingService.LogType;
 
 /**
  * The event gets called when one of the {@link LoggingService#log(String)} functions was used in the {@link LoggingService}.

@@ -1,4 +1,4 @@
-package eu.derzauberer.javautils.service;
+package eu.derzauberer.javautils.services;
 
 import java.io.File;
 import java.io.IOException;

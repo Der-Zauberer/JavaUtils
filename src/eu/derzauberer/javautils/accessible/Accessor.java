@@ -314,7 +314,7 @@ public class Accessor<T> {
 	 * superclasses and interfaces. The classes are sorted in the order
 	 * they are loaded.
 	 * 
-	 * @return a list of classes such as the host class and supercass and
+	 * @return a list of classes such as the host class and superclass and
 	 *         interfaces
 	 */
 	public List<Class<?>> getClasses() {

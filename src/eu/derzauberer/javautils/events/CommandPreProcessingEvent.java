@@ -4,7 +4,7 @@ import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.Sender;
 
 /**
- * This event gets called before the execution of a command.
+ * This event gets called before the command gets executed.
  */
 public class CommandPreProcessingEvent extends CancellableEvent {
 
@@ -15,7 +15,7 @@ public class CommandPreProcessingEvent extends CancellableEvent {
 	private String[] args;
 	
 	/**
-	 * Creates a new event that gets called before the execution of a command.
+	 * Creates a new event that gets called before the command gets executed.
 	 * 
 	 * @param sender  the sender that called the command
 	 * @param command the command to execute

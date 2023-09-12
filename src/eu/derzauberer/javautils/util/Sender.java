@@ -37,11 +37,11 @@ public interface Sender {
 	}
 
 	/**
-	 * Reads until one of the seperator bytes is read and returns it as
-	 * byte array. The method blocks until one of the seperator bytes is
+	 * Reads until one of the separator bytes is read and returns it as
+	 * byte array. The method blocks until one of the separator bytes is
 	 * read, the end of the stream is reached or an exception occurred.
 	 *
-	 * @param seperator the seperator byte which is the end of the byte
+	 * @param seperator the separator byte which is the end of the byte
 	 *                  array
 	 * @return the byte array
 	 * @throws IOException if an I/O exception occurs
@@ -245,14 +245,14 @@ public interface Sender {
 	Charset getCharset();
 	
 	/**
-	 * Sets a memory bit which is required to process line breakes.
+	 * Sets a memory bit which is required to process line breaks.
 	 * 
 	 * @param nextLine a memory bit
 	 */
 	void setNextLineIgnore(boolean nextLineIgnored);
 	
 	/**
-	 * Returns a memory bit which is required to process line breakes.
+	 * Returns a memory bit which is required to process line breaks.
 	 * 
 	 * @return a memory bit
 	 */

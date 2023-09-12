@@ -1,6 +1,6 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.service.ConsoleService;
+import eu.derzauberer.javautils.services.ConsoleService;
 
 /**
  * This event gets called when an input was given to the

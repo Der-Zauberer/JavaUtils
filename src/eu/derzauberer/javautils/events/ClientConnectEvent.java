@@ -1,6 +1,6 @@
 package eu.derzauberer.javautils.events;
 
-import eu.derzauberer.javautils.service.ClientService;
+import eu.derzauberer.javautils.services.ClientService;
 
 /**
  * This event gets called when a client connected to a server.
