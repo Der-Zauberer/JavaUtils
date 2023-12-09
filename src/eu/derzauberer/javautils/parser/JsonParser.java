@@ -61,6 +61,15 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	public JsonParser(Path jsonFile) throws IOException {
 		super(jsonFile);
 	}
+	
+	/**
+	 * Creates a shallow copy of the original parser.
+	 * 
+	 * @param parser the parser to copy
+	 */
+	public JsonParser(KeyValueParser<?> parser) {
+		super(parser);
+	}
 
 	/**
 	 * {@inheritDoc}

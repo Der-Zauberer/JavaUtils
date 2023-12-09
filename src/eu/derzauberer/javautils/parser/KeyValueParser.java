@@ -73,6 +73,16 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public KeyValueParser(Path file) throws IOException {
 		parseFromFile(file);
 	}
+	
+	/**
+	 * Creates a shallow copy of the original parser.
+	 * 
+	 * @param parser the parser to copy
+	 */
+	public KeyValueParser(KeyValueParser<?> parser) {
+		structure.addAll(parser.getStructure());
+		parser.getEntries().forEach(entries::put);
+	}
 
 	/**
 	 * Sets the value to a given key. A key represents a value, but the value can be
