@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- The class takes an object and loads its content with reflections to make
+ * The class takes an object and loads its content with reflections to make
  * fields, methods and their annotations accessible. The object class can use
  * the following annotations {@link AccessibleVisibility},
  * {@link AccessibleWhitelist} and {@link AccessibleBlacklist} to define which
