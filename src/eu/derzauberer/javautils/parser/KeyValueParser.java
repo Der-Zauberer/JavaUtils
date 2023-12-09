@@ -25,7 +25,7 @@ import eu.derzauberer.javautils.accessible.Accessor;
 import eu.derzauberer.javautils.accessible.AccessorException;
 
 /**
- * This provides a parser based on key-value pairs and basic parser
+ * Provides a parser based on key-value pairs and basic parser
  * operations. Input and output operation are based on keys. Each key represents
  * a value, but the value can be null. A string key is a path separated by dots.
  * Stored values can be null.<br>
@@ -39,9 +39,9 @@ import eu.derzauberer.javautils.accessible.AccessorException;
  * String string = parser.get("my.path", String.class);
  * </pre>
  * 
- * @see {@link Parser}
+ * @see {@link Parsable}
  */
-public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Parser<P> {
+public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Parsable<P> {
 
 	private final List<String> structure = new ArrayList<>();
 	private final Map<String, Object> entries = new HashMap<>();
@@ -142,7 +142,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	@SuppressWarnings("unchecked")
 	public <T> T get(String key, Class<T> type) {
 		if (type.isArray()) return (T) getAsArray(key, type);
-		return Parser.convertObject(getValue(key), type);
+		return ParsingUtils.convertObject(getValue(key), type);
 	}
 
 	/**
@@ -162,7 +162,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T> T get(String key, Class<T> type, T standard) {
 		if (!isPresent(key)) return standard;
 		if (type.isArray()) return (T) getAsArray(key, type);
-		return Parser.convertObject(getValue(key), type);
+		return ParsingUtils.convertObject(getValue(key), type);
 	}
 	
 	/**
@@ -180,7 +180,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T> Optional<T> getOptional(String key, Class<T> type) {
 		if (!isPresent(key)) return Optional.empty();
 		if (type.isArray()) return Optional.of((T) getAsArray(key, type));
-		return Optional.of(Parser.convertObject(getValue(key), type));
+		return Optional.of(ParsingUtils.convertObject(getValue(key), type));
 	}
 	
 	/**
@@ -270,7 +270,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T, C extends Collection<T>> C getAsCollection(String key, C collection, Class<T> type) {
 		if (!isCollection(key) && !isArray(key)) return null;
 		for (Object object : isArray(key) ? Arrays.asList(get(key)) : (Collection<?>) getValue(key)) {
-			collection.add(Parser.convertObject(object, type));
+			collection.add(ParsingUtils.convertObject(object, type));
 		}
 		return collection;
 	}
@@ -319,7 +319,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		final T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, size);
 		int i = 0;
 		for (Object object : isArray(key) ? (Object[]) get(key) : ((Collection<?>) get(key)).toArray()) {
-			t[i] = Parser.convertObject(object, type);
+			t[i] = ParsingUtils.convertObject(object, type);
 			i++;
 		}
 		return t;
@@ -566,7 +566,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 						Character.class.isAssignableFrom(classType) ||
 						Boolean.class.isAssignableFrom(classType) ||
 						Number.class.isAssignableFrom(classType))) {
-					collection.add(Parser.convertObject(object, classType));
+					collection.add(ParsingUtils.convertObject(object, classType));
 				} else if (object instanceof Collection<?>) {
 					collection.add(deserializeCollection((Collection<?>) object, object.getClass(), classType));
 				} else if (object instanceof KeyValueParser<?>) {

@@ -7,11 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent;
 import eu.derzauberer.javautils.events.CommandExecutionFailedEvent.ExecutionFailCause;
 import eu.derzauberer.javautils.events.CommandNotFoundEvent;
 import eu.derzauberer.javautils.events.CommandPreProcessingEvent;
-import eu.derzauberer.javautils.parser.Parser;
+import eu.derzauberer.javautils.parser.ParsingUtils;
 import eu.derzauberer.javautils.util.Command;
 import eu.derzauberer.javautils.util.Sender;
 
@@ -205,14 +206,14 @@ public class CommandService {
 		for (char character : string.toCharArray()) {
 			if (character == ' ' && !enclosed) {
 				if (builder.length() != 0) {
-					strings.add(Parser.addEscapeCodes(builder.toString()));
+					strings.add(ParsingUtils.addEscapeCodes(builder.toString()));
 					builder.setLength(0);
 				}
 			} else if (character == '"' && lastCharacter != '\\') {
 				if (!enclosed) {
 					enclosed = true;
 				} else {
-					strings.add(Parser.addEscapeCodes(builder.toString()));
+					strings.add(ParsingUtils.addEscapeCodes(builder.toString()));
 					builder.setLength(0);
 					enclosed = false;
 				}
@@ -221,7 +222,7 @@ public class CommandService {
 			}
 			lastCharacter = character;
 		}
-		if (builder.length() != 0) strings.add(Parser.addEscapeCodes(builder.toString()));
+		if (builder.length() != 0) strings.add(ParsingUtils.addEscapeCodes(builder.toString()));
 		final String[] command = new String[strings.size()];
 		for (int i = 0; i < command.length; i++) {
 			command[i] = strings.get(i);

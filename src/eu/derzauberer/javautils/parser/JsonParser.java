@@ -87,7 +87,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 					} else if (value.length() > 0 && value.charAt(0) == '[' && value.charAt(value.length() - 1) == ']') {
 						array.add(new JsonParser(value.toString()).get("null"));
 					} else if (value.length() > 0) {
-						array.add(Parser.autoDeserializePrimitive(value.toString()));
+						array.add(ParsingUtils.autoDeserializePrimitive(value.toString()));
 					}
 					value.setLength(0);
 					if (character == ']') {
@@ -127,7 +127,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 				if (isValue) {
 					isValue = false;
 					getStructure().add(key.toString() + name);
-					getEntries().put(key.toString() + name, Parser.autoDeserializePrimitive(value.toString()));
+					getEntries().put(key.toString() + name, ParsingUtils.autoDeserializePrimitive(value.toString()));
 					name.setLength(0);
 					value.setLength(0);
 				}
@@ -221,7 +221,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
 				string.append(parseOutCollections(oneliner, offset + lastLayer, name, getAsCollection(key)));
 			} else {
-				string.append(TABS + '\"' + name + "\":" + SPACE + Parser.autoSerializePrimitive(value, true));
+				string.append(TABS + '\"' + name + "\":" + SPACE + ParsingUtils.autoSerializePrimitive(value, true));
 			}
 			string.append(',' + NEW_LINE);
 			lastkeys = keys;
@@ -269,7 +269,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 				}
 				string.append(parser.parseOut(oneliner, offset + 1));
 			} else {
-				string.append(TABS + Parser.autoSerializePrimitive(value, true));
+				string.append(TABS + ParsingUtils.autoSerializePrimitive(value, true));
 			}
 			string.append(',' + NEW_LINE);
 		}

@@ -2,7 +2,7 @@ package eu.derzauberer.javautils.parser;
 
 /**
  * The exception is thrown when a problem occurs while trying to serialize
- * objects for a {@link Parser}.
+ * objects for a {@link Parsable}.
  *
  */
 public class SerializationException extends RuntimeException {
