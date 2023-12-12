@@ -8,7 +8,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import eu.derzauberer.javautils.events.LoggingEvent;
 
@@ -27,6 +30,7 @@ public class LoggingService {
 	 */
 	public enum LogType {
 		INFO,
+		SUCCESS,
 		WARN,
 		ERROR,
 		DEBUG
@@ -35,16 +39,27 @@ public class LoggingService {
 	private final String prefix;
 	private boolean systemOutput = true;
 	private boolean fileOutput = true;
-	private boolean enableOutputInformation = true;
+	private boolean debug = false;
 	private Path fileDirectory = Path.of("logs");
-	private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 	private Consumer<LoggingEvent> loggingAction;
 
+	private Function<LoggingEvent, String> formatter = (event) -> {
+		final StringBuilder string = new StringBuilder();
+		string.append("[");
+		string.append(event.getTimeStamp().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+		string.append(" ");
+		string.append(event.getType());
+		string.append("] ");
+		event.getPrefix().ifPresent(prefix -> string.append(prefix + ": "));
+		string.append(event.getMessage());
+		return string.toString();
+	};
+	
 	/**
 	 *  Creates a new logging service without a prefix.
 	 */
 	public LoggingService() {
-		this.prefix = "";
+		prefix = null;
 	}
 	
 	/**
@@ -55,7 +70,7 @@ public class LoggingService {
 	 *               the message
 	 */
 	public LoggingService(String  prefix) {
-		this.prefix = prefix + ": ";
+		this.prefix = prefix;
 	}
 	
 	/**
@@ -66,47 +81,173 @@ public class LoggingService {
 	 *               the message
 	 */
 	public LoggingService(Class<?> classType) {
-		prefix = classType.getName() + ": ";
+		prefix = classType.getName();
 	}
 	
 	/**
-	 * Sends an information message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not run in
-	 * debug mode. The default type, if no one is given, is {@link LogType#INFO}.
+	 * Sends an information message to the logger.
 	 * 
 	 * @param message the message to send
 	 */
-	public void log(String message) {
+	public void info(String message) {
 		log(LogType.INFO, message);
 	}
 	
 	/**
-	 * Sends an information message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not
-	 * run in debug mode. The default type, if no one is given, is
-	 * {@link LogType#INFO}.
+	 * Sends an information message with arguments to the logger.
 	 * 
 	 * @param message the message to send
 	 * @param args    arguments to insert in the message with the build in
 	 *                {@link String#format(String, Object...)} method
 	 */
-	public void log(String message, Object... args) {
-		log(LogType.INFO, String.format(message, args));
+	public void info(String message, Object... args) {
+		log(LogType.INFO, message, args);
 	}
 	
 	/**
-	 * Sends a message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not
-	 * run in debug mode.
+	 * Sends an information message with a string supplier to the logger.
+	 * 
+	 * @param message supplier that builds the string output when it's called
+	 */
+	public void info(Supplier<String> action) {
+		log(LogType.INFO, action);
+	}
+	
+	/**
+	 * Sends a success message to the logger.
+	 * 
+	 * @param message the message to send
+	 */
+	public void success(String message) {
+		log(LogType.SUCCESS, message);
+	}
+	
+	/**
+	 * Sends a success message with arguments to the logger.
+	 * 
+	 * @param message the message to send
+	 * @param args    arguments to insert in the message with the build in
+	 *                {@link String#format(String, Object...)} method
+	 */
+	public void success(String message, Object... args) {
+		log(LogType.SUCCESS, message, args);
+	}
+	
+	/**
+	 * Sends a success message with a string supplier to the logger.
+	 * 
+	 * @param message supplier that builds the string output when it's called
+	 */
+	public void success(Supplier<String> message) {
+		log(LogType.SUCCESS, message);
+	}
+	
+	/**
+	 * Sends a warn message to the logger.
+	 * 
+	 * @param message the message to send
+	 */
+	public void warn(String message) {
+		log(LogType.WARN, message);
+	}
+	
+	/**
+	 * Sends a warn message with arguments to the logger.
+	 * 
+	 * @param message the message to send
+	 * @param args    arguments to insert in the message with the build in
+	 *                {@link String#format(String, Object...)} method
+	 */
+	public void warn(String message, Object... args) {
+		log(LogType.WARN, message, args);
+	}
+	
+	/**
+	 * Sends a warn message with a string supplier to the logger.
+	 * 
+	 * @param message supplier that builds the string output when it's called
+	 */
+	public void warn(Supplier<String> message) {
+		log(LogType.WARN, message);
+	}
+	
+	/**
+	 * Sends an error message to the logger.
+	 * 
+	 * @param message the message to send
+	 */
+	public void error(String message) {
+		log(LogType.ERROR, message);
+	}
+	
+	/**
+	 * Sends an error message with arguments to the logger.
+	 * 
+	 * @param message the message to send
+	 * @param args    arguments to insert in the message with the build in
+	 *                {@link String#format(String, Object...)} method
+	 */
+	public void error(String message, Object... args) {
+		log(LogType.ERROR, message);
+	}
+	
+	/**
+	 * Sends an error message with a string supplier to the logger.
+	 * 
+	 * @param message supplier that builds the string output when it's called
+	 */
+	public void error(Supplier<String> message) {
+		log(LogType.ERROR, message);
+	}
+	
+	/**
+	 * Sends a debug message to the logger. The method does noting if logging is
+	 * disabled.
+	 * 
+	 * @param message the message to send
+	 */
+	public void debug(String message) {
+		if (!isDebugEnabled()) return;
+		log(LogType.DEBUG, message);
+	}
+	
+	/**
+	 * Sends a debug message with arguments to the logger. The method does noting if
+	 * logging is disabled. The string format will not be processed if the logging
+	 * is disabled.
+	 * 
+	 * @param message the message to send
+	 * @param args    arguments to insert in the message with the build in
+	 *                {@link String#format(String, Object...)} method
+	 */
+	public void debug(String message, Object... args) {
+		if (!isDebugEnabled()) return;
+		log(LogType.DEBUG, message, args);
+	}
+	
+	/**
+	 * Sends a debug message with a string supplier to the logger. The method does
+	 * noting if logging is disabled. The string supplier will not be processed if
+	 * the logging is disabled.
+	 * 
+	 * @param message supplier that builds the string output when it's called
+	 */
+	public void debug(Supplier<String> message) {
+		if (!isDebugEnabled()) return;
+		log(LogType.DEBUG, message);
+	}
+	
+	/**
+	 * Sends a message to the logger.
 	 * 
 	 * @param type    the type of the message
 	 * @param message the message to send
 	 */
-	public void log(LogType type, String message) {
-		if (type == LogType.DEBUG && !isDebugEnabled()) return;
+	private void log(LogType type, String message) {
 		final LocalDateTime timeStamp = LocalDateTime.now();
-		final String output = enableOutputInformation ?  "[" + timeStamp.format(dateTimeFormatter) + " " + type + "] " + prefix + message: message;
-		if (loggingAction != null) loggingAction.accept(new LoggingEvent(this, type, message, timeStamp, output));
+		final LoggingEvent loggingEvent = new LoggingEvent(this, formatter, type, timeStamp, Optional.ofNullable(prefix), message);
+		final String output = formatter.apply(loggingEvent);
+		if (loggingAction != null) loggingAction.accept(loggingEvent);
 		if (systemOutput) System.out.println(output);
 		if (fileOutput) {
 			try {
@@ -121,26 +262,25 @@ public class LoggingService {
 	}
 	
 	/**
-	 * Sends a message to the logger. The output will not be displayed
-	 * if the type is {@link LogType#DEBUG} and the java virtual machine does not
-	 * run in debug mode.
+	 * Sends a message to the logger.
 	 * 
-	 * @param type   the type of the message
+	 * @param type    the type of the message
 	 * @param message the message to send
-	 * @param args   arguments to insert in the message with the build in
-	 *               {@link String#format(String, Object...)} method
+	 * @param args    arguments to insert in the message with the build in
+	 *                {@link String#format(String, Object...)} method
 	 */
-	public void log(LogType type, String message, Object... args) {
+	private void log(LogType type, String message, Object... args) {
 		log(type, String.format(message, args));
 	}
 	
 	/**
-	 * Returns if java is currently running in debug mode.
+	 * Sends a message to the logger.
 	 * 
-	 * @return if java is currently running in debug mode
+	 * @param type   the type of the message
+	 * @param string supplier that builds the string output when it's called
 	 */
-	public boolean isDebugEnabled() {
-		return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+	private void log(LogType type, Supplier<String> string) {
+		log(type, string.get());
 	}
 	
 	/**
@@ -183,21 +323,24 @@ public class LoggingService {
 	}
 	
 	/**
-	 * Defines whether the date, type and prefix should be printed in front of the debug output.
+	 * Enables or disables debug messages. Note that debug messages are even
+	 * displayed if debug mode is disabled but the java virtual machine runs in
+	 * debug mode.
 	 * 
-	 * @param enableOutputInformation if the date, type and prefix should be printed in front of the debug output
+	 * @param debug if debug messages should be displayed
 	 */
-	public void setOutputInformationEnabled(boolean enableOutputInformation) {
-		this.enableOutputInformation = enableOutputInformation;
+	public void setDebugEnabled(boolean debug) {
+		this.debug = debug;
 	}
 	
 	/**
-	 * Returns whether the date, type and prefix should be printed in front of the debug output.
+	 * Returns if debug is enabled or java is currently running in debug mode. One
+	 * of these has to be enabled to show debug messages.
 	 * 
-	 * @return if the date, type and prefix should be printed in front of the debug output
+	 * @return if debug messages are enabled
 	 */
-	public boolean isOutputInformationEnabled() {
-		return enableOutputInformation;
+	public boolean isDebugEnabled() {
+		return debug || ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 	}
 	
 	/**
@@ -220,25 +363,25 @@ public class LoggingService {
 	}
 	
 	/**
-	 * Sets the format in which the date should be in front of the logging
+	 * Sets the format in which metadata should be in front of the logging
 	 * messages.
 	 * 
-	 * @param dateTimeFormatter the format in which the date should be in front
+	 * @param formatter the format in which the metadata should be in front
 	 *                          of the logging messages
 	 */
-	public void setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
-		this.dateTimeFormatter = dateTimeFormatter;
+	public void setFormatter(Function<LoggingEvent, String> formatter) {
+		this.formatter = formatter;
 	}
 	
 	/**
-	 * Returns the format in which the date should be in front of the logging
+	 * Returns the format in which the metadata should be in front of the logging
 	 * messages.
 	 * 
-	 * @return the format in which the date should be in front of the logging
+	 * @return the format in which the metadata should be in front of the logging
 	 *         messages
 	 */
-	public DateTimeFormatter getDateTimeFormatter() {
-		return dateTimeFormatter;
+	public Function<LoggingEvent, String> getFormatter() {
+		return formatter;
 	}
 	
 	/**
