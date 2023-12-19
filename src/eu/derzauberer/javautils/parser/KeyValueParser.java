@@ -12,12 +12,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import eu.derzauberer.javautils.accessible.AccessibleVisibility;
@@ -442,37 +445,47 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * 
 	 * @see {@link Accessor}
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked" })
 	public P serialize(String key, Accessor<?> accessor) {
+		final Queue<SerializationRecord> entryQueue = new LinkedList<>();
 		accessor.getFields().forEach(field -> {
-			final String fieldKey = key.trim().isEmpty() ? field.getName() : key + "." + field.getName();
-			if (field.getClassType().isPrimitive() || 
-					field.getValue() == null ||
-					String.class.isAssignableFrom(field.getClassType()) ||
-					Character.class.isAssignableFrom(field.getClassType()) ||
-					Boolean.class.isAssignableFrom(field.getClassType()) ||
-					Number.class.isAssignableFrom(field.getClassType())) {
-				set(fieldKey, field.getValue());
-			} else if (Collection.class.isAssignableFrom(field.getClassType()) || field.getClassType().isArray()) {
-				final Collection<Object> collection = new ArrayList<>();
-				for (Object object : field.getClassType().isArray() ? Arrays.asList((Object[]) field.getValue()) : (Collection<?>) field.getValue()) {
-					if (object == null || object instanceof String || object instanceof Character || object instanceof Boolean || object instanceof Number) {
-						collection.add(object);
-					} else {
-						collection.add(getImplementationInstance().serialize((new Accessor<>(object))));
-					}
-				}
-				set(fieldKey, collection);
-			} else if (Map.class.isAssignableFrom(field.getClassType())) {
-				((Map<?, ?>) field.getValue()).forEach((mapKey, mapValue) -> {
-					//TODO
-				});
-			} else if (Enum.class.isAssignableFrom(field.getClassType())) {
-				set(fieldKey, field.getValue().toString());
-			} else {
-				serialize(fieldKey, new Accessor<>(field.getValue()));
-			}
+			entryQueue.add(new SerializationRecord(this, field.getName(), field.getName(), field.getValue(), object -> this.set(field.getName(), object)));
 		});
+		while (!entryQueue.isEmpty()) {
+			final SerializationRecord entry = entryQueue.poll();
+			final Class<?> type = entry.value() != null ? entry.value().getClass() : Object.class;
+			if (entry.value() == null ||
+					type.isPrimitive() ||
+					String.class.isAssignableFrom(type) ||
+					Character.class.isAssignableFrom(type) ||
+					Boolean.class.isAssignableFrom(type) ||
+					Number.class.isAssignableFrom(type)) {
+				entry.add().accept(entry.value());
+			} else if (Collection.class.isAssignableFrom(type) || type.isArray()) {
+				final Collection<Object> targetCollection = new ArrayList<>();
+				final Collection<Object> sourceCollection = type.isArray() ? Arrays.asList((Object[]) entry.value()) : (Collection<Object>) entry.value();
+				entry.add().accept(targetCollection);
+				sourceCollection.forEach(item -> {
+					//Name is null if the entry is a collection
+					entryQueue.add(new SerializationRecord(entry.parser(), "", null, item, targetCollection::add));
+				});
+			} else if (Map.class.isAssignableFrom(type)) {
+				((Map<?, ?>) entry.value()).entrySet().forEach(item -> {
+					final String fieldKey = entry.key().trim().isEmpty() ? entry.name() + "." + item.getKey() : entry.key() + "." + entry.name() + "." + item.getKey();
+					entryQueue.add(new SerializationRecord(entry.parser(), fieldKey, item.getKey().toString(), item.getValue(), object -> entry.parser().set(fieldKey, object)));
+				});
+			} else if (Enum.class.isAssignableFrom(type)) {
+				entry.add().accept(entry.value().toString());
+			} else {
+				new Accessor<>(type).getFields().forEach(field -> {
+					final String fieldKey = entry.key().trim().isEmpty() ? field.getName() : entry.key() + "." + field.getName();
+					final KeyValueParser<?> parser = entry.name() == null ? getImplementationInstance() : entry.parser();
+					//Name is null if the entry is a collection
+					if (entry.name() == null) entry.add().accept(parser);
+					entryQueue.add(new SerializationRecord(parser, fieldKey, field.getName(), field.getValue(), object -> parser.set(fieldKey, object)));
+				});
+			}
+		}
 		return (P) this;
 	}
 	
@@ -507,17 +520,18 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	public <T> T deserialize(String key, Accessor<T> accessor) {
 		accessor.getFields().forEach(field -> {
 			final String fieldKey = key.trim().isEmpty() ? field.getName() : key + "." + field.getName();
+			final Class<?> type = field.getClassType();
 			if (field.getValue() == null ||
 					field.getClassType().isPrimitive() || 
-					String.class.isAssignableFrom(field.getClassType()) ||
-					Character.class.isAssignableFrom(field.getClassType()) ||
-					Boolean.class.isAssignableFrom(field.getClassType()) ||
-					Number.class.isAssignableFrom(field.getClassType())) {
-				field.setObjectValue(get(fieldKey, field.getClassType()));
-			} else if (Collection.class.isAssignableFrom(field.getClassType())) {
+					String.class.isAssignableFrom(type) ||
+					Character.class.isAssignableFrom(type) ||
+					Boolean.class.isAssignableFrom(type) ||
+					Number.class.isAssignableFrom(type)) {
+				field.setObjectValue(get(fieldKey, type));
+			} else if (Collection.class.isAssignableFrom(type)) {
 				try {
 					final Class<?> classType = extractGenericClass(field.getGenericType(), 0);
-					final Class<?> collectionType = field.isPresent() ? field.getValue().getClass() : field.getClassType();
+					final Class<?> collectionType = field.isPresent() ? field.getValue().getClass() : type;
 	            	if (collectionType.isInterface() && Modifier.isAbstract(collectionType.getModifiers())) {
 	            		new SerializationException("Can't instantiate abstract or interface object " + collectionType + ", please instantiate it in the constructor!").printStackTrace();
 	            	} else {
@@ -526,25 +540,25 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				} catch (SerializationException exception) {
 					exception.printStackTrace();
 				}
-			} else if (field.getClassType().isArray()) {
-				field.setObjectValue(getAsArray(fieldKey, field.getClassType().getComponentType()));
-				final Collection collection = deserializeCollection(getAsCollection(fieldKey), ArrayList.class, field.getClassType().getComponentType());
-				field.setObjectValue(collection.toArray(Accessor.instantiateArray(field.getClassType().getComponentType(), collection.size())));				
-			} else if (Map.class.isAssignableFrom(field.getClassType())) {
+			} else if (type.isArray()) {
+				field.setObjectValue(getAsArray(fieldKey, type.getComponentType()));
+				final Collection collection = deserializeCollection(getAsCollection(fieldKey), ArrayList.class, type.getComponentType());
+				field.setObjectValue(collection.toArray(Accessor.instantiateArray(type.getComponentType(), collection.size())));				
+			} else if (Map.class.isAssignableFrom(type)) {
 				//TODO
-			} else if (Enum.class.isAssignableFrom(field.getClassType())) {
+			} else if (Enum.class.isAssignableFrom(type)) {
 				final String value = get(fieldKey, String.class);
-				if (value != null) Arrays.stream(field.getClassType().getEnumConstants()).filter(object -> object.toString().equals(value)).findAny().ifPresent(field::setObjectValue);
+				if (value != null) Arrays.stream(type.getEnumConstants()).filter(object -> object.toString().equals(value)).findAny().ifPresent(field::setObjectValue);
 			} else {
 				if (field.isPresent()) {
 					field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getValue())));
 				} else if (field.getClass().isInterface() && Modifier.isAbstract(field.getClass().getModifiers())) {
-					new SerializationException("Can't instantiate the abstract or interface object " + field.getClassType() + ", please instantiate it in the constructor!").printStackTrace();
+					new SerializationException("Can't instantiate the abstract or interface object " + type + ", please instantiate it in the constructor!").printStackTrace();
 				} else {
 					try {
-						field.setObjectValue(deserialize(fieldKey, new Accessor<>(field.getClassType())));
+						field.setObjectValue(deserialize(fieldKey, new Accessor<>(type)));
 					} catch (IllegalArgumentException | AccessorException exception) {
-						new SerializationException("Can't instantiate the " + field.getClassType() + " object, please instantiate it in the constructor!", exception).printStackTrace();
+						new SerializationException("Can't instantiate the " + type + " object, please instantiate it in the constructor!", exception).printStackTrace();
 					}
 				}
 			}
@@ -781,10 +795,15 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				setValue((key == null ? "" : key + ".") + mapKey, mapValue);
 			});
 		} else if (value instanceof KeyValueParser) {
-			((KeyValueParser<?>) value).forEach((parserKey, parserValue) -> {
-				setValue(key + "." + parserKey, parserValue);
-				setValue((key == null ? "" : key + ".") + parserKey, parserValue);
-			});
+			final KeyValueParser<?> parser = (KeyValueParser<?>) value;
+			if (parser.isPresent(null)) {
+				setValue(key, parser.get(null));
+			} else {
+				parser.forEach((parserKey, parserValue) -> {
+					setValue(key + "." + parserKey, parserValue);
+					setValue((key == null ? "" : key + ".") + parserKey, parserValue);
+				});
+			}
 		} else {
 			if (containsKey(null)) remove(null);
 			entries.put(key, value);
@@ -870,5 +889,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @return the instance of the implementation
 	 */
 	protected abstract P getImplementationInstance();
+	
+	private record SerializationRecord(KeyValueParser<?> parser, String key, String name, Object value, Consumer<Object> add) {};
 
 }
