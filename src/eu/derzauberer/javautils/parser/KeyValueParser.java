@@ -150,7 +150,6 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key  the path that represents the value
 	 * @param type type that the value will be cast in
 	 * @return the value represented by its key
-	 * @see {@link DataUtil}
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T get(String key, Class<T> type) {
@@ -169,7 +168,6 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param standard the standard value, which will returned, if the requested
 	 *                 value is null
 	 * @return the value represented by its key
-	 * @see {@link DataUtil}
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T get(String key, Class<T> type, T standard) {
@@ -187,7 +185,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param key  the path that represents the value
 	 * @param type type that the value will be cast in value is null
 	 * @return the value as {@link Optional} represented by its key
-	 * @see {@link DataUtil}, {@link Optional}
+	 * @see {@link Optional}
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> Optional<T> getOptional(String key, Class<T> type) {
@@ -212,210 +210,245 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		}
 		return parser;
 	}
-
+	 
 	/**
-	 * Gets the collection as value by its key The key null represents the root
-	 * list. If there is no value then it will return null. Note, that the returned
-	 * value is a copy of the original one, changes doesn't have any impact on the
-	 * original object. To change the value please put the object back in with
-	 * {{@link #set(String, Object)}} or with
+	 * Gets the list as value by its key The key null represents the root list.
+	 * If there is no value then it will return null. Note, that the returned
+	 * list is a copy of the original array, changes doesn't have any impact on
+	 * the original array. To change the value please put the array or
+	 * collection back in with {{@link #set(String, Object)}} or with
 	 * {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return collection as value represented by its key
-	 * @see {@link Collection}
-	 */
-	public Collection<?> getAsCollection(String key) {
-		if (!isCollection(key) && !isArray(key)) return null;
-		final Collection<Object> collection = new ArrayList<>();
-		for (Object object : isArray(key) ? Arrays.asList(get(key)) : (Collection<?>) getValue(key)) {
-			collection.add(object);
-		}
-		return collection;
-	}
-	
-	/**
-	 * Gets the list as value by its key The key null represents the root list. If
-	 * there is no value then it will return null. Note, that the returned value is
-	 * a copy of the original one, changes doesn't have any impact on the original
-	 * object. To change the value please put the object back in with
-	 * {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
-	 * 
-	 * @param key the path that represents the value
-	 * @return collection as value represented by its key
-	 * @see {@link Collection}
+	 * @return the list as value represented by its key
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
+	 * @see {@link List}
 	 */
 	public List<?> getAsList(String key) {
 		return getAsCollection(key, new ArrayList<>(), Object.class);
 	}
 	
 	/**
-	 * Gets the set as value by its key The key null represents the root list. If
-	 * there is no value then it will return null. Note, that the returned value is
-	 * a copy of the original one, changes doesn't have any impact on the original
-	 * object. To change the value please put the object back in with
+	 * Gets the list as value by its key and convert it to the requested
+	 * type. The key null represents the root list. Note, that the returned
+	 * list is a copy of the original array, changes doesn't have any impact on
+	 * the original array. To change the value please put the array or
+	 * collection back in with {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * 
+	 * @param <T>  type that the value will be cast in
+	 * @param key  the path that represents the value
+	 * @param type type that the value will be cast in
+	 * @return the list as value represented by its key
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
+	 * @see {@link List}
+	 */
+	public <T> List<T> getAsList(String key, Class<T> type) {
+		return getAsCollection(key, new ArrayList<>(), type);
+	}
+	
+	/**
+	 * Gets the set as value by its key The key null represents the root list.
+	 * Note, that the returned set is a copy of the original array, changes
+	 * doesn't have any impact on the original array. To change the value
+	 * please put the array or collection back in with
 	 * {{@link #set(String, Object)}} or with
 	 * {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param key the path that represents the value
-	 * @return collection as value represented by its key
-	 * @see {@link Collection}
+	 * @return the set as value represented by its key
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
+	 * @see {@link Set}
 	 */
 	public Set<?> getAsSet(String key) {
 		return getAsCollection(key, new HashSet<>(), Object.class);
 	}
+	
+	/**
+	 * Gets the set as value by its key and convert it to the requested
+	 * type. The key null represents the root list. Note, that the returned
+	 * value is a copy of the original one, changes doesn't have any impact on
+	 * the original array. To change the value please put the array or
+	 * collection back in with {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * 
+	 * @param <T>  type that the value will be cast in
+	 * @param key  the path that represents the value
+	 * @param type type that the value will be cast in
+	 * @return the set as value represented by its key
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
+	 * @see {@link Set}
+	 */
+	public <T> Set<T> getAsSet(String key, Class<T> type) {
+		return getAsCollection(key, new HashSet<>(), type);
+	}
+	
+	/**
+	 * Gets the collection as value by its key. The key null represents the
+	 * root list. Note, that the returned collection is a copy of the original
+	 * array, changes doesn't have any impact on the original array. To change
+	 * the value please put the array or collection back in with
+	 * {{@link #set(String, Object)}} or with
+	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * 
+	 * @param key the path that represents the value
+	 * @return the collection as value represented by its key
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
+	 * @see {@link Collection}
+	 */
+	public Collection<?> getAsCollection(String key) {
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		return Arrays.stream((Object[]) get(key)).toList();
+	}
 
 	/**
-	 * Gets the collection as value by its key and convert it to the requested type.
-	 * The key null represents the root list. If there is no value then it will
-	 * return null. Note, that the returned value is a copy of the original one,
-	 * changes doesn't have any impact on the original object. To change the value
-	 * please put the object back in with {{@link #set(String, Object)}} or with
+	 * Gets the collection as value by its key and convert it to the requested
+	 * type. The key null represents the root list. Note, that the returned
+	 * value is a copy of the original one, changes doesn't have any impact on
+	 * the original array. To change the value please put the array or
+	 * collection back in with {{@link #set(String, Object)}} or with
 	 * {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
 	 * @param type type that the value will be cast in
 	 * @return the collection as value represented by its key
-	 * @see {@link DataUtil}, {@link Collection}
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
+	 * @see {@link Collection}
 	 */
 	public <T, C extends Collection<T>> C getAsCollection(String key, C collection, Class<T> type) {
-		if (!isCollection(key) && !isArray(key)) return null;
-		for (Object object : isArray(key) ? Arrays.asList(get(key)) : (Collection<?>) getValue(key)) {
-			collection.add(ParsingUtils.convertObject(object, type));
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		final Object[] array = (Object[]) get(key);
+		for (int i = 0; i < array.length; i++) {
+			collection.add(ParsingUtils.convertObject(array[i], type));
 		}
 		return collection;
 	}
 	
 	/**
-	 * Gets the array as value by its key. The key null represents the root list. If
-	 * there is no value then it will return null. Note, that the returned value is
-	 * a copy of the original one, changes doesn't have any impact on the original
-	 * object. To change the value please put the object back in with
-	 * {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * Gets the array as value by its key. The key null represents the root
+	 * list. Note, that the returned value is a copy of the original one,
+	 * changes doesn't have any impact on the original array. To change the
+	 * value please put the array back in with {{@link #set(String, Object)}}
+	 * or with {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return the array as value represented by its key
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
 	 */
 	public Object[] getAsArray(String key) {
-		if (!isCollection(key) && !isArray(key)) return null;
-		final int size = isArray(key) ? ((Object[]) get(key)).length : ((Collection<?>) get(key)).size();
-		final Object[] array = new Object[size];
-		int i = 0;
-		for (Object object : isArray(key) ? (Object[]) get(key) : ((Collection<?>) get(key)).toArray()) {
-			array[i] = object;
-			i++;
-		}
-		return array;
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		final Object[] existingArray = (Object[]) get(key);
+		final Object[] newArray = new Object[existingArray.length];
+		System.arraycopy(existingArray, 0, newArray, 0, existingArray.length);
+		return newArray;
 	}
 
 	/**
-	 * Gets the array as value by its key and convert it to the requested type. The
-	 * key null represents the root list. If there is no value then it will return
-	 * null. Note, that the returned value is a copy of the original one, changes
-	 * doesn't have any impact on the original object. To change the value please
-	 * put the object back in with {{@link #set(String, Object)}} or with
+	 * Gets the array as value by its key and convert it to the requested type.
+	 * The key null represents the root array. Note, that the returned value is
+	 * a copy of the original one, changes doesn't have any impact on the
+	 * original array. To change the value please put the array back in with
+	 * {{@link #set(String, Object)}} or with
 	 * {@link #setAtArrayIndex(String, int, Object)}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
 	 * @param type type that the value will be cast in
 	 * @return the array as value represented by its key
-	 * @see {@link DataUtil}
+	 * @throws IllegalArgumentException if the key does not point to an array
+	 * @throws NullPointerException     if the the key represents no value
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T[] getAsArray(String key, Class<T> type) {
-		if (!isCollection(key) && !isArray(key)) return null;
-		final int size = isArray(key) ? ((Object[]) get(key)).length : ((Collection<?>) get(key)).size();
-		final T t[] = (T[]) Array.newInstance(type.isArray() ? type.getComponentType() : type, size);
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		final Object[] existingArray = (Object[]) get(key);
+		final T newArray[] = (T[]) Array.newInstance(type, existingArray.length);
 		int i = 0;
-		for (Object object : isArray(key) ? (Object[]) get(key) : ((Collection<?>) get(key)).toArray()) {
-			t[i] = ParsingUtils.convertObject(object, type);
+		for (Object object : existingArray) {
+			newArray[i] = ParsingUtils.convertObject(object, type);
 			i++;
 		}
-		return t;
+		return newArray;
 	}
 	
 	/**
-	 * Sets a value at at specific index of an array or a collection by it's key.
-	 * The key null represents the root list. It does nothing if the key doesn't
-	 * point to an array or collection. The operation can manipulate {@link List}
-	 * objects directly. A new {@link List} has to be created for all other arrays
-	 * and collection types. This list overrides the existing array or collection.
+	 * Sets a value at at specific index of an array by it's key. The key null
+	 * represents the root list.
 	 * 
 	 * @param key   he path that represents the value
-	 * @param index the array or collection index to put the value in
-	 * @param value the value to put in the array or collection at the index
+	 * @param index the array index to put the value in
+	 * @param value the value to put in the array or at the index
 	 * @return the own parser object for further customizations
-	 * @throws IndexOutOfBoundsException if the index is out of range
-	 *                                   ({@code index < 0 || index >= size()})
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *                                        ({@code index < 0 || index >= array.lenght})
+	 * @throws IllegalArgumentException       if the key does not point to an
+	 *                                        array
+	 * @throws NullPointerException           if the the key represents no
+	 *                                        value
 	 */
 	@SuppressWarnings("unchecked")
 	public P setAtArrayIndex(String key, int index, Object value) {
-		if (!isCollection(key) && !isArray(key)) return (P) this;
-		ArrayList<Object> list;
-		if (getValue(key) instanceof ArrayList<?>) { 
-			list = (ArrayList<Object>) getValue(key);
-		} else if (isCollection(key)) {
-			list = new ArrayList<>((Collection<?>) getValue(key));
-		} else {
-			list = new ArrayList<>(Arrays.asList((Object[]) getValue(key)));
-		}
-		if (index < list.size()) {
-			list.set(index, value);
-		} else {
-			for (int i = 0; i < index - list.size() - 1; i++) list.add(null);
-			list.add(value);
-		}
-		setValue(key, list);
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		((Object[]) get(key))[index] = value;
 		return (P) this;
 	}
 	
 	/**
-	 * Gets the object from a specific index of an array or a collection by it's
-	 * key. The key null represents the root list. It returns null if the value that
-	 * is found by the key is not an array or collection.
+	 * Gets an object at a specific index of an array by it's key. The key
+	 * null represents the root list.
 	 * 
 	 * @param key   the path that represents the value
-	 * @param index the array or collection index to take the value from
-	 * @return the value from the index of an array or a collection
-	 * @throws IndexOutOfBoundsException if the index is outside of the array
+	 * @param index the array index to take the value from
+	 * @return the value from the index of an array
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *                                        ({@code index < 0 || index >= array.lenght})
+	 * @throws IllegalArgumentException       if the key does not point to an
+	 *                                        array
+	 * @throws NullPointerException           if the the key represents no
+	 *                                        value
 	 */
 	public Object getAtArrayIndex(String key, int index) {
-		if (isCollection(key)) {
-			return ((Collection<?>) getValue(key)).toArray()[index];
-		} else if (isArray(key)) {
-			return ((Object[]) getValue(key))[index];
-		} else {
-			return null;
-		}
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		return ((Object[]) getValue(key))[index];
 	}
 	
 	/**
-	 * Gets the value from a specific index of an array or a collection by it's key
-	 * and convert it to the requested type. The key null represents the root list.
-	 * It returns null if the object that is found by the key is not an array or
-	 * collection.
+	 * Gets the value from a specific index of an array by it's key and convert
+	 * it to the requested type. The key null represents the root list.
 	 * 
 	 * @param <T>   type that the value will be casted in
 	 * @param key   key the path that represents the value
-	 * @param index the array or collection index to take the value from
+	 * @param index the array index to take the value from
 	 * @param type  the type that the value will be casted in
-	 * @return the value from the index of an array or a collection
-	 * @throws IndexOutOfBoundsException if the index is outside of the array
-	 * @throws ClassCastException        if it is not possible to convert the object
-	 *                                   into the given type
+	 * @return the value from the index of an array
+	 * @throws ArrayIndexOutOfBoundsException if the index is outside of the
+	 *                                        array
+	 * @throws IllegalArgumentException       if the key does not point to an
+	 *                                        array
+	 * @throws NullPointerException           if the the key represents no
+	 *                                        value
+	 * @throws ClassCastException             if it is not possible to convert
+	 *                                        the object into the given type
 	 */
 	public <T> T getAtArrayIndex(String key, int index, Class<T> type) {
-		if (isCollection(key)) {
-			return type.cast(((Collection<?>) getValue(key)).toArray()[index]);
-		} else if (isArray(key)) {
-			return type.cast(((Object[]) getValue(key))[index]);
-		} else {
-			return null;
-		}
+		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
+		return type.cast(((Object[]) getValue(key))[index]);
 	}
 	
 	/**
@@ -447,12 +480,12 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public P serialize(String key, Accessor<?> accessor) {
-		final Queue<SerializationRecord> entryQueue = new LinkedList<>();
+		final Queue<ParserEntry> entries = new LinkedList<>();
 		accessor.getFields().forEach(field -> {
-			entryQueue.add(new SerializationRecord(this, field.getName(), field.getName(), field.getValue(), object -> this.set(field.getName(), object)));
+			entries.add(new ParserEntry(this, field.getName(), field.getName(), field.getValue(), object -> this.set(field.getName(), object)));
 		});
-		while (!entryQueue.isEmpty()) {
-			final SerializationRecord entry = entryQueue.poll();
+		while (!entries.isEmpty()) {
+			final ParserEntry entry = entries.poll();
 			final Class<?> type = entry.value() != null ? entry.value().getClass() : Object.class;
 			if (entry.value() == null ||
 					type.isPrimitive() ||
@@ -467,12 +500,12 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 				entry.add().accept(targetCollection);
 				sourceCollection.forEach(item -> {
 					//Name is null if the entry is a collection
-					entryQueue.add(new SerializationRecord(entry.parser(), "", null, item, targetCollection::add));
+					entries.add(new ParserEntry(entry.parser(), "", null, item, targetCollection::add));
 				});
 			} else if (Map.class.isAssignableFrom(type)) {
 				((Map<?, ?>) entry.value()).entrySet().forEach(item -> {
 					final String fieldKey = entry.key().trim().isEmpty() ? entry.name() + "." + item.getKey() : entry.key() + "." + entry.name() + "." + item.getKey();
-					entryQueue.add(new SerializationRecord(entry.parser(), fieldKey, item.getKey().toString(), item.getValue(), object -> entry.parser().set(fieldKey, object)));
+					entries.add(new ParserEntry(entry.parser(), fieldKey, item.getKey().toString(), item.getValue(), object -> entry.parser().set(fieldKey, object)));
 				});
 			} else if (Enum.class.isAssignableFrom(type)) {
 				entry.add().accept(entry.value().toString());
@@ -482,7 +515,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 					final KeyValueParser<?> parser = entry.name() == null ? getImplementationInstance() : entry.parser();
 					//Name is null if the entry is a collection
 					if (entry.name() == null) entry.add().accept(parser);
-					entryQueue.add(new SerializationRecord(parser, fieldKey, field.getName(), field.getValue(), object -> parser.set(fieldKey, object)));
+					entries.add(new ParserEntry(parser, fieldKey, field.getName(), field.getValue(), object -> parser.set(fieldKey, object)));
 				});
 			}
 		}
@@ -498,7 +531,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param accessor the accessor with the object to serialize
 	 * @return the deserialized object
 	 * 
-	 * @see {@link Accessor} {@link DataUtil}
+	 * @see {@link Accessor}
 	 */
 	public <T> T deserialize(Accessor<T> accessor) {
 		return deserialize("", accessor);
@@ -514,7 +547,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @param accessor the accessor with the object to serialize
 	 * @return the deserialized object
 	 * 
-	 * @see {@link Accessor} {@link DataUtil}
+	 * @see {@link Accessor}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> T deserialize(String key, Accessor<T> accessor) {
@@ -568,14 +601,14 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	
 	/**
 	 * Deserializes a collection of primitive types and complex objects using the
-	 * {@link Accessor} and the {@link DataUtil} to convert the values.
+	 * {@link Accessor} to convert the values.
 	 * 
 	 * @param parserCollection the collection to deserialize
 	 * @param collectionType   the type of the collection, when serializes
 	 * @param classType        the type of the collections entities
 	 * @return the deserialized collection
 	 * 
-	 * @see {@link Accessor} {@link DataUtil}
+	 * @see {@link Accessor}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Collection<?> deserializeCollection(Collection<?> parserCollection, Class<?> collectionType, Class<?> classType) {
@@ -651,19 +684,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	public boolean isPrimitive(String key) {
 		if (!isPresent(key)) return false;
-		return !isCollection(key) && !isArray(key) && !isObject(key);
-	}
-
-	/**
-	 * Gets the array as value by its key and check if it is a {@link Collection}.
-	 * The key null represents the root list.
-	 * 
-	 * @param key the path that represents the value
-	 * @return if the value represented by its key is a {@link Collection}
-	 */
-	public boolean isCollection(String key) {
-		if (!isPresent(key)) return false;
-		return get(key) instanceof Collection<?>;
+		return !isArray(key) && !isObject(key);
 	}
 
 	/**
@@ -782,14 +803,16 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	protected void setValue(String key, Object value) {
 		if (key == null && !(value instanceof KeyValueParser<?> || value instanceof Map<?, ?>)) {
-			if (value instanceof Collection<?> || (value != null && value.getClass().isArray())) {
+			if (value instanceof Collection<?> || (value.getClass().isArray())) {
 				structure.clear();
 				entries.clear();
 				structure.add(null);
-				entries.put(null, value);
+				entries.put(null, (value instanceof Collection<?>) ? ((Collection<?>) value).toArray() : value);
 			} else {
-				throw new ParserException("The key null can only be used for Collection, Map and KeyValueParser!");
+				throw new ParserException("The key null can only be used for Array, Collection, Map and KeyValueParser!");
 			}
+		} else if (value instanceof Collection<?>) {
+			setValue(key, ((Collection<?>) value).toArray());
 		} else if (value instanceof Map<?, ?>) {
 			((Map<?, ?>) value).forEach((mapKey, mapValue) -> {
 				setValue((key == null ? "" : key + ".") + mapKey, mapValue);
@@ -840,7 +863,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 		if (key == null) return entries.get(key);
 		final List<String> list = structure.stream().filter(path -> {
 			return path.startsWith(key) && (key.length() == path.length() || path.charAt(key.length()) == '.');
-		}).collect(Collectors.toList());
+		}).toList();
 		if (list.isEmpty()) {
 			return null;
 		} else if (list.size() == 1) {
@@ -890,6 +913,6 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	protected abstract P getImplementationInstance();
 	
-	private record SerializationRecord(KeyValueParser<?> parser, String key, String name, Object value, Consumer<Object> add) {};
+	private record ParserEntry(KeyValueParser<?> parser, String key, String name, Object value, Consumer<Object> add) {};
 
 }

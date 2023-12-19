@@ -227,7 +227,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			final String name = keys[lastLayer - 1];
 			final Object value = getEntries().get(key);
 			final String TABS = TAB.repeat(lastLayer + offset);
-			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
+			if (value != null && value.getClass().isArray()) {
 				string.append(parseOutCollections(oneliner, offset + lastLayer, name, getAsCollection(key)));
 			} else {
 				string.append(TABS + '\"' + name + "\":" + SPACE + ParsingUtils.autoSerializePrimitive(value, true));
