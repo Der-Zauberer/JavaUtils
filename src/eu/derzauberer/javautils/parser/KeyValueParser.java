@@ -216,8 +216,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * If there is no value then it will return null. Note, that the returned
 	 * list is a copy of the original array, changes doesn't have any impact on
 	 * the original array. To change the value please put the array or
-	 * collection back in with {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * collection back in with {{@link #set(String, Object)}}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return collection as value represented by its key
@@ -231,12 +230,11 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 	
 	/**
-	 * Gets the list as value by its key and convert it to the requested
-	 * type. The key null represents the root list. Note, that the returned
-	 * list is a copy of the original array, changes doesn't have any impact on
-	 * the original array. To change the value please put the array or
-	 * collection back in with {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * Gets the list as value by its key and convert it to the requested type.
+	 * The key null represents the root list. Note, that the returned list is a
+	 * copy of the original array, changes doesn't have any impact on the
+	 * original array. To change the value please put the array or collection
+	 * back in with {{@link #set(String, Object)}}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
@@ -255,8 +253,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * Note, that the returned set is a copy of the original array, changes
 	 * doesn't have any impact on the original array. To change the value
 	 * please put the array or collection back in with
-	 * {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * {{@link #set(String, Object)}}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return the set as value represented by its key
@@ -269,12 +266,11 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	}
 	
 	/**
-	 * Gets the set as value by its key and convert it to the requested
-	 * type. The key null represents the root list. Note, that the returned
-	 * value is a copy of the original one, changes doesn't have any impact on
-	 * the original array. To change the value please put the array or
-	 * collection back in with {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * Gets the set as value by its key and convert it to the requested type.
+	 * The key null represents the root list. Note, that the returned value is
+	 * a copy of the original one, changes doesn't have any impact on the
+	 * original array. To change the value please put the array or collection
+	 * back in with {{@link #set(String, Object)}}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
@@ -293,8 +289,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * root list. Note, that the returned collection is a copy of the original
 	 * array, changes doesn't have any impact on the original array. To change
 	 * the value please put the array or collection back in with
-	 * {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * {{@link #set(String, Object)}}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return the collection as value represented by its key
@@ -303,7 +298,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @see {@link Collection}
 	 */
 	public Collection<?> getAsCollection(String key) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isPresent(key)) throw new NullPointerException("The key " + key + " is not present!");
 		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
 		return Arrays.stream((Object[]) get(key)).toList();
 	}
@@ -313,8 +308,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * type. The key null represents the root list. Note, that the returned
 	 * value is a copy of the original one, changes doesn't have any impact on
 	 * the original array. To change the value please put the array or
-	 * collection back in with {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * collection back in with {{@link #set(String, Object)}}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
@@ -325,7 +319,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @see {@link Collection}
 	 */
 	public <T, C extends Collection<T>> C getAsCollection(String key, C collection, Class<T> type) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isPresent(key)) throw new NullPointerException("The key " + key + " is not present!");
 		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
 		final Object[] array = (Object[]) get(key);
 		for (int i = 0; i < array.length; i++) {
@@ -338,8 +332,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * Gets the array as value by its key. The key null represents the root
 	 * list. Note, that the returned value is a copy of the original one,
 	 * changes doesn't have any impact on the original array. To change the
-	 * value please put the array back in with {{@link #set(String, Object)}}
-	 * or with {@link #setAtArrayIndex(String, int, Object)}.
+	 * value please put the array back in with {{@link #set(String, Object)}}.
 	 * 
 	 * @param key the path that represents the value
 	 * @return the array as value represented by its key
@@ -347,7 +340,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * @throws NullPointerException     if the the key represents no value
 	 */
 	public Object[] getAsArray(String key) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isPresent(key)) throw new NullPointerException("The key " + key + " is not present!");
 		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
 		final Object[] existingArray = (Object[]) get(key);
 		final Object[] newArray = new Object[existingArray.length];
@@ -360,8 +353,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 * The key null represents the root array. Note, that the returned value is
 	 * a copy of the original one, changes doesn't have any impact on the
 	 * original array. To change the value please put the array back in with
-	 * {{@link #set(String, Object)}} or with
-	 * {@link #setAtArrayIndex(String, int, Object)}.
+	 * {{@link #set(String, Object)}}.
 	 * 
 	 * @param <T>  type that the value will be cast in
 	 * @param key  the path that represents the value
@@ -372,7 +364,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T[] getAsArray(String key, Class<T> type) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isPresent(key)) throw new NullPointerException("The key " + key + " is not present!");
 		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
 		final Object[] existingArray = (Object[]) get(key);
 		final T newArray[] = (T[]) Array.newInstance(type, existingArray.length);
@@ -382,29 +374,6 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 			i++;
 		}
 		return newArray;
-	}
-	
-	/**
-	 * Sets a value at at specific index of an array by it's key. The key null
-	 * represents the root list.
-	 * 
-	 * @param key   he path that represents the value
-	 * @param index the array index to put the value in
-	 * @param value the value to put in the array or at the index
-	 * @return the own parser object for further customizations
-	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
-	 *                                        ({@code index < 0 || index >= array.lenght})
-	 * @throws IllegalArgumentException       if the key does not point to an
-	 *                                        array
-	 * @throws NullPointerException           if the the key represents no
-	 *                                        value
-	 */
-	@SuppressWarnings("unchecked")
-	public P setAtArrayIndex(String key, int index, Object value) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
-		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
-		((Object[]) get(key))[index] = value;
-		return (P) this;
 	}
 	
 	/**
@@ -422,7 +391,7 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 *                                        value
 	 */
 	public Object getAtArrayIndex(String key, int index) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isPresent(key)) throw new NullPointerException("The key " + key + " is not present!");
 		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
 		return ((Object[]) getValue(key))[index];
 	}
@@ -446,9 +415,9 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 	 *                                        the object into the given type
 	 */
 	public <T> T getAtArrayIndex(String key, int index, Class<T> type) {
-		if (!isPresent(key)) new NullPointerException("The key " + key + " is not present!");
+		if (!isPresent(key)) throw new NullPointerException("The key " + key + " is not present!");
 		if (!isArray(key)) throw new IllegalArgumentException("The key " + key + " does not represent an array!");
-		return type.cast(((Object[]) getValue(key))[index]);
+		return ParsingUtils.convertObject(((Object[]) getValue(key))[index], type);
 	}
 	
 	/**
