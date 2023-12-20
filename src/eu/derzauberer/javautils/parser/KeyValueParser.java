@@ -464,25 +464,26 @@ public abstract class KeyValueParser<P extends KeyValueParser<P>> implements Par
 					Number.class.isAssignableFrom(type)) {
 				entry.add().accept(entry.value());
 			} else if (Collection.class.isAssignableFrom(type) || type.isArray()) {
-				final Collection<Object> targetCollection = new ArrayList<>();
-				final Collection<Object> sourceCollection = type.isArray() ? Arrays.asList((Object[]) entry.value()) : (Collection<Object>) entry.value();
-				entry.add().accept(targetCollection);
-				sourceCollection.forEach(item -> {
-					//Name is null if the entry is a collection
-					entries.add(new ParserEntry(entry.parser(), "", null, item, targetCollection::add));
-				});
+				final Object[] sourceArray = type.isArray() ? (Object[]) entry.value() : ((Collection<Object>) entry.value()).toArray();
+				final Object[] targetArray = new Object[sourceArray.length];
+				entry.add().accept(targetArray);
+				for (int i = 0; i < targetArray.length; i++) {
+					final int index = i;
+					//Name is null because the entry is an array
+					entries.add(new ParserEntry(entry.parser(), "", null, sourceArray[i], value -> targetArray[index] = value));
+				}
 			} else if (Map.class.isAssignableFrom(type)) {
 				((Map<?, ?>) entry.value()).entrySet().forEach(item -> {
 					final String fieldKey = entry.key().trim().isEmpty() ? entry.name() + "." + item.getKey() : entry.key() + "." + entry.name() + "." + item.getKey();
 					entries.add(new ParserEntry(entry.parser(), fieldKey, item.getKey().toString(), item.getValue(), object -> entry.parser().set(fieldKey, object)));
 				});
 			} else if (Enum.class.isAssignableFrom(type)) {
-				entry.add().accept(entry.value().toString());
+				entry.add().accept(((Enum<?>) entry.value()).name());
 			} else {
 				new Accessor<>(type).getFields().forEach(field -> {
 					final String fieldKey = entry.key().trim().isEmpty() ? field.getName() : entry.key() + "." + field.getName();
 					final KeyValueParser<?> parser = entry.name() == null ? getImplementationInstance() : entry.parser();
-					//Name is null if the entry is a collection
+					//Name is null if the entry is an array
 					if (entry.name() == null) entry.add().accept(parser);
 					entries.add(new ParserEntry(parser, fieldKey, field.getName(), field.getValue(), object -> parser.set(fieldKey, object)));
 				});

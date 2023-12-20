@@ -3,7 +3,6 @@ package eu.derzauberer.javautils.parser;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,13 +87,12 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 		for (char character : input.toCharArray()) {
 			if (character == '"' && lastCharacter != '\\') {
 				isString = !isString;
-				if (isArray) value.append(character);
 			} else if (isArray) {
 				if ((character == ',' || character == ']') && arrayLayer == 0) {
 					if (value.length() > 0 && value.charAt(0) == '{' && value.charAt(value.length() - 1) == '}') {
 						array.add(new JsonParser(value.toString()));
 					} else if (value.length() > 0 && value.charAt(0) == '[' && value.charAt(value.length() - 1) == ']') {
-						array.add(new JsonParser(value.toString()).get("null"));
+						array.add(new JsonParser(value.toString()).get(null));
 					} else if (value.length() > 0) {
 						array.add(ParsingUtils.autoDeserializePrimitive(value.toString()));
 					}
@@ -104,10 +102,10 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 						isValue = false;
 						if (name.length() == 0) {
 							getStructure().add(null);
-							getEntries().put(null, array.clone());
+							getEntries().put(null, array.toArray());
 						} else {
 							getStructure().add(key + name.toString());
-							getEntries().put(key.toString() + name.toString(), array.clone());
+							getEntries().put(key.toString() + name.toString(), array.toArray());
 						}
 						name.setLength(0);
 						value.setLength(0);
@@ -204,7 +202,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * @return the output of the parser
 	 */
 	private String parseOut(boolean oneliner, int offset) {
-		if (containsKey(null)) return parseOutCollections(oneliner, offset, null, getAsCollection(null));
+		if (containsKey(null)) return parseOutArray(oneliner, offset, null, getAsArray(null));
 		final StringBuilder string = new StringBuilder();
 		final String TAB = oneliner ? "" : "\t";
 		final String SPACE = oneliner ? "" : " ";
@@ -228,7 +226,7 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			final Object value = getEntries().get(key);
 			final String TABS = TAB.repeat(lastLayer + offset);
 			if (value != null && value.getClass().isArray()) {
-				string.append(parseOutCollections(oneliner, offset + lastLayer, name, getAsCollection(key)));
+				string.append(parseOutArray(oneliner, offset + lastLayer, name, getAsArray(key)));
 			} else {
 				string.append(TABS + '\"' + name + "\":" + SPACE + ParsingUtils.autoSerializePrimitive(value, true));
 			}
@@ -251,23 +249,18 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 	 * @param collection the collection to parse out
 	 * @return the collection as string
 	 */
-	private String parseOutCollections(boolean oneliner, int offset, String name, Collection<?> collection) {
+	private String parseOutArray(boolean oneliner, int offset, String name, Object[] array) {
 		final StringBuilder string = new StringBuilder();
 		final String TAB = oneliner ? "" : "\t";
 		final String SPACE = oneliner ? "" : " ";
 		final String NEW_LINE = oneliner ? "" : "\n";
 		final String TABS = TAB.repeat(offset + 1);
-		if (collection.isEmpty()) return TAB.repeat(offset) + "[]";
-		string.append(TAB.repeat(offset) + (name != null ? "\"" + name + "\":" + SPACE + "[" : "[") + NEW_LINE);
-		for (Object value : collection) {
-			if (value != null && (value instanceof Collection<?> || value.getClass().isArray())) {
-				Collection<?> innerCollection;
-				if (value instanceof Collection<?>) {
-					innerCollection = (Collection<?>) value;
-				} else {
-					innerCollection = Arrays.asList((Object[]) value);
-				}
-				string.append(parseOutCollections(oneliner, offset + 1, null, innerCollection));
+		if (array.length == 0 && name == null) return TAB.repeat(offset) + "[]";
+		string.append(TAB.repeat(offset) + (name != null ? "\"" + name + "\":" + SPACE + "[" : "[") + (array.length == 0 ? "]" : NEW_LINE));
+		for (Object value : array) {
+			if (value != null && (value.getClass().isArray() || value instanceof Collection<?>)) {
+				final Object[] innerArray = value.getClass().isArray() ? (Object[]) value : ((Collection<?>) value).toArray();
+				string.append(parseOutArray(oneliner, offset + 1, null, innerArray));
 			} else if (value != null && value instanceof KeyValueParser<?>) {
 				JsonParser parser;
 				if (value instanceof JsonParser) {
@@ -282,8 +275,10 @@ public class JsonParser extends KeyValueParser<JsonParser> {
 			}
 			string.append(',' + NEW_LINE);
 		}
-		if (string.charAt(string.length() - (oneliner ? 1 : 2)) == ',') string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
-		string.append(TAB.repeat(offset) + "]");
+		if (array.length != 0) {
+			if (string.charAt(string.length() - (oneliner ? 1 : 2)) == ',') string.deleteCharAt(string.length() - (oneliner ? 1 : 2));
+			string.append(TAB.repeat(offset) + "]");
+		}
 		return string.toString();
 	}
 	
